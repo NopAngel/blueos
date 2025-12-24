@@ -80,9 +80,10 @@ int mkdir(const char *dirname) {
 
 void list_items() {
     cursor_y++;
-    printk(".", cursor_y++, BLUE);
-    printk("..", cursor_y++, BLUE);
+
     if (directory_count > 0) {
+        printk(".", cursor_y++, BLUE);
+        printk("..", cursor_y++, BLUE);
         for (unsigned int i = 0; i < directory_count; i++) {
             printk(directory_table[i].name, cursor_y++, BLUE);
         }
@@ -92,13 +93,12 @@ void list_items() {
     if (file_count > 0) {
         for (unsigned int i = 0; i < file_count; i++) {
             printk(file_table[i].name, cursor_y++, GRAY);
-
         }
     }
 
 
     if (directory_count == 0 && file_count == 0) {
-        printk("No content.", cursor_y++, RED);
+        printk("Err: No content.", cursor_y++, RED);
 
     }
 
@@ -107,6 +107,7 @@ void list_items() {
 }
 
 int cat(const char *filename) {
+    cursor_y++;
     for (unsigned int i = 0; i < file_count; i++) {
         if (strcmp(file_table[i].name, filename) == 0) {
             char temp_buffer[MAX_CONTENT_LENGTH];
@@ -217,7 +218,7 @@ int cat(const char *filename) {
         }
     }
     
-    printk("ERR: Archivo no encontrado: ", cursor_y++, RED);
+    printk("ERR: File not found: ", cursor_y++, RED);
     printk(filename, cursor_y++, RED);
     return -1;
 }
@@ -285,7 +286,6 @@ int cd(const char *dirname) {
         }
     }
     
-    printk("ERR: Directory not found: ", cursor_y++, RED);
-    printk(dirname, cursor_y++, RED);
+    printk("ERR: File not found ", cursor_y++, RED);
     return -1;
 }

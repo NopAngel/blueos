@@ -1,7 +1,7 @@
 #include "../include/colors.h"
 #include "../include/printk.h"
 
-unsigned int printk(char *message, unsigned int line, unsigned int color)
+unsigned int printk(const char *message, unsigned int line, unsigned int color)
 {
 	char *vidmem = (char *) 0xb8000;
 	unsigned int i=0;

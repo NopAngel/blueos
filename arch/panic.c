@@ -8,7 +8,9 @@ extern int cursor_y;
 int k_panic (char* msg)
 {
     bg_clear(WHITE_RED);    
-    printk("KERNEL Panic", cursor_y++, WHITE_RED);
+    printk("== Kernel Panic ==", cursor_y++, WHITE_RED);
+    printk("System error - Crash kernel", cursor_y++, WHITE_RED);
+    cursor_y++;
     printk(msg, cursor_y++, WHITE_RED);
     while (1) 
     {
