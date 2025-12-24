@@ -214,3 +214,17 @@ void draw_string(short x, short y, char color, char *str)
     index++;
   }
 }
+
+
+
+void draw_custom(short x, short y, char color, unsigned char bitmap[8])
+{
+    for(int row = 0; row < 8; row++){
+        unsigned char byte = bitmap[row];
+        for(int col = 0; col < 8; col++){
+            if(byte & (1 << (7 - col))){ // Bit de izquierda a derecha
+                putpixel(x + col, y + row, color);
+            }
+        }
+    }
+}
