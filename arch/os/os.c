@@ -824,16 +824,6 @@ void draw_desktop_backbuffer() {
     // Fondo azul
     fill_backbuffer(WIN_BLUE);
     
-    // Iconos del escritorio
-    draw_string_backbuffer(10, 30, WIN_WHITE, "My Computer");
-    draw_string_backbuffer(10, 50, WIN_WHITE, "My Documents");
-    draw_string_backbuffer(10, 70, WIN_WHITE, "Recycle Bin");
-    draw_string_backbuffer(10, 90, WIN_WHITE, "Network");
-    
-    // Dibujar cuadrados como iconos
-    for(int i = 0; i < 4; i++) {
-        fill_rect_backbuffer(5, 25 + (i * 20), 5, 5, WIN_YELLOW);
-    }
 }
 
 void draw_cursor_backbuffer() {
