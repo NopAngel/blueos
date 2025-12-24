@@ -641,7 +641,7 @@ void draw_window_98_backbuffer(int x, int y, int width, int height, char* title,
     int title_y = y + 6;
     int idx = 0;
     while(title[idx]) {
-        draw_char(title_x, title_y, WIN_WHITE, title[idx]);
+        draw_char_backbuffer(title_x, title_y, WIN_WHITE, title[idx]);
         title_x += 9;
         idx++;
     }
@@ -652,11 +652,16 @@ void draw_window_98_backbuffer(int x, int y, int width, int height, char* title,
 }
 
 void draw_terminal_content_backbuffer(int x, int y, int width, int height) {
-    draw_string_backbuffer(x + 10, y + 30, WIN_BLACK, "C:\\WINDOWS>");
+
+    draw_string_backbuffer(x + 10, y + 30, WIN_BLUE, "blueos - NopAngel");
+    draw_string_backbuffer(x + 10, y + 60, WIN_BLUE, "vfs - success!");
+
+
+    draw_string_backbuffer(x + 10, y + 80, WIN_BLACK, "/ >");
     draw_line_backbuffer(x + 10, y + 45, x + width - 20, y + 45, WIN_GREY);
     
     // Mostrar coordenadas del mouse
-    draw_string_backbuffer(x + 10, y + 60, WIN_BLACK, "Mouse X: ");
+    /*draw_string_backbuffer(x + 10, y + 60, WIN_BLACK, "Mouse X: ");
     
     // Convertir coordenadas a string simple
     char x_str[4] = "   ";
@@ -697,7 +702,7 @@ void draw_terminal_content_backbuffer(int x, int y, int width, int height) {
         draw_string_backbuffer(x + 10, y + 90, WIN_RED, "LEFT CLICK");
     } else {
         draw_string_backbuffer(x + 10, y + 90, WIN_GREEN, "NO CLICK");
-    }
+    }*/
 }
 
 void draw_calculator_content_backbuffer(int x, int y, int width, int height) {
@@ -771,7 +776,7 @@ void draw_taskbar_backbuffer() {
     // Botón inicio
     fill_rect_backbuffer(2, 187, 50, 11, WIN_GREEN);
     draw_rect_backbuffer(2, 187, 50, 11, WIN_BLACK);
-    draw_string_backbuffer(8, 188, WIN_BLACK, "Start");
+    draw_string_backbuffer(8, 188, WIN_BLACK, "START");
     
     // Botones de aplicaciones
     for(int i = 0; i < 4; i++) {
@@ -796,9 +801,9 @@ void draw_taskbar_backbuffer() {
     }
     
     // Reloj
-    fill_rect_backbuffer(280, 187, 38, 11, WIN_LIGHT_GREY);
-    draw_rect_backbuffer(280, 187, 38, 11, WIN_BLACK);
-    draw_string_backbuffer(285, 188, WIN_BLACK, "12:00");
+    //fill_rect_backbuffer(280, 187, 38, 11, WIN_LIGHT_GREY);
+    //draw_rect_backbuffer(280, 187, 38, 11, WIN_BLACK);
+    //draw_string_backbuffer(285, 188, WIN_BLACK, "12:00");
 }
 
 void draw_start_menu_backbuffer() {
@@ -807,17 +812,14 @@ void draw_start_menu_backbuffer() {
     fill_rect_backbuffer(start_menu_x, start_menu_y - 80, 80, 80, WIN_LIGHT_GREY);
     draw_rect_backbuffer(start_menu_x, start_menu_y - 80, 80, 80, WIN_BLACK);
     
-    draw_string_backbuffer(start_menu_x + 5, start_menu_y - 75, WIN_BLACK, "Programs");
     draw_line_backbuffer(start_menu_x + 5, start_menu_y - 70, start_menu_x + 75, start_menu_y - 70, WIN_DARK_GREY);
     
-    draw_string_backbuffer(start_menu_x + 5, start_menu_y - 60, WIN_BLACK, "Documents");
+    draw_string_backbuffer(start_menu_x + 5, start_menu_y - 60, WIN_BLACK, "DOC.");
     draw_string_backbuffer(start_menu_x + 5, start_menu_y - 50, WIN_BLACK, "Settings");
     draw_string_backbuffer(start_menu_x + 5, start_menu_y - 40, WIN_BLACK, "Find");
-    draw_string_backbuffer(start_menu_x + 5, start_menu_y - 30, WIN_BLACK, "Help");
     draw_line_backbuffer(start_menu_x + 5, start_menu_y - 25, start_menu_x + 75, start_menu_y - 25, WIN_DARK_GREY);
     
-    draw_string_backbuffer(start_menu_x + 5, start_menu_y - 15, WIN_BLACK, "Run...");
-    draw_string_backbuffer(start_menu_x + 5, start_menu_y - 5, WIN_BLACK, "Shutdown");
+    draw_string_backbuffer(start_menu_x + 5, start_menu_y - 10, WIN_BLACK, "Shutdown");
 }
 
 void draw_desktop_backbuffer() {
