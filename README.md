@@ -1,6 +1,6 @@
-### BlueOS (kernel)
+### BlueOS 
 
-This is an "optimized" OS designed
+This is an "optimized" **OS** designed
 for both databases and general use; inspired
 by Linux/Unix.
 
