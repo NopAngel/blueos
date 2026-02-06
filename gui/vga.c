@@ -1,6 +1,7 @@
 #include <include/gui/vga.h>
 
 // a global VGA buffer
+static char back_buffer[VGA_MAX];
 static char* g_vga_buffer;
 
 static inline unsigned char custom_inb(unsigned short port) {
@@ -108,28 +109,38 @@ void init_vga_fnc()
   vga_clear_screen();
 }
 
-void putpixel(short x, short y, char color)
-{
-  int index = 0;
-  index = 320 * y + x;
-  if(index < VGA_MAX)
-    g_vga_buffer[index] = color;
+void putpixel(short x, short y, char color) {
+    if(x >= 0 && x < 320 && y >= 0 && y < 200) {
+        back_buffer[320 * y + x] = color;
+    }
 }
 
-void draw_line(short x1, short y1, short x2, short y2, char color)
-{
-  if(y1 == y2){
-    for(short i = x1; i <= x2; i++)
-      putpixel(i, y1, color);
-    return;
-  }
+void draw_line(short x1, short y1, short x2, short y2, char color) {
+    int dx =  abs(x2 - x1), sx = x1 < x2 ? 1 : -1;
+    int dy = -abs(y2 - y1), sy = y1 < y2 ? 1 : -1;
+    int err = dx + dy, e2;
 
-  if(x1 == x2){
-    for(short i = y1; i <= y2; i++){
-      putpixel(x1, i, color);
+    for (;;) {
+        putpixel(x1, y1, color);
+        if (x1 == x2 && y1 == y2) break;
+        e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x1 += sx; }
+        if (e2 <= dx) { err += dx; y1 += sy; }
     }
-    return;
-  }
+}
+
+int abs(int v) { return v < 0 ? -v : v; }
+
+void vga_update() {
+    __asm__ volatile (
+        "movl %0, %%ecx\n"      // VGA_MAX / 4 (para copiar de 4 en 4 bytes)
+        "movl %1, %%esi\n"      
+        "movl %2, %%edi\n"      
+        "rep movsl\n"           
+        :
+        : "g"(VGA_MAX / 4), "r"(back_buffer), "r"(g_vga_buffer)
+        : "ecx", "esi", "edi", "memory"
+    );
 }
 
 void draw_rect(short x, short y, short width, short height, char color)
@@ -146,15 +157,14 @@ void fill_screen(char color)
         g_vga_buffer[i] = color;
 }
 
-void fill_rect(short x, short y, short width, short height, char color)
-{
-  draw_line(x, y, x, y + height, color);
-  draw_line(x, y, x + width, y, color);
-  draw_line(x + width, y, x + width, y + height, color);
-  draw_line(x, y + height, x + width, y + height, color);
-  for(int i = y; i < y + height; i++){
-    draw_line(x, i, x + width, i, color);
-  }
+void fill_rect(short x, short y, short width, short height, char color) {
+    for (int i = 0; i < height; i++) {
+     
+        char* dest = &back_buffer[320 * (y + i) + x];
+        for (int j = 0; j < width; j++) {
+            dest[j] = color; 
+        }
+    }
 }
 
 void draw_bresenham_circle(int xc, int yc, int x, int y, char color)

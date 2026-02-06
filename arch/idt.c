@@ -35,14 +35,14 @@ void idt_init(void) {
     idtp.limit = (sizeof(struct idt_entry) * IDT_ENTRIES) - 1;
     idtp.base = (uint32_t)&idt;
 
-    // Limpiar IDT
+
     for (int i = 0; i < IDT_ENTRIES; i++) {
         idt_set_gate(i, 0, 0, 0);
     }
 
-    // Configurar IRQs (0x20 + número de IRQ)
+
     idt_set_gate(32, (uint32_t)irq0, 0x08, 0x8E);  // IRQ0
-    idt_set_gate(33, (uint32_t)irq1, 0x08, 0x8E);  // IRQ1 - Teclado
+    idt_set_gate(33, (uint32_t)irq1, 0x08, 0x8E);  // IRQ1 - keyboard
     idt_set_gate(34, (uint32_t)irq2, 0x08, 0x8E);  // IRQ2
     idt_set_gate(35, (uint32_t)irq3, 0x08, 0x8E);  // IRQ3
     idt_set_gate(36, (uint32_t)irq4, 0x08, 0x8E);  // IRQ4

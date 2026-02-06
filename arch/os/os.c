@@ -1,30 +1,24 @@
 #include <include/gui/vga.h>
 #include <include/gui/bitmap.h>
+#include <include/gui/window.h>
+#include <include/panic.h>
 
 int cursor_x;
 int cursor_y;
 
 extern int bitmaps_0_9[10][8];
 extern int bitmaps_A_Z[26][8];
-
+extern Window windows[];
 #define MOUSE_DATA_PORT 0x60
 #define PS2_CMD_PORT 0x64
 
-// Bits del status byte
+
 #define LEFT_BUTTON   0x01
 #define RIGHT_BUTTON  0x02
 #define ALWAYS_1      0x08
 #define X_SIGN        0x10
 #define Y_SIGN        0x20
 
-typedef struct {
-    int x, y;
-    int width, height;
-    char title[32];
-    char visible;
-    char dragging;
-    int content_id; // 0=terminal, 1=calc, 2=paint
-} Window;
 
 typedef struct {
     int x, y;
@@ -39,13 +33,13 @@ char mouse_left_pressed = 0;
 char mouse_right_pressed = 0;
 char mouse_enabled = 0;
 
-
+/*
 Window windows[3] = {
     {50, 50, 200, 150, "BlueSH", 0, 0, 0},
     {100, 80, 180, 120, "BlueCalc", 0, 0, 1},
     {80, 60, 220, 180, "PAINT", 0, 0, 2}
 };
-
+*/
 TaskbarButton taskbar_buttons[4] = {
     {5, 185, "TERM", 0, 0},
     {85, 185, "CALC", 1, 0},
@@ -193,7 +187,7 @@ void mouse_handler() {
                         if(mouse_x >= windows[i].x && mouse_x <= windows[i].x + windows[i].width &&
                            mouse_y >= windows[i].y && mouse_y <= windows[i].y + 20) {
                             windows[i].dragging = 1;
-                            // Traer al frente
+                            
                             for(int j = 0; j < 3; j++) {
                                 if(j != i) windows[j].dragging = 0;
                             }
@@ -259,15 +253,27 @@ void mouse_handler() {
 }
 
 void swap_buffers() {
-    for(int i = 0; i < VGA_SIZE; i++) {
-        front_buffer[i] = back_buffer[i];
-    }
+    __asm__ volatile (
+        "cld\n"
+        "rep movsl"
+        :
+        : "S"(back_buffer), "D"(front_buffer), "c"(VGA_SIZE / 4)
+        : "memory"
+    );
 }
 
 void fill_backbuffer(char color) {
-    for(int i = 0; i < VGA_SIZE; i++) {
-        back_buffer[i] = color;
-    }
+
+    unsigned int c = (unsigned char)color;
+    unsigned int full_color = (c << 24) | (c << 16) | (c << 8) | c;
+
+    __asm__ volatile (
+        "cld\n"
+        "rep stosl"
+        :
+        : "a"(full_color), "D"(back_buffer), "c"(VGA_SIZE / 4)
+        : "memory"
+    );
 }
 
 void putpixel_backbuffer(short x, short y, char color) {
@@ -576,46 +582,51 @@ void draw_string_backbuffer(short x, short y, char color, const char *str) {
 }
 
 void fill_rect_backbuffer(short x, short y, short width, short height, char color) {
-    for(int row = y; row < y + height; row++) {
-        draw_line_backbuffer(x, row, x + width, row, color);
+   
+    if (x < 0) { width += x; x = 0; }
+    if (y < 0) { height += y; y = 0; }
+    if (x + width > 320) width = 320 - x;
+    if (y + height > 200) height = 200 - y;
+    if (width <= 0 || height <= 0) return;
+
+    for (int i = 0; i < height; i++) {
+        
+        char* dest = &back_buffer[(y + i) * 320 + x];
+        
+        
+        __asm__ volatile (
+            "cld\n"
+            "rep stosb"
+            :
+            : "a"(color), "D"(dest), "c"(width)
+            : "memory"
+        );
     }
 }
 
 
 
 void draw_window_98_backbuffer(int x, int y, int width, int height, char* title, char active) {
+   
+    fill_rect_backbuffer(x, y, width, height, WIN_GREY);
 
-    draw_rect_backbuffer(x, y, width, height, WIN_DARK_GREY);
-
-    draw_rect_backbuffer(x+1, y+1, width-2, height-2, WIN_LIGHT_GREY);
+    draw_line_backbuffer(x, y, x + width, y, WIN_WHITE);
+    draw_line_backbuffer(x, y, x, y + height, WIN_WHITE);
+    
+    draw_line_backbuffer(x, y + height, x + width, y + height, WIN_DARK_GREY);
+    draw_line_backbuffer(x + width, y, x + width, y + height, WIN_DARK_GREY);
 
     if(active) {
-        fill_rect_backbuffer(x+3, y+3, width-6, 16, WIN_BLUE);
+        fill_rect_backbuffer(x+3, y+3, width-6, 16, WIN_BLUE); 
     } else {
-        fill_rect_backbuffer(x+3, y+3, width-6, 16, WIN_DARK_BLUE);
+        fill_rect_backbuffer(x+3, y+3, width-6, 16, WIN_DARK_GREY); 
     }
 
-    fill_rect_backbuffer(x + width - 20, y + 5, 14, 12, WIN_RED);
-    draw_rect_backbuffer(x + width - 20, y + 5, 14, 12, WIN_BLACK);
 
-    fill_rect_backbuffer(x + width - 40, y + 5, 14, 12, WIN_GREY);
-    draw_rect_backbuffer(x + width - 40, y + 5, 14, 12, WIN_BLACK);
-    draw_line_backbuffer(x + width - 37, y + 11, x + width - 27, y + 11, WIN_BLACK);
-
-    fill_rect_backbuffer(x + width - 60, y + 5, 14, 12, WIN_GREY);
-    draw_rect_backbuffer(x + width - 60, y + 5, 14, 12, WIN_BLACK);
-
-    int title_x = x + 8;
-    int title_y = y + 6;
-    int idx = 0;
-    while(title[idx]) {
-        draw_char_backbuffer(title_x, title_y, WIN_WHITE, title[idx]);
-        title_x += 9;
-        idx++;
-    }
-
-    fill_rect_backbuffer(x+3, y+22, width-6, height-25, WIN_WHITE);
-    draw_rect_backbuffer(x+3, y+22, width-6, height-25, WIN_BLACK);
+    draw_string_backbuffer(x + 9, y + 7, WIN_BLACK, title); 
+    draw_string_backbuffer(x + 8, y + 6, WIN_WHITE, title); 
+    
+  
 }
 
 void draw_terminal_content_backbuffer(int x, int y, int width, int height) {
@@ -818,14 +829,15 @@ void draw_cursor_backbuffer() {
     putpixel_backbuffer(x + 2, y + 2, WIN_BLACK);
 }
 
-// ========== FUNCIÓN PRINCIPAL ==========
 int k_main(void) {
     init_vga_fnc();
+    init_windows();
+    create_window(0, 50, 50, 200, 150, "xd");
 
     mouse_init();
 
     windows[0].visible = 1;
-
+/*
     while(1) {
 
         if(inb(PS2_CMD_PORT) & 1) {
@@ -881,6 +893,48 @@ int k_main(void) {
 
         delay(100);
     }
+*/
+while(1) {
+   // check_input_devices();
+     if(inb(PS2_CMD_PORT) & 1) {
+            if(inb(PS2_CMD_PORT) & 0x20) {
+                mouse_handler();
+            }
+        }
+    fill_backbuffer(WIN_GREEN);
+    draw_all_windows();
 
+    for(int i = 0; i < 4; i++) {
+        if(windows[i].visible) {
+            draw_window_98_backbuffer(windows[i].x, windows[i].y, 
+                                      windows[i].width, windows[i].height, 
+                                      windows[i].title, windows[i].dragging);
+        }
+    }
+    
+
+    draw_rect_backbuffer(mouse_x, mouse_y, 4, 4, WIN_WHITE); 
+    draw_cursor_backbuffer();
+    swap_buffers(); 
+}
     return 0;
 }
+
+
+/*
+
+void draw_status_bar() {
+    update_battery_status();
+    
+    char level_txt[10];
+    simple_itoa(get_bat_level(), level_txt);
+    
+    draw_string_backbuffer(250, 5, GUI_WHITE, "BAT:");
+    draw_string_backbuffer(285, 5, GUI_WHITE, level_txt);
+    draw_string_backbuffer(305, 5, GUI_WHITE, "%");
+    
+    if (get_bat_charging()) {
+        draw_string_backbuffer(230, 5, GUI_YELLOW, "!");
+    }
+}
+*/

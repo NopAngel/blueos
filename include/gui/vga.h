@@ -62,6 +62,8 @@ void vga_clear_screen();
 void clear_color(char color);
 void putpixel(short x, short y, char color);
 void draw_line(short x1, short y1, short x2, short y2, char color);
+int abs(int v);
+void vga_update();
 void draw_rect(short x, short y, short width, short height, char color);
 void fill_screen(char color);
 void fill_rect(short x, short y, short width, short height, char color);

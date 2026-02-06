@@ -1,0 +1,1 @@
+/mnt/c/Users/angel/OneDrive/Desktop/workspace/blueos/rust/target/i686-unknown-linux-gnu/release/librust.a: /mnt/c/Users/angel/OneDrive/Desktop/workspace/blueos/rust/src/lib.rs /mnt/c/Users/angel/OneDrive/Desktop/workspace/blueos/rust/src/security.rs /mnt/c/Users/angel/OneDrive/Desktop/workspace/blueos/rust/src/virt.rs

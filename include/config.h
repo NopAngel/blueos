@@ -2,7 +2,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// Definir las constantes del teclado aquí también para acceso global
 #define KEY_NONE 0x00
 #define KEY_ESC 0x01
 #define KEY_BACKSPACE 0x0E

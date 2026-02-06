@@ -5,7 +5,7 @@
 use core::ptr::{read_volatile, write_volatile};
 use core::mem::zeroed;
 
-// Constantes DRM
+
 const DRM_IOCTL_BASE: u32 = 0x64;
 const DRM_IOCTL_MODE_GETRESOURCES: u32 = 0xC0106400;
 const DRM_IOCTL_MODE_GETCONNECTOR: u32 = 0xC01C6407;
@@ -14,7 +14,6 @@ const DRM_IOCTL_MODE_CREATE_DUMB: u32 = 0xC0206401;
 const DRM_IOCTL_MODE_MAP_DUMB: u32 = 0xC0106403;
 const DRM_IOCTL_MODE_PAGE_FLIP: u32 = 0xC018640D;
 
-// Estructuras DRM
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 struct DrmModeRes {
@@ -140,7 +139,6 @@ struct DrmModeMapDumb {
     offset: u64,
 }
 
-// Driver DRM principal
 struct DrmDevice {
     fd: i32,
     resources: DrmModeRes,
@@ -450,7 +448,6 @@ impl DrmDevice {
     }
 }
 
-// Funciones de ayuda
 fn rgb(r: u8, g: u8, b: u8) -> u32 {
     (b as u32) << 16 | (g as u32) << 8 | (r as u32)
 }
@@ -459,14 +456,12 @@ fn rgb(r: u8, g: u8, b: u8) -> u32 {
 pub extern "C" fn _start() -> ! {
     unsafe {
         let mut drm = DrmDevice::new();
-        
-        // Abrir dispositivo DRM
+       
         let card_path = b"/dev/dri/card0\0";
         if drm.open(card_path) < 0 {
             panic!("No se pudo abrir dispositivo DRM");
         }
-        
-        // Obtener recursos
+   
         if drm.get_resources() < 0 {
             panic!("No se pudieron obtener recursos DRM");
         }
@@ -475,7 +470,7 @@ pub extern "C" fn _start() -> ! {
             panic("Monitor no conectado");
         }
         
-        // Crear framebuffer
+       
         let width = drm.mode.hdisplay as u32;
         let height = drm.mode.vdisplay as u32;
         
@@ -483,28 +478,26 @@ pub extern "C" fn _start() -> ! {
             panic("No se pudo crear framebuffer");
         }
         
-        // Ejemplo: dibujar algo
-        drm.clear_screen(rgb(0, 0, 0));  // Fondo negro
         
-        // Dibujar rectángulo rojo
+        drm.clear_screen(rgb(0, 0, 0));
+        
+       
         drm.fill_rect(100, 100, 200, 150, rgb(255, 0, 0));
         
-        // Dibujar rectángulo verde
         drm.fill_rect(400, 200, 150, 200, rgb(0, 255, 0));
         
-        // Dibujar píxeles azules
+      
         for i in 0..50 {
             drm.draw_pixel(50 + i, 50 + i, rgb(0, 0, 255));
         }
         
-        // Bucle infinito
+      
         loop {
             asm!("wfe");
         }
     }
 }
 
-// Manejo de panic
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     unsafe {

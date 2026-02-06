@@ -10,10 +10,40 @@
 #include <include/version.h>
 #include <include/gui/dosbox/main.h>
 #include <include/gui/dosbox/utils.h>
-
-
+#include <include/interrupts.h>
 int cursor_x = 0;
 int cursor_y = 0;
+
+
+//RUST
+
+
+
+extern int is_command_safe(const char* cmd, int len);
+extern int suma_rust(int a, int b) __asm__("suma_rust");
+extern void loadpin_init(int device_id);
+extern int loadpin_check(int device_id);
+extern void __stack_chk_fail(void);
+extern int ipe_verify_binary(const unsigned char* buffer, int size);
+extern int landlock_restrict(int pid, unsigned int min, unsigned int max, int io);
+extern int landlock_check_mem(int pid, unsigned int addr);
+
+void kernel_write_mem(int pid, unsigned int addr, char value) {
+    if (landlock_check_mem(pid, addr)) {
+        *(char*)addr = value;
+    } else {
+        printk("LANDLOCK: Bloqueado acceso ilegal a memoria del PID %d!", pid, RED);
+       
+    }
+}
+
+
+
+
+__attribute__((visibility("hidden"))) 
+void __stack_chk_fail_local(void) {
+    __stack_chk_fail();
+}
 
 void splash_screen()
 {
@@ -22,15 +52,36 @@ void splash_screen()
 }
 
 
-int k_main(void)
+
+void load_and_run_program(unsigned char* program_buffer, int size) {
+    printk("IPE: Verifying program integrity...", cursor_y++, WHITE);
+
+    int status = ipe_verify_binary(program_buffer, size);
+
+    if (status == 1) {
+        printk("IPE: [OK] Valid signature. Running...", cursor_y++, GREEN);
+        
+    
+        // ((void (*)(void))program_buffer)(); 
+        
+    } else {
+        printk("SECURITY ALERT: Attempted to run unauthorized binary!", cursor_y++, RED);
+
+    }
+}
+
+
+
+void k_main(void)
 {
     init_all();
     init_vga(VGA_WHITE, VGA_BLACK);
-
     clear_screen();
     splash_screen();
+
     cursor_y++;
     cursor_y++;
+   
 
 
     while (1) {
