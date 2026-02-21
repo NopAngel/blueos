@@ -2,9 +2,24 @@
 #include "idt.h"
 #include "ports.h"
 #include <include/printk.h>
+extern void syscall_isr_wrapper(void);
 
-struct idt_entry idt[IDT_ENTRIES];
+struct idt_ptr {
+    uint16_t limit;
+    uint32_t base;
+} __attribute__((packed));
+
+struct idt_entry {
+    uint16_t base_low;
+    uint16_t selector;
+    uint8_t  zero;
+    uint8_t  flags;
+    uint16_t base_high;
+} __attribute__((packed));
+
+
 struct idt_ptr idtp;
+struct idt_entry idt[256];
 
 extern void irq0(void);
 extern void irq1(void);
@@ -32,11 +47,11 @@ void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags) {
 }
 
 void idt_init(void) {
-    idtp.limit = (sizeof(struct idt_entry) * IDT_ENTRIES) - 1;
-    idtp.base = (uint32_t)&idt;
+    idtp.limit = (sizeof(struct idt_entry) * 256) - 1;
+    idtp.base  = (uint32_t)&idt;
 
 
-    for (int i = 0; i < IDT_ENTRIES; i++) {
+    for(int i = 0; i < 256; i++) {
         idt_set_gate(i, 0, 0, 0);
     }
 
@@ -57,7 +72,8 @@ void idt_init(void) {
     idt_set_gate(45, (uint32_t)irq13, 0x08, 0x8E); // IRQ13
     idt_set_gate(46, (uint32_t)irq14, 0x08, 0x8E); // IRQ14
     idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E); // IRQ15
-
-    idt_load(&idtp);
-    printk("IDT cargada\n", 0, 0x0F);
+    idt_set_gate(128, (uint32_t)syscall_isr_wrapper, 0x08, 0xEE);
+    
+    idt_load((uint32_t)&idtp);
+    printk(WHITE, "IDT: IRQs y Syscalls (0x80) cargadas\n");
 }

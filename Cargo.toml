@@ -7,5 +7,5 @@ edition = "2021"
 crate-type = ["staticlib"]
 
 [profile.release]
-panic = "abort"    # Los kernels no saben qué hacer con un pánico complejo
-lto = true         # Optimización total para que el archivo sea pequeño
+panic = "abort"    
+lto = true         

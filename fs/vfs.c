@@ -1,6 +1,16 @@
 #include "../include/fs/vfs.h"
+#include "../include/fs/fs.h"
+#include <include/colors.h>
 
 extern int cursor_y;
+extern unsigned int directory_count;
+extern unsigned int file_count;
+extern DirectoryEntry directory_table[MAX_DIRECTORIES];
+extern FileEntry file_table[MAX_FILES];
+
+
+vfs_node_t vfs_nodes[MAX_VFS_NODES];
+int total_vfs_nodes = 0;
 
 static vfs_system vfs;
 static vfs_file_handle open_files[VFS_MAX_OPEN_FILES];
@@ -10,6 +20,9 @@ static char read_buffer[VFS_MAX_CONTENT];
 
 static char data_blocks[VFS_MAX_ENTRIES][VFS_MAX_CONTENT];
 
+vfs_system* get_vfs_instance(void) {
+    return &vfs;
+}
 
 static void vfs_memset(void *ptr, char value, unsigned int size) {
     char *p = (char *)ptr;
@@ -60,8 +73,6 @@ void vfs_init(void) {
     vfs.entry_count = 1;
     vfs.current_directory = 0;
     vfs.root_directory = 0;
-    
-    printk("VFS initialized", cursor_y++, GREEN);
 }
 
 static unsigned int vfs_allocate_inode(void) {
@@ -133,7 +144,7 @@ static int vfs_remove_entry(unsigned int inode) {
 int vfs_mkdir(const char *name) {
     unsigned int name_len = strlen(name);
     if (name_len >= VFS_MAX_NAME) {
-        printk("ERR: Name too long", cursor_y++, RED);
+        printk(RED, "ERR: Name too long");
         return -1;
     }
     
@@ -151,27 +162,34 @@ int vfs_mkdir(const char *name) {
     int result = vfs_add_entry(&new_dir);
     if (result < 0) {
         if (result == -2) {
-            printk("ERR: Directory already exists", cursor_y++, RED);
+            printk(RED, "ERR: Directory already exists");
         } else {
-            printk("ERR: Cannot create directory", cursor_y++, RED);
+            printk(RED, "ERR: Cannot create directory");
         }
         return -1;
     }
     
-    printk("Directory created", cursor_y++, GREEN);
+    printk(WHITE, "VFS: Directory created\n");
+
     return 0;
+}
+
+void vfs_create_sys_node(const char *path, int (*read_fn)(char *)) {
+
+    printk(WHITE, "\nVFS: Registered sys-node: %s\n", path);
+
 }
 
 int vfs_create(const char *name, const char *content) {
     unsigned int name_len = strlen(name);
     if (name_len >= VFS_MAX_NAME) {
-        printk("ERR: Name too long", cursor_y++, RED);
+        printk(RED, "ERR: Name too long");
         return -1;
     }
     
     unsigned int content_len = strlen(content);
     if (content_len >= VFS_MAX_CONTENT) {
-        printk("ERR: Content too large", cursor_y++, RED);
+        printk(RED, "ERR: Content too large");
         return -2;
     }
     
@@ -192,21 +210,21 @@ int vfs_create(const char *name, const char *content) {
     int result = vfs_add_entry(&new_file);
     if (result < 0) {
         if (result == -2) {
-            printk("ERR: File already exists", cursor_y++, RED);
+            printk(RED, "ERR: File already exists");
         } else {
-            printk("ERR: Cannot create file", cursor_y++, RED);
+            printk(RED, "ERR: Cannot create file");
         }
         return -1;
     }
     
-    printk("File created", cursor_y++, GREEN);
+    printk(GREEN, "File created");
     return 0;
 }
 
 char* vfs_read(const char *name) {
     vfs_entry *file = vfs_find_in_directory(vfs.current_directory, name, VFS_TYPE_FILE);
     if (file == NULL) {
-        printk("ERR: File not found", cursor_y++, RED);
+        printk(RED, "ERR: File not found");
         return NULL;
     }
     
@@ -224,7 +242,7 @@ int vfs_write(const char *name, const char *content) {
     
     unsigned int content_len = strlen(content);
     if (content_len >= VFS_MAX_CONTENT) {
-        printk("ERR: Content too large", cursor_y++, RED);
+        printk(RED, "ERR: Content too large");
         return -1;
     }
     
@@ -232,8 +250,45 @@ int vfs_write(const char *name, const char *content) {
     file->size = content_len;
     data_blocks[file->data_block][content_len] = '\0';
     
-    printk("File written", cursor_y++, GREEN);
+    printk(GREEN, "File written");
     return 0;
+}
+
+void vfs_register_node(const char *path, int is_dir, int (*callback)(char *)) {
+    if (total_vfs_nodes >= MAX_VFS_NODES) return;
+
+    strncpy(vfs_nodes[total_vfs_nodes].path, path, 254);
+    vfs_nodes[total_vfs_nodes].is_directory = is_dir;
+    vfs_nodes[total_vfs_nodes].read_callback = callback;
+    strcpy(directory_table[directory_count].name, "sys");
+    directory_table[directory_count].is_vfs = 1;
+    directory_table[directory_count].parent_dir = 0;
+    total_vfs_nodes++;
+}
+void vfs_list_files_in_dir(const char *dir_path) {
+    int dir_len = strlen(dir_path);
+    
+    for (int i = 0; i < total_vfs_nodes; i++) {
+        /* Check if the node path starts with the current directory */
+        if (strncmp(vfs_nodes[i].path, dir_path, dir_len) == 0) {
+            
+            /* Pointer to the name after the directory prefix */
+            char *name = vfs_nodes[i].path + dir_len;
+
+            /* If it's the root directory or starts with slash, skip the slash */
+            if (*name == '/') name++;
+
+            /* Only list items in the immediate directory (no deeper slashes) */
+            if (strlen(name) > 0 && strchr(name, '/') == 0) {
+                if (vfs_nodes[i].is_directory) {
+                    printk(CYAN, "%s/  ", name);
+                } else {
+                    printk(WHITE, "%s  ", name);
+                }
+            }
+        }
+    }
+    printk(WHITE, "\n");
 }
 
 int vfs_delete(const char *name) {
@@ -243,44 +298,43 @@ int vfs_delete(const char *name) {
     }
     
     if (entry == NULL) {
-        printk("ERR: Entry not found", cursor_y++, RED);
+        printk(RED, "ERR: Entry not found");
         return -1;
     }
     
     int result = vfs_remove_entry(entry->inode);
     if (result < 0) {
         if (result == -3) {
-            printk("ERR: Directory not empty", cursor_y++, RED);
+            printk(RED, "ERR: Directory not empty");
         } else {
-            printk("ERR: Cannot delete", cursor_y++, RED);
+            printk(RED, "ERR: Cannot delete");
         }
         return -1;
     }
     
-    printk("Entry deleted", cursor_y++, GREEN);
+    printk(GREEN, "Entry deleted");
     return 0;
 }
 
 void vfs_ls(void) {
-    cursor_y++;
-    printk(".", cursor_y++, BLUE);
-    printk("..", cursor_y++, BLUE);
+    printk(CYAN, "  .  \n  .. "); 
+
     
     unsigned int count = 0;
     
     for (unsigned int i = 0; i < vfs.entry_count; i++) {
         if (vfs.entries[i].parent == vfs.current_directory) {
             if (vfs.entries[i].type == VFS_TYPE_DIRECTORY) {
-                printk(vfs.entries[i].name, cursor_y++, BLUE);
+                printk(BLUE, "\n  %s/", vfs.entries[i].name);
             } else {
-                printk(vfs.entries[i].name, cursor_y++, GRAY);
+                printk(GRAY, "\n  %s", vfs.entries[i].name);
             }
             count++;
         }
     }
     
     if (count == 0) {
-        printk("Empty directory", cursor_y++, RED);
+        printk(RED, "Empty directory");
     }
     
     cursor_y++;
@@ -304,7 +358,7 @@ int vfs_cd(const char *path) {
 
     vfs_entry *dir = vfs_find_in_directory(vfs.current_directory, path, VFS_TYPE_DIRECTORY);
     if (dir == NULL) {
-        printk("ERR: Directory not found", cursor_y++, RED);
+        printk(RED, "ERR: Directory not found");
         return -1;
     }
     
@@ -453,4 +507,80 @@ int vfs_write_fd(int fd, const char *buffer, unsigned int size) {
     }
     
     return size;
+}
+void vfs_cat(const char *name) {
+    vfs_system* sys = get_vfs_instance();
+    int found = 0;
+
+    for (unsigned int i = 0; i < sys->entry_count; i++) { 
+        if (strcmp(sys->entries[i].name, name) == 0 && 
+            sys->entries[i].parent == sys->current_directory) {
+        
+            if (sys->entries[i].type == VFS_TYPE_DIRECTORY) {
+                printk(RED, "cat: %s: Is a directory\n", name);
+                return;
+            }
+
+            printk(WHITE, "%s\n", data_blocks[sys->entries[i].data_block]);
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found) {
+        printk(RED, "cat: %s: No such file\n", name);
+    }
+}
+
+
+
+void vfs_rm(const char *name) {
+    vfs_system* sys = get_vfs_instance();
+    
+    for (unsigned int i = 0; i < sys->entry_count; i++) {
+        if (strcmp(sys->entries[i].name, name) == 0 && 
+            sys->entries[i].parent == sys->current_directory) {
+            
+            if (sys->entries[i].type == VFS_TYPE_DIRECTORY) {
+                printk(RED, "\nrm: %s is a directory. Use rmdir.\n", name);
+                return;
+            }
+
+           
+            vfs_memset(data_blocks[sys->entries[i].data_block], 0, VFS_MAX_CONTENT);
+            
+            for (unsigned int j = i; j < sys->entry_count - 1; j++) {
+                sys->entries[j] = sys->entries[j + 1];
+            }
+            sys->entry_count--;
+            
+            printk(GREEN, "\nFile '%s' removed.\n", name);
+            return;
+        }
+    }
+    printk(RED, "\nrm: %s not found.\n", name);
+}
+
+void vfs_rmdir(const char *name) {
+    vfs_system* sys = get_vfs_instance();
+    
+    for (unsigned int i = 0; i < sys->entry_count; i++) {
+        if (strcmp(sys->entries[i].name, name) == 0 && 
+            sys->entries[i].parent == sys->current_directory) {
+            
+            if (sys->entries[i].type != VFS_TYPE_DIRECTORY) {
+                printk(RED, "\nrmdir: %s is not a directory.\n", name);
+                return;
+            }
+
+            for (unsigned int j = i; j < sys->entry_count - 1; j++) {
+                sys->entries[j] = sys->entries[j + 1];
+            }
+            sys->entry_count--;
+            
+            printk(GREEN, "\nDirectory '%s' removed.\n", name);
+            return;
+        }
+    }
+    printk(RED, "\nrmdir: %s not found.\n", name);
 }

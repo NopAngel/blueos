@@ -2,7 +2,7 @@
 typedef struct {
     unsigned char dest_mac[6];
     unsigned char src_mac[6];
-    unsigned short type; // 0x0800 para IPv4, 0x0806 para ARP
+    unsigned short type; // 0x0800
 } __attribute__((packed)) ethernet_frame_t;
 
 typedef struct {

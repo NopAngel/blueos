@@ -1,12 +1,9 @@
-#ifndef KEYBOARD_H
-#define KEYBOARD_H
+#ifndef _DRIVERS_KEYBOARD_H
+#define _DRIVERS_KEYBOARD_H
 
-unsigned char read_scancode();
 
+void put_char(char c, unsigned int color);
 void scroll_screen();
-
-void put_char(char c);
-int process_input ();
 void keyboard_handler();
 
 #endif

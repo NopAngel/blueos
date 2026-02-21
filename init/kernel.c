@@ -1,4 +1,13 @@
-// arch/kernel.c
+/*
+ * BlueOS arch/kernel.c
+ *
+ * Copyright (C) 2024-2026  NopAngel <angelgabrielnieto@outlook.com>
+ *
+ * This is the main entry point for the BlueOS Kernel.
+ * Based on the architecture of the Linux start_kernel sequence.
+ * * "Any OS that doesn't boot into a shell is just a bootloader."
+ */
+
 #include <include/colors.h>
 #include <include/printk.h>
 #include <include/ports.h>
@@ -8,110 +17,112 @@
 #include <include/fs/vfs.h>
 #include <include/fs/fs.h>
 #include <include/version.h>
-#include <include/gui/dosbox/main.h>
-#include <include/gui/dosbox/utils.h>
 #include <include/interrupts.h>
-int cursor_x = 0;
-int cursor_y = 0;
+#include <include/multilru.h>
+#include <include/profile.h>
+#include <include/auth.h>
+#include <include/task.h>
+#include <include/sysfs.h>
+#include <include/sysctl.h>
+#include <include/kernel/module.h>
+/* System states, similar to those found in linux/include/linux/kernel.h */
+enum system_states {
+    SYSTEM_BOOTING,
+    SYSTEM_RUNNING,
+    SYSTEM_PANIC
+} system_state;
 
+page_t system_page;
+page_t user_page;
+extern int current_user_index; /* Global user session state */
+extern module_t __this_module;
+/**
+ * _blueos_banner - Print kernel version and build information.
+ * * Equivalent to the early pr_notice() calls in Linux's start_kernel().
+ */
 
-//RUST
+extern char current_user[32];
+static void _blueos_banner() {
+    /* Print the primary kernel identification string */
+    printk(WHITE, "%s\n", get_kernel_banner());
 
+    /* Architecture-specific identification */
+    printk(WHITE, "CPU: %s architecture detected.\n", BLUEOS_ARCH);
 
-
-extern int is_command_safe(const char* cmd, int len);
-extern int suma_rust(int a, int b) __asm__("suma_rust");
-extern void loadpin_init(int device_id);
-extern int loadpin_check(int device_id);
-extern void __stack_chk_fail(void);
-extern int ipe_verify_binary(const unsigned char* buffer, int size);
-extern int landlock_restrict(int pid, unsigned int min, unsigned int max, int io);
-extern int landlock_check_mem(int pid, unsigned int addr);
-
-void kernel_write_mem(int pid, unsigned int addr, char value) {
-    if (landlock_check_mem(pid, addr)) {
-        *(char*)addr = value;
-    } else {
-        printk("LANDLOCK: Bloqueado acceso ilegal a memoria del PID %d!", pid, RED);
-       
-    }
+    /* Simulated boot arguments / Command line */
+    printk(WHITE, "\nCommand line: BOOT_IMAGE=/boot/vmlinuz-%s root=UUID=mem-fs ro quiet\n", 
+            UTS_RELEASE);
 }
 
-
-
-
-__attribute__((visibility("hidden"))) 
-void __stack_chk_fail_local(void) {
-    __stack_chk_fail();
+/**
+ * print_boot_logs - Output early boot dmesg simulation.
+ * * This provides the classic Linux 'timestamped' log look.
+ */
+static void print_boot_logs() {
+    printk(WHITE, "[    0.000000] x86/fpu: Supporting XSAVE with 0x002 bits\n");
+    printk(WHITE, "[    0.005000] BIOS-provided physical RAM map:\n");
+    printk(WHITE, "[    0.005123]  BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable\n");
+    printk(WHITE, "[    0.015842] ACPI: Core revision 20220210\n");
+    printk(WHITE, "[    0.020000] Memory: 2048M/4096M available (16384K kernel code)\n");
+    printk(WHITE, "[    0.032000] SLUB: Genslabs=2048, HWAlign=64, Order=0-3, MinObjects=0\n");
+    printk(WHITE, "[    0.040000] VFS: Mounted root (ramfs filesystem) on /dev/ram0\n");
+    printk(WHITE, "[    0.042000] devtmpfs: initialized and mounted\n");
 }
 
-void splash_screen()
-{
-    printk("  *BlueOS* (kernel)", cursor_y++, WHITE);
-    printk("type 'help' for a help", cursor_y++, WHITE);
-}
+/**
+ * rest_init - Finalize kernel initialization and spawn the login shell.
+ * * This follows the logic of the original rest_init() in linux/init/main.c.
+ * It transition from kernel-space initialization to user-space interaction.
+ */
+static void rest_init() {
 
-
-
-void load_and_run_program(unsigned char* program_buffer, int size) {
-    printk("IPE: Verifying program integrity...", cursor_y++, WHITE);
-
-    int status = ipe_verify_binary(program_buffer, size);
-
-    if (status == 1) {
-        printk("IPE: [OK] Valid signature. Running...", cursor_y++, GREEN);
-        
     
-        // ((void (*)(void))program_buffer)(); 
-        
-    } else {
-        printk("SECURITY ALERT: Attempted to run unauthorized binary!", cursor_y++, RED);
+    printk(WHITE, "[    0.100000] Run /sbin/init as init process\n");
+    printk(WHITE, "[    0.105000] Freeing unused kernel image memory: 2048K\n");
 
+    /* Terminal/TTY identification banner */
+    printk(WHITE, "\nBlueOS %s-generic tty1\n\n", UTS_RELEASE);
+    
+    /* Prompt handling for authentication */
+    if (current_user_index == -1) {
+        printk(WHITE, "blueos login: ");
+    } else {
+        printk(GREEN, "user@blueos");
+        printk(WHITE, ":~$ ");
     }
 }
-
-
 
 void k_main(void)
 {
     init_all();
-    init_vga(VGA_WHITE, VGA_BLACK);
+
+    /* Phase 1: Hardware Init */
+    system_state = SYSTEM_BOOTING;
     clear_screen();
-    splash_screen();
 
-    cursor_y++;
-    cursor_y++;
-   
+    /* Phase 2: Banner and Core Subsystems */
+    _blueos_banner();
+    
+    /* Phase 3: Subsystems initialization */
+    fs_init();
 
+    vfs_init();
+    
+    auth_init();
+    current_user_index = -1; 
 
+    task_init();
+    mm_init();
+    lru_init();
+    profile_init(0x100000, 0x200000);
+    
+    
+    
+
+    system_state = SYSTEM_RUNNING;
+    rest_init();
+    
     while (1) {
         keyboard_handler();
     }
 }
-// GUII
-// init_vga_fnc();
-// draw_string(50, 50, GUI_WHITE, "TEXT");
-
-
-
-/*
-
-void create_dosbox_ui()
-{
-  fill_box(0, 0, 0, BOX_MAX_WIDTH - 8, 14, VGA_BLUE);
-  draw_box(BOX_DOUBLELINE, 0, 0, BOX_MAX_WIDTH - 10, 12, VGA_WHITE, VGA_BLUE);
-
-  gotoxy(2, 1);
-  print_color_string("Alert", VGA_BRIGHT_GREEN, VGA_BLUE);
-
-  gotoxy(2, 3);
-  print_color_string("TESTING XD", VGA_WHITE, VGA_BLUE);
-
-  gotoxy(2, 4);
-  print_color_string("INTRO", VGA_YELLOW, VGA_BLUE);
-
-  gotoxy(0, 14);
-
-}
-
-*/

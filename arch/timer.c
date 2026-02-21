@@ -1,5 +1,5 @@
 #include <include/timer.h>
-#include <include/string/string.h>
+#include <include/lib/string.h>
 #include <include/printk.h>
 
 extern int cursor_y;

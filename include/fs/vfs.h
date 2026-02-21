@@ -1,16 +1,16 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
-#include "../printk.h"
-#include "../colors.h"
-#include "../string/string.h"
+#include <include/printk.h>
+#include <include/colors.h>
+#include <include/lib/string.h>
 
 #define VFS_MAX_PATH 256
 #define VFS_MAX_NAME 30
 #define VFS_MAX_CONTENT 1024
 #define VFS_MAX_ENTRIES 500
 #define VFS_MAX_OPEN_FILES 32
-
+#define MAX_VFS_NODES 256
 
 #ifndef NULL
 #define NULL ((void*)0)
@@ -39,6 +39,12 @@ typedef struct {
     unsigned int root_directory;    
 } vfs_system;
 
+typedef struct {
+    char path[255];
+    int is_directory;
+    int (*read_callback)(char *);
+} vfs_node_t;
+
 
 typedef struct {
     unsigned int inode;
@@ -57,6 +63,7 @@ int vfs_delete(const char *name);
 int vfs_cd(const char *path);
 void vfs_ls(void);
 char* vfs_pwd(void);
+void vfs_list_files_in_dir(const char *dir_path);
 int vfs_exists(const char *path);
 int vfs_open(const char *name, unsigned int mode);
 int vfs_close(int fd);
@@ -64,10 +71,12 @@ int vfs_read_fd(int fd, char *buffer, unsigned int size);
 int vfs_write_fd(int fd, const char *buffer, unsigned int size);
 vfs_entry* vfs_find_entry(const char *name, vfs_entry_type type);
 vfs_entry* vfs_get_entry_by_inode(unsigned int inode);
-
+void vfs_rmdir(const char *name);
+void vfs_rm(const char *name);
 
 static void vfs_memset(void *ptr, char value, unsigned int size);
 static void vfs_memcpy(void *dest, const void *src, unsigned int size);
 static void vfs_strcat(char *dest, const char *src);
+void vfs_cat(const char *name);
 
 #endif // __VFS_H__

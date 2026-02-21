@@ -18,7 +18,7 @@ pub extern "C" fn is_command_safe(command_ptr: *const u8, length: i32) -> i32 {
 }
 
 #[no_mangle]
-pub static mut __stack_chk_guard: u32 = 0x595a5553; // "SYSU" en hex, por ejemplo
+pub static mut __stack_chk_guard: u32 = 0x595a5553; // "SYSU" in hex
 
 #[no_mangle]
 pub extern "C" fn __stack_chk_fail() -> ! {

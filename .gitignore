@@ -1,2 +1,15 @@
 *.o
-kernel
+*.bin
+*.elf
+*.iso
+*.a
+Cargo.lock
+
+*.img
+*.vdi
+
+qemu-vgalog.*
+serial.log
+
+build/
+dist/
