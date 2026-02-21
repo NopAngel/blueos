@@ -6,4 +6,4 @@ by Unix.
 
 **Warning: Still under development, so it may contain some bugs.**
 
-**LICESE: GPL-3.0**   MADE BY: NopAngel
+**LICENSE: GPL-3.0**   MADE BY: NopAngel
