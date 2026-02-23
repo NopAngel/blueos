@@ -13,3 +13,5 @@ serial.log
 
 build/
 dist/
+
+*.log
