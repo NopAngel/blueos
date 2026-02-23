@@ -8,6 +8,8 @@ Cargo.lock
 *.img
 *.vdi
 
+isodir/
+
 qemu-vgalog.*
 serial.log
 
