@@ -1,5 +1,5 @@
-#include <include/task.h>
-#include <include/lib/string.h>
+#include <blueos/task.h>
+#include <lib/string.h>
 
 int process_count = 1;
 #define MAX_TASKS 4

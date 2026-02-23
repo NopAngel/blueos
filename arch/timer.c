@@ -1,6 +1,6 @@
-#include <include/timer.h>
-#include <include/lib/string.h>
-#include <include/printk.h>
+#include <timer.h>
+#include <lib/string.h>
+#include <blueos/printk.h>
 
 extern int cursor_y;
 

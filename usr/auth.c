@@ -7,8 +7,8 @@
  * User authentication and session control implementation.
  */
 
-#include <include/auth.h>
-#include <include/lib/string.h>
+#include <auth.h>
+#include <lib/string.h>
 
 user_t users[MAX_USERS];
 int current_user_index = {};

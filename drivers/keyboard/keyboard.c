@@ -1,13 +1,15 @@
-#include <include/drivers/keyboard.h>
-#include <include/drivers/k_language.h>
-#include <include/printk.h>
-#include <include/colors.h>
-#include <include/lib/string.h>
-#include <include/ports.h>
-#include <include/fs/fs.h>
-#include <include/auth.h>
-#include <include/version.h>
-#include <include/fs/vfs.h>
+#include <drivers/keyboard.h>
+#include <drivers/k_language.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
+#include <lib/string.h>
+#include <blueos/ports.h>
+#include <fs/fs.h>
+#include <auth.h>
+#include <idt.h>
+#include <blueos/ports.h>
+#include <version.h>
+#include <fs/vfs.h>
 
 #define KEYBOARD_PORT 0x60
 #define SCREEN_BUFFER ((unsigned char *)0xb8000)
@@ -30,6 +32,22 @@ int cursor_x;
 extern int current_user_index; 
 extern void start_nano(const char* filename);
 
+
+void handle_backspace() {
+    if (input_index > 0) {
+        input_index--;
+        if (cursor_x > 0) {
+            cursor_x--;
+        } else if (cursor_y > 0) {
+            cursor_y--;
+            cursor_x = SCREEN_COLUMNS - 1;
+        }
+        
+        int pos = (cursor_y * SCREEN_COLUMNS + cursor_x) * 2;
+        SCREEN_BUFFER[pos] = ' ';      
+        SCREEN_BUFFER[pos + 1] = 0x07; 
+    }
+}
 
 unsigned char read_scancode() {
     unsigned char scancode;
@@ -247,12 +265,37 @@ int process_input() {
         else if (strncmp(input_buffer, "mkdir ", 6) == 0) {
             mkdir(input_buffer + 6);
         }
+
+        else if (strncmp(input_buffer, "jfs-mkdir ", 10) == 0) {
+            jfs_mkdir(input_buffer + 10);
+        }
+        else if (strcmp(input_buffer, "jfs-ls") == 0) {
+            printk(WHITE, "\n"); 
+            jfs_ls();
+        }
+        else if (strncmp(input_buffer, "jfs-touch ", 10) == 0) {
+            jfs_touch(input_buffer + 10);
+        }
         else if (strncmp(input_buffer, "touch ", 6) == 0) {
             touch(input_buffer + 6, "");
             printk(GREEN, "\nFile created.\n");
         }
+        else if (strcmp(input_buffer, "xfs-ls") == 0)
+        {
+           xfs_ls(); 
+        }
+        else if (strncmp(input_buffer, "xfs-createnode ", 10) == 0)
+        {
+            xfs_create(input_buffer + 10);
+        }
         else if (strcmp(input_buffer, "bluefetch") == 0) {
             print_raccoon_real(); 
+        }
+        else if (strcmp(input_buffer, "reboot") == 0 || strcmp(input_buffer, "restart") == 0) {
+            sys_reboot(); 
+        }
+        else if (strcmp(input_buffer, "poweroff") == 0 || strcmp(input_buffer, "shutdown") == 0) {
+            sys_shutdown(); 
         }
         else if (strlen(input_buffer) > 0) {
             printk(RED, "\nERR: Command not found\n");
@@ -271,59 +314,48 @@ int process_input() {
     return 0;
 }
 
-void keyboard_handler() {
+void keyboard_handler(struct registers *r) {
     unsigned char scancode = read_scancode();
 
-    if (scancode == 0x1D) ctrl_pressed = 1;
-    else if (scancode == 0x9D) ctrl_pressed = 0;
-
-    if (ctrl_pressed && scancode == 0x26) { 
-        clear_screen();
-        cursor_y = 0;
-        cursor_x = 0;
-        if (current_user_index == -1) printk(WHITE, "blueos login: ");
-        else printk(GREEN, "user@blueos:~$ ");
-        return;
-    }
-
+   
     if (scancode == last_scancode) return;
     last_scancode = scancode;
 
-    if (scancode & 0x80) {
-        scancode &= 0x7F;
-        if (scancode == 0x2A || scancode == 0x36) shift_pressed = 0;
-        return;
-    } else {
-        if (scancode == 0x2A || scancode == 0x36) {
-            shift_pressed = 1;
-            return;
-        } else if (scancode == 0x3A) {
-            caps_lock = !caps_lock;
-            return;
-        }
+    pic_send_eoi(1);
+    switch (scancode) {
+        case 0x1D: ctrl_pressed = 1; return;
+        case 0x9D: ctrl_pressed = 0; return;
+        case 0x2A: case 0x36: shift_pressed = 1; return; // Shift Pressed
+        case 0xAA: case 0xB6: shift_pressed = 0; return; // Shift Released
+        case 0x3A: caps_lock = !caps_lock; return;       // Caps Lock
     }
+
+    if (scancode & 0x80) return;
 
     if (scancode < sizeof(scancode_to_ascii)) {
         char ascii = scancode_to_ascii[scancode];
+
+        if (ascii == 0) return;
 
         if ((caps_lock || shift_pressed) && ascii >= 'a' && ascii <= 'z') {
             ascii -= 32;
         }
 
+        if (ctrl_pressed && ascii == 'l') {
+            clear_screen();
+            input_index = 0;
+            return;
+        }
+
         if (ascii == '\b') {
-            if (input_index > 0) {
-                input_index--;
-                if (cursor_x > 0) cursor_x--;
-                int pos = (cursor_y * SCREEN_COLUMNS + cursor_x) * 2;
-                SCREEN_BUFFER[pos] = ' ';
-                SCREEN_BUFFER[pos + 1] = 0x07;
-            }
+            handle_backspace();
         } else if (ascii == '\n') {
-            process_input();
-        } else if (ascii) {
+            put_char('\n', WHITE);
+            process_input(); 
+        } else {
             if (input_index < INPUT_BUFFER_SIZE - 1) {
                 input_buffer[input_index++] = ascii;
-                put_char(ascii, 0x07); 
+                put_char(ascii, WHITE); 
             }
         }
     }

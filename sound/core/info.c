@@ -1,5 +1,5 @@
-#include <include/printk.h>
-#include <include/panic.h>
+#include <blueos/printk.h>
+#include <blueos/panic.h>
 
 extern char* stats;
 extern int cursor_y;

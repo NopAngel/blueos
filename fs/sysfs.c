@@ -8,12 +8,12 @@
  * This allows kernel subsystems to export internal state to user-space.
  */
 
-#include <include/sysfs.h>
-#include <include/fs/vfs.h>
-#include <include/lib/string.h>
-#include <include/version.h>
-#include <include/printk.h>
-#include <include/colors.h>
+#include <sysfs.h>
+#include <fs/vfs.h>
+#include <lib/string.h>
+#include <version.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
 
 /**
  * sysfs_read_version() - Read handler for /sys/kernel/version.

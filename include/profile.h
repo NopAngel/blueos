@@ -1,7 +1,7 @@
 #ifndef PROFILE_H
 #define PROFILE_H
 
-#include <include/printk.h>
+#include <blueos/printk.h>
 
 
 #define PROF_SHIFT 2  

@@ -1,7 +1,7 @@
 /* BlueOS / hello.c */
-#include <include/kernel/module.h>
-#include <include/printk.h>
-#include <include/colors.h>
+#include <kernel/module.h>
+#include <blueos/printk.h>
+#include <colors.h>
 
 int hello_init(void) {
     printk(CYAN, "[MODULE] ");

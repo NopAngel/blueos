@@ -1,6 +1,6 @@
-#include <include/kernel/module.h>
-#include <include/printk.h>
-#include <include/version.h>
+#include <kernel/module.h>
+#include <blueos/printk.h>
+#include <version.h>
 
 #ifndef LIGHT_RED
     #define LIGHT_RED      12

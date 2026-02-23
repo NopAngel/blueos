@@ -1,6 +1,6 @@
-#include "../include/fs/fs.h"
-#include "../include/printk.h"
-#include "../include/colors.h"
+#include <fs/fs.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
 
 #define MAX_TEXT_SIZE 1024
 char nano_buffer[MAX_TEXT_SIZE];

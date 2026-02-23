@@ -1,6 +1,6 @@
 #include "../include/fs/vfs.h"
 #include "../include/fs/fs.h"
-#include <include/colors.h>
+#include <blueos/colors.h>
 
 extern int cursor_y;
 extern unsigned int directory_count;
@@ -317,11 +317,19 @@ int vfs_delete(const char *name) {
 }
 
 void vfs_ls(void) {
-    printk(CYAN, "  .  \n  .. "); 
 
     
     unsigned int count = 0;
     
+    
+    
+    if (count == 0) {
+        printk(RED, "Empty directory");
+    } else 
+    {
+        printk(CYAN, "  .  \n  .. "); 
+
+    }
     for (unsigned int i = 0; i < vfs.entry_count; i++) {
         if (vfs.entries[i].parent == vfs.current_directory) {
             if (vfs.entries[i].type == VFS_TYPE_DIRECTORY) {
@@ -332,11 +340,6 @@ void vfs_ls(void) {
             count++;
         }
     }
-    
-    if (count == 0) {
-        printk(RED, "Empty directory");
-    }
-    
     cursor_y++;
 }
 

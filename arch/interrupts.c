@@ -2,6 +2,8 @@ extern int virt_irq_is_pending(unsigned char irq);
 extern void virt_irq_ack(unsigned char irq);
 extern void virt_irq_unmask(unsigned char irq);
 
+
+
 void handle_virtual_device(unsigned char irq) {
     switch(irq) {
         case 0:

@@ -2,10 +2,10 @@
  * BlueOS / kernel / module.c
  */
 
-#include <include/kernel/module.h>
-#include <include/printk.h>
-#include <include/colors.h>
-#include <include/lib/string.h>
+#include <kernel/module.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
+#include <lib/string.h>
 
 #define MAX_MODULES 16
 module_t *loaded_modules[MAX_MODULES];

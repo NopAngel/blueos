@@ -2,10 +2,10 @@
  * BlueOS / kernel / sysctl.c
  */
 
-#include <include/sysctl.h>
-#include <include/lib/string.h>
-#include <include/colors.h>
-#include <include/printk.h>
+#include <sysctl.h>
+#include <lib/string.h>
+#include <blueos/colors.h>
+#include <blueos/printk.h>
 
 int kernel_debug_level = 1;
 char kernel_hostname[32] = "BlueOS-Machine";
@@ -13,7 +13,7 @@ char kernel_hostname[32] = "BlueOS-Machine";
 sysctl_entry_t sysctl_table[] = {
     {"kernel.debug", &kernel_debug_level, 0, 1},
     {"kernel.hostname", kernel_hostname, 1, 1},
-    {0, 0, 0, 0} /* Centinela */
+    {0, 0, 0, 0}
 };
 
 void sysctl_list() {
@@ -33,7 +33,6 @@ int sysctl_set(const char *name, const char *new_value) {
             if (!sysctl_table[i].writable) return -1;
 
             if (sysctl_table[i].type == 0) {
-                /* Aquí podrías usar un atoi() si lo tienes */
                 *(int*)sysctl_table[i].value = (new_value[0] - '0');
             } else {
                 strncpy((char*)sysctl_table[i].value, new_value, 31);
@@ -41,5 +40,5 @@ int sysctl_set(const char *name, const char *new_value) {
             return 0;
         }
     }
-    return -2; /* No encontrado */
+    return -2;
 }

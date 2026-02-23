@@ -1,7 +1,7 @@
 #define MEMORY_C
-#include <include/mm/memory.h>
-#include <include/printk.h>
-#include <include/colors.h>
+#include <mm/memory.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
 
 extern int cursor_y;
 
@@ -245,7 +245,6 @@ static void int_to_str(uint32_t num, char* buf) {
         num /= 10;
     }
 
-    /* Invertir */
     int len = i;
     for (int j = 0; j < len; j++) {
         buf[j] = temp[len - j - 1];

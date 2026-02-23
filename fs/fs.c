@@ -8,11 +8,11 @@
  * Supports directory hierarchy using parent_dir indexing.
  */
 
-#include <include/printk.h>
-#include <include/colors.h>
-#include <include/lib/string.h>
-#include <include/fs/fs.h>
-#include <include/fs/vfs.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
+#include <lib/string.h>
+#include <fs/fs.h>
+#include <fs/vfs.h>
 
 unsigned int directory_count = 0;
 unsigned int file_count = 0;

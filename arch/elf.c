@@ -1,8 +1,8 @@
-#include <include/elf.h>
-#include <include/printk.h>
-#include <include/colors.h> 
-#include <include/panic.h> 
-#include <include/string/string.h>
+#include <elf.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h> 
+#include <blueos/panic.h> 
+#include <string/string.h>
 
 typedef void (*entry_point_t)(void);
 

@@ -2,7 +2,7 @@
 #ifndef PORTS_H
 #define PORTS_H
 
-#include "../include/types.h"
+#include <blueos/types.h>
 
 
 static inline unsigned char inb(unsigned short port) {

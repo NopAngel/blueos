@@ -3,7 +3,6 @@
 #
 # Copyright (C) 2024-2026  NopAngel <angelgabrielnieto@outlook.com>
 #
-# Inspired by the Linux Kernel Kbuild system and Vim's Makefile.
 #
 
 include .config
@@ -35,8 +34,13 @@ KERNEL_BIN = kernel.bin
 
 obj-y := boot.o init/kernel.o printk.o panic.o task.o init.o lib/string.o \
          arch/interrupts.o arch/interrupts-a.o syscall.o profile.o notifier.o \
-         arch/switch.o bg.o auth.o drivers/multilru.o kernel/sysctl.o \
-		 arch/mm/memory.o fs/help.o
+         arch/switch.o arch/bg.o auth.o drivers/multilru.o kernel/sysctl.o \
+		 arch/mm/memory.o fs/help.o drivers/tty.o  \
+		 drivers/scsi/scsi_core.o arch/pic.o drivers/scsi/scsi_lsi.o \
+		 drivers/pci.o drivers/pinctrl/pinctrl.o arch/idt.o arch/interrupt_stubs.o \
+		 arch/irq.o drivers/pictrl.o fs/vboxfs.o arch/interrupt_entry.o drivers/power/power.o \
+		 fs/9p.o drivers/net/mac80211.o kernel/vmcore_info.o drivers/leds.o drivers/vhost_net.o \
+		 arch/apic.o arch/kvm.o
 
 obj-m += hello.o
 
@@ -59,6 +63,30 @@ endif
 
 ifeq ($(CONFIG_MODVERSIONS),y)
     obj-y += kernel/ksyms.o
+endif
+
+ifeq ($(CONFIG_XFS),y)
+	obj-y += fs/xfs.o
+endif 
+ifeq ($(CONFIG_JFS),y)
+	obj-y += fs/jfs.o
+endif
+
+
+include .config
+
+ifeq ($(CONFIG_ARCH),x86_64)
+    CC      = gcc
+    ASFLAGS = -f elf64
+    CFLAGS  = -m64 -ffreestanding -O2 -Iinclude
+    LDFLAGS = -m elf_x86_64 -T link.ld
+    QEMU    = qemu-system-x86_64
+else
+    CC      = gcc
+    ASFLAGS = -f elf32
+    CFLAGS  = -m32 -ffreestanding -O2 -Iinclude
+    LDFLAGS = -m elf_i386 -T link.ld
+    QEMU    = qemu-system-i386
 endif
 
 # Rust support
@@ -95,6 +123,9 @@ arch/%.o: arch/%.asm
 	@echo "  AS      $@"
 	$(Q)$(ASM) $(ASFLAGS) $< -o $@
 
+arch/%.o: arch/%.s
+	$(Q)$(ASM) -f elf32 $< -o $@
+
 %.o: %.c
 	@echo "  CC      $@"
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
@@ -130,15 +161,30 @@ rust_module:
 	$(Q)cd rust && RUSTFLAGS="-C relocation-model=static" cargo build --release \
 		-Z build-std=core --target i686-unknown-linux-gnu
 
+grub: all
+	$(Q)mkdir -p isodir/boot/grub
+	$(Q)cp kernel.bin isodir/boot/kernel.bin
+	$(Q)grub-mkrescue -o BlueOS.iso isodir
 # --- Helpers ---
 
 run: all
-	@echo "  QEMU    $(KERNEL_BIN)"
-	$(Q)$(QEMU) -no-reboot -no-shutdown -kernel $(KERNEL_BIN)
+	@echo "  QEMU    Starting BlueOS with VMX emulation..."
+	$(Q)$(QEMU) -cpu pentium3,+vmx \
+	            -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+	            -kernel $(KERNEL_BIN) \
+	            -m 256M \
+	            -display curses # O quita -display curses si usas ventana normal
+
+#run: all
+#	@echo "  QEMU    $(KERNEL_BIN)"
+#	$(Q)$(QEMU) -d int -no-reboot -no-shutdown -cpu qemu32,+vmx -kernel $(KERNEL_BIN) \
+#		-m 256M 
+menuconfig:
+	$(Q)make -f scripts/Makefile all
 
 clean:
 	@echo "  CLEAN   Objects and binaries"
-	$(Q)rm -f $(obj-y) $(KERNEL_BIN) *.o *.a *.bin *.elf
+	$(Q)rm -f $(obj-y) $(KERNEL_BIN) *.o *.a *.bin *.elf *.iso *.img
 	$(Q)cd rust && cargo clean
 
 .PHONY: all clean run rust_module

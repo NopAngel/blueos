@@ -1,5 +1,5 @@
-#include <include/drivers/nvidia/core.h">
-#include <include/types.h">
+#include <drivers/nvidia/core.h">
+#include <types.h">
 
 static nvidia_gpu_info gpu_info;
 static nvidia_config current_config;

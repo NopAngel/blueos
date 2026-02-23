@@ -1,12 +1,15 @@
 [EXTERN syscall_handler]
 [GLOBAL syscall_isr_wrapper]
+[EXTERN keyboard_handler]
+global keyboard_wrapper
+keyboard_wrapper:
+    pusha               ; Guarda EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
+    
+    call keyboard_handler ; Llama a tu código de C
+    
+    popa                ; Restaura los registros
+    iret                ; ¡FUNDAMENTAL! Vuelve de la interrupción correctamente
 
-[GLOBAL idt_load]
-
-idt_load:
-    mov eax, [esp + 4]  ; Toma el puntero a idtp (el argumento)
-    lidt [eax]          ; Carga la dirección real en el registro IDTR
-    ret
 syscall_isr_wrapper:
     cli             ; Desactiva interrupciones
     push 0          ; Código de error ficticio

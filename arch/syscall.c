@@ -1,5 +1,5 @@
-#include <include/printk.h>
-#include <include/colors.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
 
 
 typedef unsigned int   uint32_t;

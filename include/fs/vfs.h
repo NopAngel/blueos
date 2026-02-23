@@ -1,9 +1,9 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
-#include <include/printk.h>
-#include <include/colors.h>
-#include <include/lib/string.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
+#include <lib/string.h>
 
 #define VFS_MAX_PATH 256
 #define VFS_MAX_NAME 30
@@ -20,6 +20,14 @@ typedef enum {
     VFS_TYPE_FILE,
     VFS_TYPE_DIRECTORY
 } vfs_entry_type;
+typedef struct {
+    void (*init)(void);
+    void (*mkdir)(const char* name);
+    void (*touch)(const char* name);
+    void (*ls)(void);
+} fs_ops_t;
+
+
 
 typedef struct {
     char name[VFS_MAX_NAME];
@@ -53,6 +61,7 @@ typedef struct {
     unsigned int ref_count;
 } vfs_file_handle;
 
+void vfs_register_fs(const char* name, fs_ops_t ops);
 
 void vfs_init(void);
 int vfs_mkdir(const char *name);

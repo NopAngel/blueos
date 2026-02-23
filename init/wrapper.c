@@ -1,5 +1,5 @@
 // wrapper.c
-#include <include/fs/vfs.h>
+#include <fs/vfs.h>
 
 int mkdir(const char *dirname) {
     return vfs_mkdir(dirname);

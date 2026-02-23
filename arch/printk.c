@@ -1,5 +1,5 @@
-#include <include/printk.h>
-#include <include/colors.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
 #include <stdarg.h>
 #include <stddef.h>
 
