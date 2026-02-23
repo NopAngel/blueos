@@ -40,7 +40,7 @@ obj-y := boot.o init/kernel.o printk.o panic.o task.o init.o lib/string.o \
 		 drivers/pci.o drivers/pinctrl/pinctrl.o arch/idt.o arch/interrupt_stubs.o \
 		 arch/irq.o drivers/pictrl.o fs/vboxfs.o arch/interrupt_entry.o drivers/power/power.o \
 		 fs/9p.o drivers/net/mac80211.o kernel/vmcore_info.o drivers/leds.o drivers/vhost_net.o \
-		 arch/apic.o arch/kvm.o
+		 arch/apic.o arch/kvm.o 
 
 obj-m += hello.o
 
@@ -168,17 +168,91 @@ grub: all
 # --- Helpers ---
 
 run: all
+	@mkdir -p initrd_root
+#	python3 tools/mkinitrd.py
 	@echo "  QEMU    Starting BlueOS with VMX emulation..."
 	$(Q)$(QEMU) -cpu pentium3,+vmx \
 	            -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
 	            -kernel $(KERNEL_BIN) \
-	            -m 256M \
-	            -display curses # O quita -display curses si usas ventana normal
+	            -m 256M 
 
 #run: all
 #	@echo "  QEMU    $(KERNEL_BIN)"
 #	$(Q)$(QEMU) -d int -no-reboot -no-shutdown -cpu qemu32,+vmx -kernel $(KERNEL_BIN) \
 #		-m 256M 
+
+
+
+
+# --- Limine Config (Binary Branch) ---
+LIMINE_GIT_URL = https://github.com/limine-bootloader/limine.git
+LIMINE_BRANCH  = v8.x-binary
+ISO_DIR        = isodir
+INITRD_DIR     = initrd_root
+
+# --- Build Rules ---
+
+all: $(KERNEL_BIN)
+
+# 1. Descarga Limine (Solo los binarios de la rama v7.x)
+limine-setup:
+	@if [ ! -d "limine" ]; then \
+		echo "  GIT      Cloning Limine..."; \
+		git clone https://github.com/limine-bootloader/limine --branch=v8.x-binary --depth=1; \
+		$(MAKE) -C limine; \
+	fi
+
+# 2. Empaquetar el Initrd en TAR (Limine ama los .tar)
+initrd:
+	@echo "  TAR     Creating initrd.tar..."
+	@mkdir -p $(INITRD_DIR)
+	@# Ejemplo: Meter el hello.txt si existe
+	@if [ -f "hello.txt" ]; then cp hello.txt $(INITRD_DIR)/; fi
+	$(Q)tar -cf initrd.tar -C $(INITRD_DIR) .
+
+#limine: $(KERNEL_BIN) limine limine.cfg
+#	@echo "  ISO      Building blueos.iso..."
+#	@mkdir -p iso_root
+#	@cp $(KERNEL_BIN) iso_root/kernel.bin
+#	@cp limine.cfg iso_root/
+#	@cp limine/limine-bios.sys limine/limine-bios-cd.bin \
+#	    limine/limine-uefi-cd.bin iso_root/
+#	@xorriso -as mkisofs -b limine-bios-cd.bin \
+#	    -no-emul-boot -boot-load-size 4 -boot-info-table \
+#	    --protective-msdos-label \
+#	    -partition_offset 16 \
+#	    iso_root -o blueos.iso > /dev/null 2>&1
+#	@./limine/limine bios-install blueos.iso
+#	@rm -rf iso_root
+
+
+limine: $(KERNEL_BIN) limine-setup initrd limine.cfg
+	@echo "  ISO      Building blueos.iso..."
+	@mkdir -p iso_root
+	@cp $(KERNEL_BIN) iso_root/kernel.bin
+	@cp limine.cfg iso_root/
+	@# --- EL FIX AQUÍ: Copiar el initrd a la ISO ---
+	@cp initrd.tar iso_root/
+	@# ---------------------------------------------
+	@cp limine/limine-bios.sys limine/limine-bios-cd.bin \
+	    limine/limine-uefi-cd.bin iso_root/
+	@xorriso -as mkisofs -b limine-bios-cd.bin \
+	    -no-emul-boot -boot-load-size 4 -boot-info-table \
+	    --protective-msdos-label \
+	    -partition_offset 16 \
+	    iso_root -o blueos.iso > /dev/null 2>&1
+	@./limine/limine bios-install blueos.iso
+
+run-limine:
+	@echo "  QEMU    Booting BlueOS.iso..."
+	$(Q)$(QEMU) -cdrom  BlueOS.iso -m 256M -serial stdio -d int
+
+
+
+
+
+
+
 menuconfig:
 	$(Q)make -f scripts/Makefile all
 
@@ -186,5 +260,13 @@ clean:
 	@echo "  CLEAN   Objects and binaries"
 	$(Q)rm -f $(obj-y) $(KERNEL_BIN) *.o *.a *.bin *.elf *.iso *.img
 	$(Q)cd rust && cargo clean
+
+clean_limine:
+	@echo "  CLEAN   Limine build artifacts"
+	$(Q)rm -rf limine iso_root initrd.tar
+
+
+
+
 
 .PHONY: all clean run rust_module

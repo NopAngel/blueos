@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <io.h>
+#include <blueos/io.h>
 
 void sys_reboot() {
     outb(0x64, 0xFE);

@@ -19,6 +19,7 @@
 #include <profile.h>
 #include <auth.h>
 #include <blueos/task.h>
+#include <multiboot.h>
 #include <sysfs.h>
 #include <sysctl.h>
 #include <kernel/module.h>
@@ -78,9 +79,10 @@ static void rest_init() {
     }
 }
 
-void k_main(void)
+void k_main (unsigned int magic, multiboot_info_t* mbi)
 {
-    init_all();
+
+    init_all(magic, mbi);
 
     /* Phase 1: Hardware Init */
     system_state = SYSTEM_BOOTING;
@@ -90,15 +92,12 @@ void k_main(void)
     _blueos_banner();
     
     /* Phase 3: Subsystems initialization */
-    
-    
-    
-    
 
+    enable_cursor(0, 15);   
+    
+    update_cursor(0, 0);
     system_state = SYSTEM_RUNNING;
     rest_init();
-    
-    while (1) {
-        keyboard_handler();
-    }
+   
+    while(1) keyboard_handler();
 }

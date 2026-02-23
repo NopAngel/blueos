@@ -62,14 +62,6 @@ char *strcpy(char *dest, const char *src)
     return dest_start;
 }
 
-int strcmp(const char *str1, const char *str2) {
-    while (*str1 && (*str1 == *str2)) {
-        str1++;
-        str2++;
-    }
-    return *(unsigned char *)str1 - *(unsigned char *)str2;
-}
-
 
 char *strchr(const char *s, int c) {
     while (*s != (char)c) {
@@ -137,4 +129,12 @@ char *strstr(const char *haystack, const char *needle) {
         }
     }
     return 0;
+}
+
+int strcmp(const char *s1, const char *s2) {
+    while (*s1 && (*s1 == *s2)) {
+        s1++;
+        s2++;
+    }
+    return *(unsigned char *)s1 - *(unsigned char *)s2;
 }

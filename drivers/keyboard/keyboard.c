@@ -7,7 +7,6 @@
 #include <fs/fs.h>
 #include <auth.h>
 #include <idt.h>
-#include <blueos/ports.h>
 #include <version.h>
 #include <fs/vfs.h>
 
@@ -17,9 +16,28 @@
 #define SCREEN_ROWS 25
 #define INPUT_BUFFER_SIZE 255
 
-extern char current_user[32];
 
+void update_cursor(int x, int y) {
+    uint16_t pos = y * SCREEN_COLUMNS + x;
+
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t) (pos & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
+void enable_cursor(uint8_t cursor_start, uint8_t cursor_end) {
+    outb(0x3D4, 0x0A);
+    outb(0x3D5, (inb(0x3D5) & 0xC0) | cursor_start);
+    outb(0x3D4, 0x0B);
+    outb(0x3D5, (inb(0x3D5) & 0xE0) | cursor_end);
+}
+
+extern char current_user[32];
 extern void print_raccoon_real(void);
+extern int current_user_index; 
+extern void start_nano(const char* filename);
+
 char input_buffer[INPUT_BUFFER_SIZE];
 int input_index = 0;
 int caps_lock = 0;
@@ -27,11 +45,24 @@ int shift_pressed = 0;
 volatile unsigned char last_scancode = 0;
 volatile int ctrl_pressed = 0;
 
-int cursor_y;
-int cursor_x;
-extern int current_user_index; 
-extern void start_nano(const char* filename);
+int cursor_y = 0;
+int cursor_x = 0;
 
+
+
+void scroll_screen() {
+    for (int i = 1; i < SCREEN_ROWS; i++) {
+        for (int j = 0; j < SCREEN_COLUMNS * 2; j++) {
+            SCREEN_BUFFER[(i - 1) * SCREEN_COLUMNS * 2 + j] = SCREEN_BUFFER[i * SCREEN_COLUMNS * 2 + j];
+        }
+    }
+    for (int j = 0; j < SCREEN_COLUMNS; j++) {
+        int pos = ((SCREEN_ROWS - 1) * SCREEN_COLUMNS + j) * 2;
+        SCREEN_BUFFER[pos] = ' ';      
+        SCREEN_BUFFER[pos + 1] = 0x07;  
+    }
+    cursor_y = SCREEN_ROWS - 1; 
+}
 
 void handle_backspace() {
     if (input_index > 0) {
@@ -46,89 +77,12 @@ void handle_backspace() {
         int pos = (cursor_y * SCREEN_COLUMNS + cursor_x) * 2;
         SCREEN_BUFFER[pos] = ' ';      
         SCREEN_BUFFER[pos + 1] = 0x07; 
+        update_cursor(cursor_x, cursor_y);
     }
 }
-
-unsigned char read_scancode() {
-    unsigned char scancode;
-    __asm__ volatile ("inb %1, %0" : "=a"(scancode) : "Nd"(KEYBOARD_PORT));
-    return scancode;
-}
-
-/**
- * sys_cd() - Change the current working directory for the active user.
- * @path: The target directory path.
- *
- * This function updates the 'cwd' variable of the current user session.
- * It includes basic validation for absolute and relative paths.
- */
-void sys_cd(const char *path) {
-    if (current_user_index == -1) return;
-
-    /* Handle "cd .." (move up one level) */
-    if (strcmp(path, "..") == 0) {
-        char *last_slash = strrchr(users[current_user_index].cwd, '/');
-        if (last_slash && last_slash != users[current_user_index].cwd) {
-            *last_slash = '\0';
-        } else {
-            strcpy(users[current_user_index].cwd, "/");
-        }
-    } 
-    /* Handle absolute path */
-    else if (path[0] == '/') {
-        strncpy(users[current_user_index].cwd, path, 254);
-    } 
-    /* Handle relative path */
-    else {
-        if (strcmp(users[current_user_index].cwd, "/") != 0) {
-            strcat(users[current_user_index].cwd, "/");
-        }
-        strcat(users[current_user_index].cwd, path);
-    }
-}
-
-void sys_pwd() {
-    if (current_user_index != -1) {
-        printk(WHITE, "\n%s\n", users[current_user_index].cwd);
-    }
-}
-
-void sys_ls() {
-    if (current_user_index == -1) return;
-
-    char *current_path = users[current_user_index].cwd;
-    printk(WHITE, "\n");
-
-    /* * Mock logic for VFS filtering:
-     * In a real kernel, we would iterate over the dentry cache.
-     * Here, we simulate listing by checking the path prefix.
-     */
-    vfs_list_files_in_dir(current_path);
-}
-
-void scroll_screen() {
-
-    for (int i = 1; i < SCREEN_ROWS; i++) {
-        for (int j = 0; j < SCREEN_COLUMNS * 2; j++) {
-            SCREEN_BUFFER[(i - 1) * SCREEN_COLUMNS * 2 + j] = SCREEN_BUFFER[i * SCREEN_COLUMNS * 2 + j];
-        }
-    }
-
-    for (int j = 0; j < SCREEN_COLUMNS; j++) {
-        int pos = ((SCREEN_ROWS - 1) * SCREEN_COLUMNS + j) * 2;
-        SCREEN_BUFFER[pos] = ' ';      
-        SCREEN_BUFFER[pos + 1] = 0x07;  
-    }
-
-    cursor_y = SCREEN_ROWS - 1; 
-}
-
 
 void put_char(char c, unsigned int color) {
-
-    if (cursor_y >= SCREEN_ROWS) {
-        scroll_screen();
-    }
+    if (cursor_y >= SCREEN_ROWS) scroll_screen();
 
     if (c == '\n') {
         cursor_x = 0;
@@ -147,11 +101,10 @@ void put_char(char c, unsigned int color) {
         }
     }
 
- 
-    if (cursor_y >= SCREEN_ROWS) {
-        scroll_screen();
-    }
+    if (cursor_y >= SCREEN_ROWS) scroll_screen();
+    update_cursor(cursor_x, cursor_y); 
 }
+
 
 int process_input() {
     input_buffer[input_index] = '\0'; 
@@ -165,29 +118,25 @@ int process_input() {
                 pass++;
                 if (check_login(name, pass)) {
                     strncpy(current_user, name, 31);
-                    current_user[31] = '\0'; // Ensure null termination
+                    current_user[31] = '\0';
                     clear_screen();
-                    cursor_y = 0;
-                    cursor_x = 0; 
+                    cursor_y = 0; cursor_x = 0; 
                     printk(GREEN, "Welcome to BlueOS. System ready.\n");
                 } else {
                     printk(RED, "\nLogin Failed!\n");
                 }
-            } else {
-                printk(RED, "\nUsage: login <user> <pass>\n");
             }
         } 
         else if (strlen(input_buffer) > 0) {
             printk(RED, "\nPermission denied. Please login first.\n");
         }
         
-    
         if (current_user_index == -1) {
             printk(WHITE, "\nblueos login: ");
         }
     } 
- 
     else {
+
         if (strcmp(input_buffer, "main") == 0) {
             printk(GREEN, "\nTHANKS GOD FOR ALL!\n");
         }
@@ -310,40 +259,59 @@ int process_input() {
         }
     }
 
-    input_index = 0; 
+    input_index = 0;
+    update_cursor(cursor_x, cursor_y); 
     return 0;
 }
 
+
+
+unsigned char read_scancode() {
+    unsigned char scancode;
+    __asm__ volatile ("inb %1, %0" : "=a"(scancode) : "Nd"(KEYBOARD_PORT));
+    return scancode;
+}
+
+
 void keyboard_handler(struct registers *r) {
     unsigned char scancode = read_scancode();
+    pic_send_eoi(1); 
 
-   
-    if (scancode == last_scancode) return;
-    last_scancode = scancode;
-
-    pic_send_eoi(1);
-    switch (scancode) {
-        case 0x1D: ctrl_pressed = 1; return;
-        case 0x9D: ctrl_pressed = 0; return;
-        case 0x2A: case 0x36: shift_pressed = 1; return; // Shift Pressed
-        case 0xAA: case 0xB6: shift_pressed = 0; return; // Shift Released
-        case 0x3A: caps_lock = !caps_lock; return;       // Caps Lock
+    if (scancode & 0x80) {
+        unsigned char released = scancode & 0x7F; 
+        if (released == 0x1D) ctrl_pressed = 0;
+        if (released == 0x2A || released == 0x36) shift_pressed = 0;
+        
+        last_scancode = 0;  
+        return;
     }
 
-    if (scancode & 0x80) return;
 
-    if (scancode < sizeof(scancode_to_ascii)) {
+    if (scancode == last_scancode) {
+        return;
+    }
+
+    last_scancode = scancode;
+
+    switch (scancode) {
+        case 0x1D: ctrl_pressed = 1; return;
+        case 0x2A: case 0x36: shift_pressed = 1; return;
+        case 0x3A: caps_lock = !caps_lock; return;
+    }
+
+   
+    if (scancode < 128) {
         char ascii = scancode_to_ascii[scancode];
-
         if (ascii == 0) return;
 
-        if ((caps_lock || shift_pressed) && ascii >= 'a' && ascii <= 'z') {
-            ascii -= 32;
-        }
+        if ((caps_lock || shift_pressed) && ascii >= 'a' && ascii <= 'z') ascii -= 32;
 
+        // Ctrl + L
         if (ctrl_pressed && ascii == 'l') {
             clear_screen();
+            cursor_x = 0; cursor_y = 0;
             input_index = 0;
+            update_cursor(0, 0);
             return;
         }
 

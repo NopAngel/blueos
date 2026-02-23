@@ -3,14 +3,20 @@
 #include <fs/vfs.h>
 #include <idt.h>
 #include <drivers/scsi.h>
+#include <blueos/kvm.h>
+#include <multiboot.h>
 
 extern fs_ops_t jfs_ops;
 extern fs_ops_t xfs_ops;
 extern int current_user_index;
 
-void init_all ()
+void init_all (unsigned int magic, struct multiboot_info *mbd)
 {
     clear_screen();
+
+    
+
+
     vfs_mkdir("/base");
     vfs_mkdir("/base/inf");
 

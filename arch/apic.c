@@ -12,7 +12,7 @@ uint32_t apic_read(uint32_t reg) {
     return *addr;
 }
 
-/* Enviar señal de fin de interrupción */
+
 void apic_eoi(void) {
     apic_write(APIC_EOI, 0);
 }

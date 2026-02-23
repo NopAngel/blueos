@@ -11,7 +11,6 @@ extern unsigned int pci_find_lsi_scsi();
 int scsi_send_command(scsi_cdb10_t *cdb, void *data_buffer) {
     if (LSI_BASE_PORT == 0) return -1;
 
-    // Usamos el registro ISTAT (Base + 0x14) para ver si está ocupado
     int timeout = 1000000;
     while ((inb(LSI_BASE_PORT + 0x14) & 0x01) && timeout > 0) {
         timeout--;
