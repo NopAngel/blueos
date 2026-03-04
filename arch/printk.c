@@ -1,7 +1,8 @@
 #include <blueos/printk.h>
 #include <blueos/colors.h>
-#include <stdarg.h>
+
 #include <stddef.h>
+#include <stdarg.h>
 
 int redirect_to_file = 0;
 char* redirect_buffer = NULL;
@@ -42,7 +43,7 @@ void print_int(int num, int base, unsigned int color) {
     while (i > 0) putchar(buffer[--i], color);
 }
 
-unsigned int printk(unsigned int color, const char *fmt, ...) {
+/*unsigned int printk(unsigned int color, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
@@ -96,7 +97,7 @@ unsigned int printk(unsigned int color, const char *fmt, ...) {
 
     va_end(args);
     return 1;
-}
+}*/
 
 void clear_screen() {
     char *vidmem = (char *) 0xb8000;
@@ -108,3 +109,62 @@ void clear_screen() {
     cursor_y = 0;
 }
 
+
+
+unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
+    if (redirect_to_file && redirect_buffer != NULL) {
+        return 0;
+    }
+
+    for (const char *p = fmt; *p != '\0'; p++) {
+        if (*p != '%') {
+            put_char(*p, color);
+            continue;
+        }
+
+        p++; 
+        
+        switch (*p) {
+            case 's': {
+                char *s = va_arg(args, char *);
+                if (!s) s = "(null)";
+                while (*s) put_char(*s++, color);
+                break;
+            }
+            case 'd': {
+                int d = va_arg(args, int);
+                print_int(d, 10, color);
+                break;
+            }
+            case 'x': {
+                put_char('0', color);
+                put_char('x', color);
+                int x = va_arg(args, int);
+                print_int(x, 16, color);
+                break;
+            }
+            case 'c': {
+                char c = (char)va_arg(args, int);
+                put_char(c, color);
+                break;
+            }
+            case '%': {
+                put_char('%', color);
+                break;
+            }
+            default:
+                put_char('%', color);
+                put_char(*p, color);
+                break;
+        }
+    }
+    return 1;
+}
+
+unsigned int printk(unsigned int color, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    unsigned int result = vprintk(color, fmt, args);
+    va_end(args);
+    return result;
+}

@@ -3,7 +3,7 @@
 #define _BLUEOS_VERSION_H
 
 #define BLUEOS_MAJOR    2
-#define BLUEOS_MINOR    1
+#define BLUEOS_MINOR    2
 #define BLUEOS_PATCH    1
 
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
@@ -18,7 +18,7 @@
 #define COMPILER_INFO "gcc version " __VERSION__
 #define BLUEOS_NAME "BlueOS"
 
-#define UTS_RELEASE    "2.1.1-blueos"
+#define UTS_RELEASE    "2.2.1-blueos"
 #define UTS_VERSION    "#1 SMP PREEMPT " __DATE__ " " __TIME__
 #define UTS_MACHINE    BLUEOS_ARCH
 

@@ -1,6 +1,8 @@
 #include <kernel/module.h>
 #include <blueos/printk.h>
 #include <version.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifndef LIGHT_RED
     #define LIGHT_RED      12
@@ -13,9 +15,8 @@
 #endif
 
 extern char current_user[32];
-extern unsigned int used_memory_kb;
-extern unsigned int total_memory_kb;
-
+extern uint64_t total_memory_kb;
+extern uint64_t used_memory_kb;
 void print_raccoon_real() {
     int r[] = {LIGHT_RED, YELLOW, GREEN, CYAN, LIGHT_BLUE, LIGHT_MAGENTA, WHITE};
 

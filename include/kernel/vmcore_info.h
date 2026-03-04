@@ -1,7 +1,6 @@
 #ifndef _BLUEOS_VMCOREINFO_H
 #define _BLUEOS_VMCOREINFO_H
 
-#include <stddef.h>
 
 #define VMCOREINFO_SYMBOL(name) \
 	printk("VMCOREINFO: SYMBOL(%s)=%p\n", #name, &name)

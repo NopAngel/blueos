@@ -9,7 +9,6 @@
 #define LSI_REG_SIST0  (LSI_BASE_PORT + 0x42) 
 
 void scsi_lsi_check() {
-    // Leemos el status del controlador
     unsigned char istat = inb(LSI_REG_ISTAT);
     
     printk(WHITE, "[ SCSI ] LSI Controller ISTAT: 0x%x\n", istat);

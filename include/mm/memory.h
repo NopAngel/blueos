@@ -1,12 +1,7 @@
 
 #ifndef MEMORY_H
 #define MEMORY_H
-
-
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
+#include <blueos/types.h>
 
 
 typedef int bool;

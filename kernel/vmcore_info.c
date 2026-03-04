@@ -1,7 +1,8 @@
 #include <kernel/vmcore_info.h>
 #include <version.h>
-#include <blueos/task.h> 
-
+#include <blueos/types.h>
+#include <blueos/task.h>
+#include <stddef.h>
 void dump_vmcoreinfo(void) {
     printk("--- BEGIN VMCOREINFO ---\n");
 
@@ -20,7 +21,7 @@ void dump_vmcoreinfo(void) {
     #ifdef CONFIG_VFS
         VMCOREINFO_CONFIG(VFS);
     #endif
-    VMCOREINFO_OFFSET(task_t, esp);
+    VMCOREINFO_OFFSET(task_t, rsp);
     #if defined(__i386__)
         printk("VMCOREINFO: ARCH=i386\n");
     #elif defined(__x86_64__)

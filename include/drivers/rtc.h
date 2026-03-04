@@ -14,7 +14,7 @@ typedef struct {
     unsigned int year;
 } rtc_time_t;
 
-void read_rtc(rtc_time_t* time);
+void read_rtc(int *second, int *minute, int *hour, int *day, int *month, int *year);
 void get_time_string(char* buffer);
 
 #endif

@@ -27,20 +27,22 @@ GCC_INC = $(shell $(CC) -print-file-name=include)
 CFLAGS  = -m32 -ffreestanding -fno-builtin -std=c99 -nostdlib \
           -fno-stack-protector -nostdinc -fno-pic -I. -Iinclude -I$(GCC_INC) -O2
 ASFLAGS = -f elf32
-LDFLAGS = -m elf_i386 -T link.ld -z noexecstack
+LDFLAGS = -m elf_i386 -T arch/i386/link.ld -z noexecstack
 
 KERNEL_BIN = kernel.bin
 
 
-obj-y := boot.o init/kernel.o printk.o panic.o task.o init.o lib/string.o \
-         arch/interrupts.o arch/interrupts-a.o syscall.o profile.o notifier.o \
-         arch/switch.o arch/bg.o auth.o drivers/multilru.o kernel/sysctl.o \
-		 arch/mm/memory.o fs/help.o drivers/tty.o  \
-		 drivers/scsi/scsi_core.o arch/pic.o drivers/scsi/scsi_lsi.o \
-		 drivers/pci.o drivers/pinctrl/pinctrl.o arch/idt.o arch/interrupt_stubs.o \
-		 arch/irq.o drivers/pictrl.o fs/vboxfs.o arch/interrupt_entry.o drivers/power/power.o \
-		 fs/9p.o drivers/net/mac80211.o kernel/vmcore_info.o drivers/leds.o drivers/vhost_net.o \
-		 arch/apic.o arch/kvm.o 
+obj-y := arch/i386/boot.o arch/printk.o arch/i386/panic.o arch/i386/task.o lib/string.o \
+         arch/i386/interrupts.o arch/i386/interrupt_entry.o arch/i386/profile.o usr/auth.o \
+         arch/i386/switch.o arch/i386/bg.o drivers/multilru.o kernel/sysctl.o \
+        fs/help.o drivers/tty.o drivers/keyboard/keyboard.o arch/i386/syscall.o \
+         drivers/scsi/scsi_core.o arch/i386/pic.o drivers/scsi/scsi_lsi.o \
+         drivers/pci.o drivers/pinctrl/pinctrl.o arch/i386/idt.o arch/i386/interrupt_stubs.o \
+         arch/i386/irq.o fs/vboxfs.o drivers/power/power.o \
+         fs/9p.o drivers/net/mac80211.o kernel/vmcore_info.o drivers/leds.o drivers/vhost_net.o \
+         arch/i386/apic.o arch/i386/kvm.o kernel/hlec.o arch/i386/timer.o kernel/hpet.o kernel/shell.o \
+         mm/pmm.o drivers/rtc.o drivers/battery.o arch/i386/mm/memory.o arch/i386/acpi.o \
+         init/kernel.o init/init_fnc.o arch/i386/intel.o arch/i386/amd.o arch/i386/interrupts-a.o #hello_bin.o
 
 obj-m += hello.o
 
@@ -50,8 +52,7 @@ obj-$(CONFIG_SYSFS)        += sysfs.o
 obj-y                      += fs.o    
 obj-y                      += usr/editor.o 
 
-# Drivers & Audio
-obj-$(CONFIG_KEYBOARD)     += keyboard.o
+
 obj-$(CONFIG_SPEAKER)      += speaker.o
 obj-$(CONFIG_SOUNDBLASTER) += bls_snd.o
 
@@ -79,13 +80,13 @@ ifeq ($(CONFIG_ARCH),x86_64)
     CC      = gcc
     ASFLAGS = -f elf64
     CFLAGS  = -m64 -ffreestanding -O2 -Iinclude
-    LDFLAGS = -m elf_x86_64 -T link.ld
+    LDFLAGS = -m elf_x86_64 -T arch/i386/link.ld
     QEMU    = qemu-system-x86_64
 else
     CC      = gcc
     ASFLAGS = -f elf32
     CFLAGS  = -m32 -ffreestanding -O2 -Iinclude
-    LDFLAGS = -m elf_i386 -T link.ld
+    LDFLAGS = -m elf_i386 -T arch/i386/link.ld
     QEMU    = qemu-system-i386
 endif
 
@@ -171,10 +172,11 @@ run: all
 	@mkdir -p initrd_root
 #	python3 tools/mkinitrd.py
 	@echo "  QEMU    Starting BlueOS with VMX emulation..."
-	$(Q)$(QEMU) -cpu pentium3,+vmx \
-	            -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+	$(Q)$(QEMU)  \
+	            -device isa-debug-exit,iobase=0xf4,iosize=0x04 -d int \
 	            -kernel $(KERNEL_BIN) \
-	            -m 256M 
+	            -m 256M \
+				-cpu qemu32,+vmx
 
 #run: all
 #	@echo "  QEMU    $(KERNEL_BIN)"
@@ -194,7 +196,7 @@ INITRD_DIR     = initrd_root
 
 all: $(KERNEL_BIN)
 
-# 1. Descarga Limine (Solo los binarios de la rama v7.x)
+
 limine-setup:
 	@if [ ! -d "limine" ]; then \
 		echo "  GIT      Cloning Limine..."; \
@@ -202,7 +204,6 @@ limine-setup:
 		$(MAKE) -C limine; \
 	fi
 
-# 2. Empaquetar el Initrd en TAR (Limine ama los .tar)
 initrd:
 	@echo "  TAR     Creating initrd.tar..."
 	@mkdir -p $(INITRD_DIR)
@@ -258,7 +259,7 @@ menuconfig:
 
 clean:
 	@echo "  CLEAN   Objects and binaries"
-	$(Q)rm -f $(obj-y) $(KERNEL_BIN) *.o *.a *.bin *.elf *.iso *.img
+	$(Q)rm -f $() $(KERNEL_BIN) *.o *.a *.bin *.elf *.iso *.img
 	$(Q)cd rust && cargo clean
 
 clean_limine:

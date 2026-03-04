@@ -5,9 +5,11 @@
  *
  */
 
+
 #include <blueos/colors.h>
 #include <blueos/printk.h>
 #include <blueos/ports.h>
+#include <hlec.h>
 #include <blueos/panic.h>
 #include <init_fnc.h>
 #include <drivers/keyboard.h>
@@ -21,10 +23,21 @@
 #include <blueos/task.h>
 #include <multiboot.h>
 #include <sysfs.h>
+#include <elf.h>
 #include <sysctl.h>
+#include <drivers/rtc.h>
+#include <mm/pmm.h>
 #include <kernel/module.h>
 #include <blueos/kvm.h>
 
+
+extern uint64_t end;
+uint64_t kernel_end_address; 
+
+extern uint32_t used_blocks;
+extern uint32_t total_blocks;
+extern uint8_t _binary_hello_elf_start[];
+typedef void (*entry_point)();
 enum system_states {
     SYSTEM_BOOTING,
     SYSTEM_RUNNING,
@@ -34,6 +47,7 @@ enum system_states {
 page_t system_page;
 page_t user_page;
 extern module_t __this_module;
+extern void _DRIVER_PS2_Keyboard();
 
 extern char current_user[32];
 static void _blueos_banner() {
@@ -49,6 +63,9 @@ static void _blueos_banner() {
 }
 
 
+
+
+
 static void print_boot_logs() {
     printk(WHITE, "[    0.000000] x86/fpu: Supporting XSAVE with 0x002 bits\n");
     printk(WHITE, "[    0.005000] BIOS-provided physical RAM map:\n");
@@ -61,43 +78,86 @@ static void print_boot_logs() {
 }
 
 
+void print_rtc_formatted(int val) {
+    if (val < 10) printk(CYAN, "0"); // Ponemos el cero si es menor a 10
+    printk(CYAN, "%d", val);
+}
+
+
 static void rest_init() {
 
     
     printk(WHITE, "[    0.100000] Run /sbin/init as init process\n");
     printk(WHITE, "[    0.105000] Freeing unused kernel image memory: 2048K\n");
 
-    /* Terminal/TTY identification banner */
+    int sec, min, hour, day, month, year;
+    read_rtc(&sec, &min, &hour, &day, &month, &year);
+
+    printk(WHITE, "info: ");
+    printk(GRAY, "Initialized RTC (24h mode, no daylight saving)\n");
+
+    printk(WHITE, "info: ");
+    printk(GRAY, "Current time: ");
+
+    print_rtc_formatted(day);   printk(CYAN, "/");
+    print_rtc_formatted(month); printk(CYAN, "/20");
+    print_rtc_formatted(year);  printk(CYAN, " ");
+    print_rtc_formatted(hour);  printk(CYAN, ":");
+    print_rtc_formatted(min);   printk(CYAN, ":");
+    print_rtc_formatted(sec);   printk(CYAN, "\n");
     printk(WHITE, "\nBlueOS %s-generic tty1\n\n", UTS_RELEASE);
     
-    /* Prompt handling for authentication */
     if (current_user_index == -1) {
-        printk(WHITE, "blueos login: ");
+        printk(WHITE, "\nblueos login: ");
     } else {
         printk(GREEN, "user@blueos");
         printk(WHITE, ":~$ ");
     }
 }
 
+
+
+/*
 void k_main (unsigned int magic, multiboot_info_t* mbi)
 {
 
     init_all(magic, mbi);
 
-    /* Phase 1: Hardware Init */
     system_state = SYSTEM_BOOTING;
     clear_screen();
 
-    /* Phase 2: Banner and Core Subsystems */
     _blueos_banner();
     
-    /* Phase 3: Subsystems initialization */
-
-    enable_cursor(0, 15);   
+printk(CYAN, "BlueOS: Intentando carga directa de ELF...\n");
+  load_elf_from_memory(_binary_hello_elf_start);
+   // enable_cursor(0, 15);   
     
-    update_cursor(0, 0);
+ //   update_cursor(0, 0);
+    system_state = SYSTEM_RUNNING;
+    rest_init(); 
+  
+    while(1) {
+        keyboard_handler();
+    }
+}*/
+
+void k_main (unsigned int magic, multiboot_info_t* mbi)
+{
+    //init_all(magic, mbi); 
+    _DRIVER_PS2_Keyboard();
+    /*system_state = SYSTEM_BOOTING;
+    clear_screen();
+
+    _blueos_banner();
+    print_boot_logs(); 
+    
     system_state = SYSTEM_RUNNING;
     rest_init();
-   
-    while(1) keyboard_handler();
+
+
+    while (1)
+    {
+        keyboard_handler();
+        update_battery_status();
+    }*/
 }
