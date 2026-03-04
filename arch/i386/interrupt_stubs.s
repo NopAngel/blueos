@@ -1,4 +1,4 @@
-; Indicamos que estas funciones son globales para que el Linker las vea
+
 global irq0
 global irq1
 global irq2
@@ -24,17 +24,17 @@ exception_handler_stub:
     popa
     iret
 
-; Crea un punto de entrada común para las excepciones del 0 al 31
+
 global isr_common
 isr_common:
-    push byte 0      ; Error code ficticio (algunas excepciones ya lo empujan, ojo ahí)
-    push byte 0      ; Número de interrupción ficticio (puedes mejorar esto luego)
-    pusha            ; Guarda registros
+    push byte 0      
+    push byte 0      
+    pusha           
     
     mov ax, ds
-    push eax         ; Guarda selector de datos
+    push eax        
 
-    mov ax, 0x10     ; Carga selector del Kernel
+    mov ax, 0x10     
     mov ds, ax
     mov es, ax
 
@@ -47,18 +47,16 @@ isr_common:
     add esp, 8
     iret
 
-; Importamos la función de C que manejará la lógica
 extern irq_handler
 
-; Macro para no repetir código 16 veces
+
 %macro IRQ 2
   irq%1:
-    push byte 0      ; Error code ficticio
-    push byte %2     ; Número de interrupción (IDT index)
+    push byte 0      
+    push byte %2     
     jmp irq_common_stub
 %endmacro
 
-; Definición de cada IRQ mapeada del 32 al 47
 IRQ 0, 32
 IRQ 1, 33
 IRQ 2, 34
@@ -77,21 +75,21 @@ IRQ 14, 46
 IRQ 15, 47
 
 irq_common_stub:
-    pusha                    ; Guarda registros generales
+    pusha                    
     mov ax, ds
-    push eax                 ; Guarda DS
+    push eax               
 
-    mov ax, 0x10             ; Carga el selector de datos del Kernel
+    mov ax, 0x10             
     mov ds, ax
     mov es, ax
 
-    push esp                 ; <--- ¡ESTO ES LA CLAVE! Empujas el puntero al struct
-    call irq_handler         ; Llama a la función (ahora recibe un puntero)
-    add esp, 4               ; Limpia el puntero empujado
+    push esp                 
+    call irq_handler         
+    add esp, 4               
 
-    pop eax                  ; Restaura DS
+    pop eax                
     mov ds, ax
     mov es, ax
-    popa                     ; Restaura registros generales
-    add esp, 8               ; Limpia int_no y err_code
+    popa                     
+    add esp, 8               
     iret

@@ -1,18 +1,16 @@
 [BITS 32]
 
-; --- SECCIÓN MULTIBOOT ---
 section .multiboot
 align 4
     dd 0x1BADB002            ; Magic
     dd 0x00                  ; Flags
     dd -(0x1BADB002 + 0x00)  ; Checksum
 
-; --- DECLARACIÓN DE SÍMBOLOS EXTERNOS ---
+
 global boot
 extern k_main
 
-; --- SECCIÓN DE DATOS Y TABLAS (BSS) ---
-; Definimos esto antes o aseguramos que el código lo vea
+
 section .bss
 align 4096
 p4_table:
@@ -25,7 +23,7 @@ stack_bottom:
     resb 16384
 stack_top:
 
-; --- SECCIÓN DE DATOS CONSTANTES (GDT) ---
+
 section .rodata
 align 16
 gdt64:
@@ -38,14 +36,13 @@ gdt64_ptr:
     dw gdt64_end - gdt64 - 1
     dq gdt64
 
-; --- SECCIÓN DE CÓDIGO ---
+
 section .text
 boot:
-    ; 1. Setup de stack
-    mov esp, stack_top
-    mov edi, ebx             ; Guardar info de Multiboot
 
-    ; 2. Verificar soporte de Long Mode
+    mov esp, stack_top
+    mov edi, ebx             
+
     mov eax, 0x80000000
     cpuid
     cmp eax, 0x80000001
@@ -55,14 +52,12 @@ boot:
     test edx, 1 << 29
     jz no_long_mode
 
-    ; 3. Configurar Paginación (Identity Mapping 1GB)
-    ; Limpiar tablas
+
     mov edi, p4_table
     xor eax, eax
     mov ecx, 4096 * 3
     rep stosb
 
-    ; Configurar jerarquía de tablas
     mov eax, p3_table
     or eax, 0b11
     mov [p4_table], eax
@@ -71,7 +66,6 @@ boot:
     or eax, 0b11
     mov [p3_table], eax
 
-    ; Mapear 512 entradas de 2MB (Total 1GB)
     mov ecx, 0
 map_p2_table:
     mov eax, 0x200000
@@ -82,37 +76,34 @@ map_p2_table:
     cmp ecx, 512
     jne map_p2_table
 
-    ; 4. Activar PAE
+    ; PAE
     mov eax, cr4
     or eax, 1 << 5
     mov cr4, eax
 
-    ; 5. Cargar CR3 (P4)
     mov eax, p4_table
     mov cr3, eax
 
-    ; 6. Activar Long Mode (EFER)
+   
     mov ecx, 0xC0000080
     rdmsr
     or eax, 1 << 8
     wrmsr
 
-    ; 7. Activar Paginación (CR0)
     mov eax, cr0
     or eax, 1 << 31
     mov cr0, eax
 
-    ; 8. Cargar GDT y Salto Largo a 64 bits
+
     lgdt [gdt64_ptr]
     jmp 0x08:init_64bit
 
 no_long_mode:
-    mov dword [0xb8000], 0x4f454f45 ; "EE" en pantalla
+    mov dword [0xb8000], 0x4f454f45 
     hlt
 
 [BITS 64]
 init_64bit:
-    ; Configurar selectores de segmento de datos
     mov ax, 0x10
     mov ds, ax
     mov es, ax
@@ -120,7 +111,6 @@ init_64bit:
     mov gs, ax
     mov ss, ax
 
-    ; Pasar puntero Multiboot (en EDI) a RDI para k_main
     mov rdi, rbx 
     
     call k_main

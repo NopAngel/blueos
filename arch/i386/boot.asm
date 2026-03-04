@@ -10,25 +10,23 @@ section .text
 global _start
 
 _start:
-    cli                         ; Apaga interrupciones
-    lgdt [gdt_ptr]              ; Carga nuestra GDT
+    cli                         
+    lgdt [gdt_ptr]              
 
-    ; EL SALTO MAESTRO:
-    ; Esto carga 0x08 en CS y nos mueve a un entorno de 32 bits real.
+
     jmp 0x08:.full_32bit
 
 .full_32bit:
-    mov ax, 0x10                ; 0x10 es el offset del Data Segment en nuestra GDT
+    mov ax, 0x10                
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
 
-    ; Configura un stack limpio para evitar que pise el Initrd
     mov esp, stack_top
 
-    push ebx                    ; Puntero a la estructura Multiboot que da Limine
+    push ebx                   
     extern k_main
     call k_main
 
@@ -47,11 +45,11 @@ gdt_start:
 gdt_end:
 
 gdt_ptr:
-    dw gdt_end - gdt_start - 1   ; Límite
+    dw gdt_end - gdt_start - 1   
     dd gdt_start                 ; Base
 
 section .bss
 align 16
 stack_bottom:
-    resb 16384                   ; 16 KB de stack
+    resb 16384                   ; 16 KB stack
 stack_top:

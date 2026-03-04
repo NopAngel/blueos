@@ -48,7 +48,7 @@ void acpi_init() {
     }
 
     if (!rsdp) {
-        printk(RED, "ACPI: RSDP no encontrada\n");
+        printk(RED, "ACPI: RSDP not found\n");
         return;
     }
 
@@ -65,15 +65,14 @@ void acpi_init() {
             uint32_t fadt_addr = entry[i];
             PM1a_CNT_BLK = *(uint32_t*)(fadt_addr + 64); 
             
-            printk(GREEN, "ACPI: FADT encontrada en 0x%x\n", fadt_addr);
-            printk(GREEN, "ACPI: Puerto real detectado: 0x%x\n", PM1a_CNT_BLK);
+            printk(GREEN, "ACPI: FADT found in 0x%x\n", fadt_addr);
+            printk(GREEN, "ACPI: Real port detected: 0x%x\n", PM1a_CNT_BLK);
             return;
         }
     }
 }
 
 void sys_shutdown() {
-    printk(RED, "BlueOS: Ejecutando secuencia final de apagado...\n");
 
 
     outw(0x604, 0x2000 | 0x08); 
@@ -81,14 +80,13 @@ void sys_shutdown() {
 
     outw(0x4004, 0x3400);
 
-    printk(RED, "Sistema detenido. Puedes cerrar la ventana.\n");
     while(1) {
         __asm__ __volatile__("cli; hlt");
     }
 }
 
 void sys_reboot() {
-    printk(YELLOW, "\nBlueOS: Reiniciando sistema...\n");
+    printk(YELLOW, "\nBlueOS: Reboot...\n");
 
   
     while ((inb(0x64) & 0x02) != 0);
@@ -96,7 +94,7 @@ void sys_reboot() {
     outb(0x64, 0xFE);
 
    
-    printk(RED, "Reinicio por 8042 falló. Intentando Triple Fault...\n");
+    printk(RED, "Reset for 8042 failed. Attempting Triple Fault...\n");
     
 
     struct {

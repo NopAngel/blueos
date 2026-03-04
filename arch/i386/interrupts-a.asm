@@ -3,25 +3,25 @@
 [EXTERN keyboard_handler]
 global keyboard_wrapper
 keyboard_wrapper:
-    pusha               ; Guarda EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
+    pusha               ; save EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
     
-    call keyboard_handler ; Llama a tu código de C
+    call keyboard_handler 
     
-    popa                ; Restaura los registros
-    iret                ; ¡FUNDAMENTAL! Vuelve de la interrupción correctamente
+    popa                
+    iret              
 
 syscall_isr_wrapper:
-    cli             ; Desactiva interrupciones
-    push 0          ; Código de error ficticio
-    push 0x80       ; Número de interrupción
+    cli             
+    push 0         
+    push 0x80      
     
-    pushad          ; Guarda EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
+    pushad          ; save EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
     push ds
     push es
     push fs
     push gs
     
-    mov ax, 0x10    ; Carga el selector de datos del kernel
+    mov ax, 0x10    
     mov ds, ax
     mov es, ax
     
@@ -32,12 +32,12 @@ syscall_isr_wrapper:
     pop es
     pop ds
     popad
-    add esp, 8      ; Limpia el código de error y el num de interrupción
-    sti             ; Reactiva interrupciones
-    iretd           ; Vuelve al modo usuario
+    add esp, 8      
+    sti            
+    iretd           
 
 
-global keyboard_asm_handler  ; <--- ESTO ES VITAL
+global keyboard_asm_handler  
 extern keyboard_handler
 
 keyboard_asm_handler:

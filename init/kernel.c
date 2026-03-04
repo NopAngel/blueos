@@ -79,7 +79,7 @@ static void print_boot_logs() {
 
 
 void print_rtc_formatted(int val) {
-    if (val < 10) printk(CYAN, "0"); // Ponemos el cero si es menor a 10
+    if (val < 10) printk(CYAN, "0");
     printk(CYAN, "%d", val);
 }
 
@@ -117,40 +117,23 @@ static void rest_init() {
 
 
 
-/*
+
 void k_main (unsigned int magic, multiboot_info_t* mbi)
 {
+    init_all(magic, mbi); 
 
-    init_all(magic, mbi);
 
     system_state = SYSTEM_BOOTING;
     clear_screen();
 
-    _blueos_banner();
-    
-printk(CYAN, "BlueOS: Intentando carga directa de ELF...\n");
-  load_elf_from_memory(_binary_hello_elf_start);
-   // enable_cursor(0, 15);   
-    
- //   update_cursor(0, 0);
-    system_state = SYSTEM_RUNNING;
-    rest_init(); 
-  
-    while(1) {
-        keyboard_handler();
-    }
-}*/
 
-void k_main (unsigned int magic, multiboot_info_t* mbi)
-{
-    //init_all(magic, mbi); 
-    _DRIVER_PS2_Keyboard();
-    /*system_state = SYSTEM_BOOTING;
-    clear_screen();
-
+    
     _blueos_banner();
     print_boot_logs(); 
     
+
+
+
     system_state = SYSTEM_RUNNING;
     rest_init();
 
@@ -159,5 +142,5 @@ void k_main (unsigned int magic, multiboot_info_t* mbi)
     {
         keyboard_handler();
         update_battery_status();
-    }*/
+    }
 }
