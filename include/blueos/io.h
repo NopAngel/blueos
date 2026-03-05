@@ -18,4 +18,14 @@ static inline uint8_t inb(uint16_t port) {
     return ret;
 }
 
+static inline uint16_t inw(uint16_t port) {
+    uint16_t result;
+    asm volatile ("inw %1, %0" : "=a"(result) : "Nd"(port));
+    return result;
+}
+
+static inline void outl(uint16_t port, uint32_t val) {
+    asm volatile ("outl %0, %1" : : "a"(val), "Nd"(port));
+}
+
 #endif

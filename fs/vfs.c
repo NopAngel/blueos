@@ -24,14 +24,14 @@ vfs_system* get_vfs_instance(void) {
     return &vfs;
 }
 
-static void vfs_memset(void *ptr, char value, unsigned int size) {
+void vfs_memset(void *ptr, char value, unsigned int size) {
     char *p = (char *)ptr;
     for (unsigned int i = 0; i < size; i++) {
         p[i] = value;
     }
 }
 
-static void vfs_memcpy(void *dest, const void *src, unsigned int size) {
+void vfs_memcpy(void *dest, const void *src, unsigned int size) {
     char *d = (char *)dest;
     const char *s = (const char *)src;
     for (unsigned int i = 0; i < size; i++) {
@@ -39,7 +39,7 @@ static void vfs_memcpy(void *dest, const void *src, unsigned int size) {
     }
 }
 
-static void vfs_strcat(char *dest, const char *src) {
+void vfs_strcat(char *dest, const char *src) {
     while (*dest != '\0') {
         dest++;
     }

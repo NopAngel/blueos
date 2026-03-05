@@ -37,19 +37,58 @@ void execute_shell_command(char* input) {
     else if (strlen(input) > 0) {
             printk(RED, "\nPermission denied. Please login first.\n");
         }
-     if (current_user_index == -1) {
-            printk(WHITE, "\nblueos login: ");
-        }
     } 
+
     else {
         if (strcmp(input, "main") == 0)  printk(GREEN, "\nTHANKS GOD FOR ALL!\n");
-        else if (strcmp(input, "version") == 0) {
+
+        else if (strcmp(input, "version") == 0) 
+        {
             printk(CYAN, "\nBlueOS Kernel v%s\n", UTS_RELEASE);
             printk(WHITE, "Arch: %s | Compiler: %s\n", BLUEOS_ARCH, COMPILER_INFO);
         }
 
-        else if (strcmp(input, "whoami") == 0) {
-            printk(CYAN, "\nYou are: %s\n", users[current_user_index].username);
+        else if (strcmp(input, "whoami") == 0) printk(CYAN, "\nYou are: %s\n", users[current_user_index].username);
+        else if (strncmp(input, "login ", 6) == 0) {
+            char *name = input + 6; 
+            char *pass = strchr(name, ' '); 
+
+            if (pass) {
+                *pass = '\0'; 
+                pass++;     
+
+                if (check_login(name, pass)) {
+                    strncpy(current_user, name, 31);
+                    current_user[31] = '\0';
+                    
+                    clear_screen();
+                    cursor_y = 0; cursor_x = 0;
+                    printk(GREEN, "Access Granted. Welcome back, %s!\n", name);
+                } else {
+                    printk(RED, "\nLogin Failed: Invalid credentials.\n");
+                }
+            } else {
+                printk(RED, "\nUsage: login <user> <pass>\n");
+            }
+        }
+        else if (strncmp(input, "usr add ", 8) == 0) 
+        {
+            char *name = input + 8; 
+            char *pass = 0;
+
+            for (int i = 0; name[i] != '\0'; i++) {
+                if (name[i] == ' ') {
+                    name[i] = '\0';      
+                    pass = &name[i + 1];
+                    break;
+                }
+            }
+
+            if (pass && *pass != '\0') {
+                add_user(name, pass);
+            } else {
+                printk(RED, "Error: Usage: usr add <name> <pass>\n");
+            }
         }
         else if (strncmp(input, "sysctl -a", 9) == 0) {
             sysctl_list();
@@ -62,6 +101,11 @@ void execute_shell_command(char* input) {
         }
         else if (strncmp(input, "cat ", 4) == 0) {
             cat(input + 4);
+        }
+        else if (strcmp(input, "logout") == 0) {
+            current_user_index = -1;
+            mm_memset(current_user, 0, 32);
+            printk(YELLOW, "\nLogged out. Session closed.\n");
         }
         else if (strncmp(input, "sysctl -w ", 10) == 0) {
             char *cmd = input + 10;
@@ -160,7 +204,7 @@ void execute_shell_command(char* input) {
 
 prompt:
     if (current_user_index != -1) {
-        printk(GREEN, "user@blueos");
+        printk(GREEN, "%s@blueos", users[current_user_index].username);
         printk(WHITE, ":");
         printk(CYAN, "%s", users[current_user_index].cwd); 
         printk(WHITE, "$ ");

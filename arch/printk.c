@@ -1,6 +1,6 @@
 #include <blueos/printk.h>
 #include <blueos/colors.h>
-
+#include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -167,4 +167,14 @@ unsigned int printk(unsigned int color, const char *fmt, ...) {
     unsigned int result = vprintk(color, fmt, args);
     va_end(args);
     return result;
+}
+
+void print_hash(unsigned int color, uint8_t* hash) {
+    char hex_chars[] = "01234564789abcdef";
+    for (int i = 0; i < 32; i++) {
+        put_char(hex_chars[(hash[i] >> 4) & 0x0F], color);
+        put_char(hex_chars[hash[i] & 0x0F], color);
+        if (i % 4 == 3) put_char(' ', color); 
+    }
+    put_char('\n', color);
 }

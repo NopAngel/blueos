@@ -1,146 +1,98 @@
 /*
- * BlueOS arch/kernel.c
+ * BlueOS arch/x86/kernel.c
+ *
+ * Core Kernel Entry Point. This file orchestrates the high-level 
+ * initialization sequence after the bootloader handoff.
  *
  * Copyright (C) 2024-2026  NopAngel <angelgabrielnieto@outlook.com>
  *
+ * This source code is licensed under the MIT License.
  */
-
 
 #include <blueos/colors.h>
 #include <blueos/printk.h>
 #include <blueos/ports.h>
-#include <hlec.h>
 #include <blueos/panic.h>
-#include <init_fnc.h>
-#include <drivers/keyboard.h>
-#include <fs/vfs.h>
-#include <fs/fs.h>
-#include <version.h>
-#include <interrupts.h>
-#include <multilru.h>
-#include <profile.h>
-#include <auth.h>
 #include <blueos/task.h>
+#include <blueos/rtc.h>
+#include <drivers/keyboard.h>
+#include <init_fnc.h>
+#include <version.h>
 #include <multiboot.h>
-#include <sysfs.h>
-#include <elf.h>
-#include <sysctl.h>
-#include <drivers/rtc.h>
-#include <mm/pmm.h>
-#include <kernel/module.h>
-#include <blueos/kvm.h>
 
-
-extern uint64_t end;
-uint64_t kernel_end_address; 
-
-extern uint32_t used_blocks;
-extern uint32_t total_blocks;
-extern uint8_t _binary_hello_elf_start[];
-typedef void (*entry_point)();
+/* --- System States --- */
 enum system_states {
     SYSTEM_BOOTING,
     SYSTEM_RUNNING,
     SYSTEM_PANIC
 } system_state;
 
-page_t system_page;
-page_t user_page;
-extern module_t __this_module;
-extern void _DRIVER_PS2_Keyboard();
 
-extern char current_user[32];
+
+
 static void _blueos_banner() {
-    /* Print the primary kernel identification string */
-    printk(WHITE, "%s\n", get_kernel_banner());
+    clear_screen();
 
-    /* Architecture-specific identification */
-    printk(WHITE, "CPU: %s architecture detected.\n", BLUEOS_ARCH);
-
-    /* Simulated boot arguments / Command line */
-    printk(WHITE, "\nCommand line: BOOT_IMAGE=/boot/vmlinuz-%s root=UUID=mem-fs ro quiet\n", 
-            UTS_RELEASE);
+    // The "Blue" Shell Logo
+    printk(CYAN,  "  ____  _            \n");
+    printk(CYAN,  " | __ )| |_   _  ___ "); printk(WHITE, "   Kernel: "); printk(GRAY, "%s\n", UTS_RELEASE);
+    printk(CYAN,  " |  _ \\| | | | |/ _ \\"); printk(WHITE, "   Arch:   "); printk(GRAY, "%s\n", BLUEOS_ARCH);
+    printk(CYAN,  " | |_) | | |_| |  __/\n");
+    printk(CYAN,  " |____/|_|\\__,_|\\___|"); printk(WHITE, "   UTS VERSION:   "); printk(GRAY, "%s\n", UTS_VERSION);
+    
+    printk(CYAN, "\n --------------------------------------------------------------\n\n");
 }
 
 
-
-
-
-static void print_boot_logs() {
-    printk(WHITE, "[    0.000000] x86/fpu: Supporting XSAVE with 0x002 bits\n");
-    printk(WHITE, "[    0.005000] BIOS-provided physical RAM map:\n");
-    printk(WHITE, "[    0.005123]  BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable\n");
-    printk(WHITE, "[    0.015842] ACPI: Core revision 20220210\n");
-    printk(WHITE, "[    0.020000] Memory: 2048M/4096M available (16384K kernel code)\n");
-    printk(WHITE, "[    0.032000] SLUB: Genslabs=2048, HWAlign=64, Order=0-3, MinObjects=0\n");
-    printk(WHITE, "[    0.040000] VFS: Mounted root (ramfs filesystem) on /dev/ram0\n");
-    printk(WHITE, "[    0.042000] devtmpfs: initialized and mounted\n");
-}
-
-
-void print_rtc_formatted(int val) {
+/**
+ * format_rtc_val - Ensures two-digit formatting for time/date
+ */
+static void format_rtc_val(int val) {
     if (val < 10) printk(CYAN, "0");
     printk(CYAN, "%d", val);
 }
 
-
+/**
+ * rest_init - Final initialization before jumping to User Space
+ */
 static void rest_init() {
-
-    
-    printk(WHITE, "[    0.100000] Run /sbin/init as init process\n");
-    printk(WHITE, "[    0.105000] Freeing unused kernel image memory: 2048K\n");
-
     int sec, min, hour, day, month, year;
+
+    /* Synchronize with CMOS Real Time Clock */
     read_rtc(&sec, &min, &hour, &day, &month, &year);
 
-    printk(WHITE, "info: ");
-    printk(GRAY, "Initialized RTC (24h mode, no daylight saving)\n");
-
-    printk(WHITE, "info: ");
-    printk(GRAY, "Current time: ");
-
-    print_rtc_formatted(day);   printk(CYAN, "/");
-    print_rtc_formatted(month); printk(CYAN, "/20");
-    print_rtc_formatted(year);  printk(CYAN, " ");
-    print_rtc_formatted(hour);  printk(CYAN, ":");
-    print_rtc_formatted(min);   printk(CYAN, ":");
-    print_rtc_formatted(sec);   printk(CYAN, "\n");
-    printk(WHITE, "\nBlueOS %s-generic tty1\n\n", UTS_RELEASE);
+    printk(WHITE, "\n[ System Clock Sync ]\n");
+    printk(GRAY, " Date: "); 
+    format_rtc_val(day);   printk(GRAY, "/"); 
+    format_rtc_val(month); printk(GRAY, "/20"); 
+    format_rtc_val(year);
     
-    if (current_user_index == -1) {
-        printk(WHITE, "\nblueos login: ");
-    } else {
-        printk(GREEN, "user@blueos");
-        printk(WHITE, ":~$ ");
-    }
+    printk(GRAY, " | Time: "); 
+    format_rtc_val(hour);  printk(GRAY, ":"); 
+    format_rtc_val(min);   printk(GRAY, ":"); 
+    format_rtc_val(sec);   printk(WHITE, "\n\n");
+
+    printk(WHITE, "BlueOS %s-generic tty1\n", UTS_RELEASE);
+    
 }
 
-
-
-
-void k_main (unsigned int magic, multiboot_info_t* mbi)
-{
+/**
+ * k_main - Kernel Entry Point (The Master Orchestrator)
+ */
+void k_main(unsigned int magic, multiboot_info_t* mbi) {
+    /* 1. Hardware abstraction layer & Drivers */
+    system_state = SYSTEM_BOOTING;
     init_all(magic, mbi); 
 
-
-    system_state = SYSTEM_BOOTING;
-    clear_screen();
-
-
-    
     _blueos_banner();
-    print_boot_logs(); 
-    
-
-
 
     system_state = SYSTEM_RUNNING;
     rest_init();
 
-
-    while (1)
-    {
+    while (1) {
         keyboard_handler();
+
         update_battery_status();
+
     }
 }

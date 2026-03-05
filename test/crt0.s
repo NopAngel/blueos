@@ -4,6 +4,5 @@
 
 _start:
     call main
-    
-    # Bucle infinito por si main retorna
+
 1:  jmp 1b

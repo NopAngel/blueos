@@ -44,6 +44,7 @@ void idt_init(void) {
     idt_set_gate(37, (uint32_t)irq5,  0x08, 0x8E);
     idt_set_gate(38, (uint32_t)irq6,  0x08, 0x8E);
     idt_set_gate(39, (uint32_t)irq7,  0x08, 0x8E);
+  //  idt_set_gate(0x80, (unsigned)syscall_handler, 0x08, 0xEE);
     idt_set_gate(40, (uint32_t)irq8,  0x08, 0x8E);
     idt_set_gate(41, (uint32_t)irq9,  0x08, 0x8E);
     idt_set_gate(42, (uint32_t)irq10, 0x08, 0x8E);

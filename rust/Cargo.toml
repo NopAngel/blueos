@@ -1,11 +1,11 @@
 [package]
 name = "rust"
 version = "0.1.0"
-edition = "2021" # Usa 2021 por ahora, es la más estable para kernel dev
+edition = "2021"
 
 [lib]
 name = "rust"
-crate-type = ["staticlib"] # Quitamos cdylib porque no vamos a usar librerías dinámicas .so
+crate-type = ["staticlib"]
 
 [profile.release]
 panic = "abort"

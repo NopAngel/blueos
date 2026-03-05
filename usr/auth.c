@@ -1,56 +1,58 @@
-/*
- * BlueOS / usr / auth.c
- *
- * Copyright (C) 2024-2026  NopAngel <angelgabrielnieto@outlook.com>
- *
- * Description:
- * User authentication and session control implementation.
- */
-
 #include <auth.h>
 #include <lib/string.h>
+#include <fs/vfs.h>
+#include <lib/string.h>
+#include <blueos/io.h>
+#include <blueos/printk.h>
+#include <blueos/colors.h>
 
 user_t users[MAX_USERS];
-int current_user_index = {};
-
+int current_user_index = -1;
 char current_user[32] = {0};
 
-/**
- * auth_init() - Wipe user table and set default security state.
- */
-void auth_init() {
-    for (int i = 0; i < MAX_USERS; i++) {
-        users[i].active = 0;
-        strcpy(users[i].cwd, "/"); // Default directory
-    }
-    
-    /* Create a default root user for development */
-    add_user("admin", "1234");
+void save_users_to_fs() {
+    vfs_write("users.dat", (const char*)users);
 }
 
-/**
- * add_user() - Register a new user in the first available slot.
- * @name: Username string.
- * @pass: Password string.
- */
+
+void load_users_from_fs() {
+    char* data = vfs_read("users.dat");
+    
+    if (data != NULL) {
+        memcpy(users, data, sizeof(user_t) * MAX_USERS);
+        printk(GREEN, "[  OK  ] ");
+        printk(WHITE, "Auth: User database loaded from VFS.\n");
+    } else {
+        for (int i = 0; i < MAX_USERS; i++) {
+            users[i].active = 0;
+            strcpy(users[i].cwd, "/");
+        }
+        add_user("admin", "1234");
+        printk(YELLOW, "[ INFO ] ");
+        printk(WHITE, "Auth: No database found. Admin created.\n");
+    }
+}
+
+void auth_init() {
+    load_users_from_fs();
+}
+
 void add_user(const char *name, const char *pass) {
     for (int i = 0; i < MAX_USERS; i++) {
         if (!users[i].active) {
-            strcpy(users[i].username, name);
-            strcpy(users[i].password, pass);
+            strncpy(users[i].username, name, 31);
+            strncpy(users[i].password, pass, 31);
             strcpy(users[i].cwd, "/");
             users[i].active = 1;
+            
+            save_users_to_fs(); 
+            clear_screen();
+            printk(GREEN, "User created!");
             return;
         }
     }
 }
 
-/**
- * check_login() - Validate credentials and open a session.
- * @name: Input username.
- * @pass: Input password.
- * Return: 1 on success, 0 on failure.
- */
 int check_login(const char *name, const char *pass) {
     for (int i = 0; i < MAX_USERS; i++) {
         if (users[i].active && 
