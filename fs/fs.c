@@ -10,6 +10,8 @@
 
 #include <blueos/printk.h>
 #include <blueos/colors.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <lib/string.h>
 #include <fs/fs.h>
 #include <fs/vfs.h>
@@ -17,8 +19,8 @@
 unsigned int directory_count = 0;
 unsigned int file_count = 0;
 extern char data_blocks[VFS_MAX_ENTRIES][VFS_MAX_CONTENT];
-
-static unsigned int current_directory = 0;
+bool fs_needs_sync = false;
+unsigned int current_directory = 0;
 
 
 
@@ -28,12 +30,63 @@ FileEntry file_table[MAX_FILES];
 
 
 
+#define DISK_START_SECTOR 100 
+
+void fs_save_to_disk() {
+    printk(YELLOW, "Persisting filesystem to disk...\n");
+
+    uint32_t stats[2] = {directory_count, file_count};
+    ata_write_sectors(DISK_START_SECTOR, 1, (uint8_t*)stats);
+
+    uint32_t dir_sectors = (sizeof(DirectoryEntry) * MAX_DIRECTORIES) / 512 + 1;
+    ata_write_sectors(DISK_START_SECTOR + 1, dir_sectors, (uint8_t*)directory_table);
+
+    uint32_t file_sectors = (sizeof(FileEntry) * MAX_FILES) / 512 + 1;
+    ata_write_sectors(DISK_START_SECTOR + 1 + dir_sectors, file_sectors, (uint8_t*)file_table);
+
+    printk(GREEN, "Done! Filesystem state saved.\n");
+}
+
+
+void fs_load_from_disk() {
+    uint32_t stats[2];
+    ata_read_sectors(DISK_START_SECTOR, 1, (uint8_t*)stats);
+
+    if (stats[0] > 0 && stats[0] < MAX_DIRECTORIES) {
+        directory_count = stats[0];
+        file_count = stats[1];
+
+        uint32_t dir_sectors = (sizeof(DirectoryEntry) * MAX_DIRECTORIES) / 512 + 1;
+        ata_read_sectors(DISK_START_SECTOR + 1, dir_sectors, (uint8_t*)directory_table);
+
+        uint32_t file_sectors = (sizeof(FileEntry) * MAX_FILES) / 512 + 1;
+        ata_read_sectors(DISK_START_SECTOR + 1 + dir_sectors, file_sectors, (uint8_t*)file_table);
+        
+        printk(GREEN, "BlueOS: Restored %d files from disk.\n", file_count);
+    } else {
+        printk(WHITE, "BlueOS: No valid FS found. Formatting...\n");
+        fs_init_clean(); 
+    }
+}
+
+void fs_init_clean() {
+
+    strcpy(directory_table[0].name, "/");
+    directory_table[0].parent_dir = 0; 
+    directory_count = 1;
+    file_count = 0;
+    current_directory = 0;
+}
+
+
+
 /**
  * fs_init() - Initialize the root filesystem.
  * * Must be called during kernel boot.
  */
 void fs_init() {
     /* Create the Root (/) directory at index 0 */
+
     strcpy(directory_table[0].name, "/");
     directory_table[0].parent_dir = 0; 
     directory_count = 1;
@@ -87,6 +140,7 @@ int touch(const char *filename, const char *content) {
         file_count++;
         return 0;
     }
+    fs_needs_sync = true;
     return -1;
 }
 
@@ -237,3 +291,21 @@ void fs_rmdir(const char *name) {
     }
 }
 
+
+
+
+int find_file(const char* name) {
+    for (unsigned int i = 0; i < file_count; i++) {
+        if (strcmp(file_table[i].name, name) == 0) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+void fs_read_at(const char* filename, uint32_t offset, uint32_t size, char* buffer) {
+    int idx = find_file(filename);
+    if (idx != -1) {
+        memcpy(buffer, file_table[idx].content + offset, size);
+    }
+}

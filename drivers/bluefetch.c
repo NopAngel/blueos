@@ -29,7 +29,7 @@ void print_raccoon_real() {
     printk(r[5], "           /~/,_/~~~\\,__.-`        "); printk(WHITE, " Kernel: "); printk(CYAN, "%s\n", UTS_RELEASE);
     printk(r[6], "          ////~    // ~\\\\          "); printk(WHITE, " Arch:   "); printk(CYAN, "%s\n", BLUEOS_ARCH);
     printk(r[0], "        ==`==`   ==`   ==`         "); printk(WHITE, " RAM:    "); printk(CYAN, "%dMB / %dMB\n", used_memory_kb/1024, total_memory_kb/1024);
-    printk(WHITE, "\n  [ BlueOS Raccoon Project ]\n\n");
+    display_system_palette();
 }
 
 

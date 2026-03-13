@@ -1,5 +1,5 @@
 /*
- * BlueOS arch/x86/kernel.c
+ * BlueOS arch/i386/kernel.c
  *
  * Core Kernel Entry Point. This file orchestrates the high-level 
  * initialization sequence after the bootloader handoff.
@@ -20,13 +20,34 @@
 #include <version.h>
 #include <multiboot.h>
 
-/* --- System States --- */
+
+
+#define KERNEL_STACK_SIZE       4096
+uint8_t kernel_stack_buffer[KERNEL_STACK_SIZE] __attribute__ ((aligned(16)));
+uint32_t get_kernel_stack_top() {
+    return (uint32_t)kernel_stack_buffer + KERNEL_STACK_SIZE;
+}
+
 enum system_states {
     SYSTEM_BOOTING,
     SYSTEM_RUNNING,
     SYSTEM_PANIC
 } system_state;
 
+void test_audio_driver() {
+    printk(YELLOW, "Testing Sound Driver... ");
+    
+    for (int i = 0; i < 3; i++) {
+        play_sound(880); // Nota La alta
+        for(volatile int d = 0; d < 20000000; d++); 
+        
+        play_sound(440); // Nota La normal
+        for(volatile int d = 0; d < 20000000; d++);
+    }
+    
+    nosound();
+    printk(GREEN, "OK\n");
+}
 
 
 
@@ -41,6 +62,8 @@ static void _blueos_banner() {
     printk(CYAN,  " |____/|_|\\__,_|\\___|"); printk(WHITE, "   UTS VERSION:   "); printk(GRAY, "%s\n", UTS_VERSION);
     
     printk(CYAN, "\n --------------------------------------------------------------\n\n");
+
+    display_system_palette();
 }
 
 
@@ -80,19 +103,18 @@ static void rest_init() {
  * k_main - Kernel Entry Point (The Master Orchestrator)
  */
 void k_main(unsigned int magic, multiboot_info_t* mbi) {
-    /* 1. Hardware abstraction layer & Drivers */
+    uint32_t stack_top = get_kernel_stack_top();
+    __asm__ __volatile__ ("movl %0, %%esp" : : "r"(stack_top));
     system_state = SYSTEM_BOOTING;
     init_all(magic, mbi); 
 
-    _blueos_banner();
 
+    _blueos_banner();
     system_state = SYSTEM_RUNNING;
     rest_init();
 
     while (1) {
         keyboard_handler();
-
         update_battery_status();
-
     }
 }

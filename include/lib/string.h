@@ -9,5 +9,7 @@ int memcmp(const void* s1, const void* s2, int n);
 int bcmp(const void* s1, const void* s2, int n);
 char *strcpy(char *dest, const char *src);
 int strcmp(const char *str1, const char *str2);
+void itoa(int n, char* s);
+long simple_strtol(const char *cp, char **endp, unsigned int base);
 
 #endif

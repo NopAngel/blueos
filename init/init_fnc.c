@@ -6,6 +6,8 @@
  * Copyright (C) 2024-2026  NopAngel
  */
 
+#include <stdint.h>
+#include <stdbool.h>
 #include <fs/fs.h>
 #include <blueos/io.h>
 #include <fs/vfs.h>
@@ -16,92 +18,189 @@
 #include <hpet.h>
 #include <blueos/printk.h>
 
+#define RTL_VENDOR_ID 0x10EC
+#define RTL_DEVICE_ID 0x8139
+int console_loglevel = 7;
 
 extern uint32_t total_blocks;
-
-/* --- External Linker Symbols --- */
 extern uint32_t _end; 
 extern int current_user_index;
 
-/* --- Internal Prototypes --- */
-static void boot_msg(const char* subsystem, const char* msg, int status);
-#define panic(reason, ...) k_panic(__FILE__, __LINE__, reason, ##__VA_ARGS__)
-/* --- DMA Buffer for Security Check --- */
-uint8_t disk_buffer[512] __attribute__((aligned(4096)));
+const char *readme_lol = "  BLUEOS  \nExplanation:\n It's a kernel inspired by GNU/Linux and Unix.\n\n How to use it?\n\nIt works similarly to Bash. Up and down arrows: to see the commands\nTab: to see the continuation of the command\nDouble Tab: for when there are two identical commands and you need to see the 'similar'\n\nThe commands:\n You can use 'help' to see the list of commands\n\nCreated by: NopAngel   Repo: github.com/NopAngel/blueos";
+
+static void x86_wallclock_init(void);
+void i386_init_noop(void);
+void idt_init(void);
+void fs_init(void);
+extern void mm_init(struct multiboot_info *mbi);
+void detect_hypervisor(void);
+bool i386_is_guest(void);
+const char* i386_hyper_name(void);
+void i386_memory_prepare(struct multiboot_info* mbi);
+static void i386_mem_init(struct multiboot_info *mbd) {
+    if (mbd) {
+        mm_init(mbd);
+    }
+}
+
+struct i386_hyper_ops {
+    void (*init_platform)(void);
+    bool (*is_guest)(void);      // Ahora 'bool' será reconocido
+    const char* (*get_name)(void);
+};
+
+struct i386_init_ops {
+    void (*resources_setup)(struct multiboot_info *); // <--- Nueva: Configura límites
+    void (*arch_setup)(void);
+    void (*mem_init)(struct multiboot_info *);
+    void (*fs_init)(void);
+    struct i386_hyper_ops hyper;
+};
+
+void i386_init_noop(void) { }
+
+/* --- Global Init Table --- */
+struct i386_init_ops blueos_init = {
+    .resources_setup = i386_memory_prepare,
+    .arch_setup = idt_init,
+    .mem_init   = mm_init,
+    .fs_init    = fs_init,
+    
+    .hyper = {
+        .init_platform = detect_hypervisor,
+        .is_guest      = i386_is_guest,
+        .get_name      = i386_hyper_name,
+    }
+};
+
+static uint8_t disk_buffer[512] __attribute__((aligned(4096)));
 
 /**
  * boot_msg - Professional styled boot logging
- * Status: 0 = OK (Green), 1 = Warning (Yellow), 2 = Error (Red)
+ * Status: 0 = OK, 1 = WARN, 2 = FAIL
  */
 static void boot_msg(const char* subsystem, const char* msg, int status) {
-    printk(WHITE, "[ ");
-    if (status == 0)      printk(GREEN, "  OK  ");
-    else if (status == 1) printk(YELLOW, " WARN ");
-    else                 printk(RED, " FAIL ");
-    printk(WHITE, " ] %-12s: %s\n", subsystem, msg);
-}
-void init_all (unsigned int magic, struct multiboot_info *mbd)
-{
-    uint8_t hash_output[32];
-    clear_screen(); 
-    idt_init();
-    boot_msg("CPU", "Interrupt Descriptor Table ready", 0);
-
-    mm_init(mbd);
-    uint32_t total_mb = mm_get_total() / (1024 * 1024);
-    uint32_t free_mb = mm_get_free() / (1024 * 1024);
-
-    if (total_mb == 0) {
-        panic("Memory detection failure: 0 MB reported by BIOS/Multiboot.");
+    switch (status) {
+        case 0:
+            pr_info("[  OK  ] %s-12s: %s\n", subsystem, msg);
+            break;
+        case 1:
+            pr_warn("[ WARN ] %s-12s: %s\n", subsystem, msg);
+            break;
+        case 2:
+            pr_err( "[ FAIL ] %s-12s: %s\n", subsystem, msg);
+            break;
     }
+}
 
-    printk(GREEN, "[  OK  ] ");
-    printk(WHITE, "Memory: %d MB total, %d MB free detected\n", total_mb, free_mb);
-
-    boot_msg("PMM", "Physical Memory Manager active", 0);
-
+/**
+ * verify_kernel_integrity - SHA-256 Check of Boot Sector
+ */
+static void verify_kernel_integrity(void) {
+    uint8_t hash_output[32];
     hdcdma_init(disk_buffer, 512);
-    outb(0x1F7, 0xC8); 
+    outb(0x1F7, 0xC8); // READ DMA command
     wait_for_disk();
     
     sha256_quick_hash(disk_buffer, 512, hash_output);
     if (hash_output[0] != 0x00) { 
-        panic("SECURITY VIOLATION: Disk signature mismatch! Expected 0x00, got 0x%x", hash_output[0]);
+        k_panic(__FILE__, __LINE__, "SECURITY VIOLATION: Disk signature mismatch!");
     }
     boot_msg("SECURITY", "Kernel integrity verified via SHA-256", 0);
+}
 
-    int virt_ok = init_intel_vtx() || init_amd_svm();
-    if (!virt_ok) {
-        boot_msg("VIRT", "No hardware acceleration support found", 1);
+/**
+ * init_all - Main kernel entry sequence
+ */
+void init_all(unsigned int magic, struct multiboot_info *mbd) {
+    clear_screen(); 
+
+
+    blueos_init.arch_setup();
+    boot_msg("CPU", "IDT and CPU descriptors ready", 0);
+
+    blueos_init.mem_init(mbd);
+    uint32_t total_mb = mm_get_total() / (1024 * 1024);
+    if (total_mb == 0) {
+        k_panic(__FILE__, __LINE__, "Memory detection failure: 0 MB reported.");
     }
-    vfs_init();
-    fs_init();
-    jfs_init();
-    boot_msg("FS", "Journaling File Systems initialized", 0);
+    boot_msg("PMM", "Physical Memory Manager active", 0);
+    printk(WHITE, "             Detected: %d MB total RAM\n", total_mb);
 
+    verify_kernel_integrity();
+
+    if (!init_intel_vtx() && !init_amd_svm()) {
+        boot_msg("VIRT", "No hardware acceleration (VMX/SVM) available", 1);
+    }
+
+
+
+    const char* cmdline = (const char*)mbd->cmdline;
+
+    if (cmdline_find_option_bool(cmdline, "quiet")) {
+        // ...
+    }
+
+    char log_level[4];
+    if (cmdline_find_option(cmdline, "loglevel", log_level, sizeof(log_level)) > 0) {
+        // ..
+    }
+
+    boot_msg("CMDLINE", "Kernel parameters parsed", 0 );
+
+    blueos_init.hyper.init_platform();
+    
+    
+    if (blueos_init.hyper.is_guest()) {
+        boot_msg("HYPER", "Virtual environment detected", 0);
+        printk(CYAN, "             Platform: %s\n", blueos_init.hyper.get_name());
+    } else {
+        boot_msg("HYPER", "Running on Bare Metal", 0);
+    }
+
+    vfs_init();
+    if (virtio_9p_present()) {
+        v9p_init();
+        vfs_mkdir("mnt");
+        vfs_mount("/mnt/host", "9p", 0); 
+        
+        boot_msg("9PFS", "Shared folder mounted via 9P", 0);
+
+        vfs_mount("host", "/mnt/shared", "9p");
+        boot_msg("ADFS", "Shared folder mounted via 9P", 0);
+
+
+    }
+    blueos_init.fs_init();
+    jfs_init();
+    boot_msg("FS", "VFS and Journaling FS (JFS) ready", 0);
 
     isapnp_init();
     bcma_scan_bus();
     usbscan_init();
-    
+    scsi_init();
+
     if (find_wifi_card() == 0) {
-        boot_msg("NETWORK", "No WiFi adapter detected", 1); // Warning
-    } else {
-        boot_msg("NETWORK", "Wireless card linked", 0);
+        boot_msg("NET", "No WiFi adapter found", 1);
     }
 
-    //write_tss(5, 0x10, (uint32_t)kmalloc(4096) + 4096); 
-    //flush_tss();
-    // jump_to_user(test_user_function);
-    scsi_init();
+    uint32_t net_dev = pci_find_device(RTL_VENDOR_ID, RTL_DEVICE_ID);
+    if (net_dev != 0xFFFFFFFF) {
+        uint8_t bus = (net_dev >> 16) & 0xFF;
+        uint8_t slot = (net_dev >> 8) & 0xFF;
+        rtl8139_init(bus, slot);
+        boot_msg("NET", "RTL8139 controller initialized", 0);
+    }
+
     auth_init();
     current_user_index = -1;
     pinctrl_init();
     leds_init();
     profile_init(0x100000, 0x200000);
-    
-    boot_msg("SYSTEM", "Runlevel 1 reached. Enabling Interrupts...", 0);
-    printk(WHITE, "\n--------------------------------------------------\n");
+
+    boot_msg("SYSTEM", "Runlevel 1 reached. Enabling IRQs", 0);
+    printk(WHITE, "--------------------------------------------------\n");
+    touch("ReadMe.md", readme_lol);
 
     __asm__ volatile ("sti");
 }

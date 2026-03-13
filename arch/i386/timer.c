@@ -10,7 +10,7 @@ volatile uint32_t current_ticks = 0;
 static timer_info_t timer_info = {0};
 static uint64_t timer_ticks = 0;
 static uint64_t timer_ms = 0;
-
+uint32_t system_ticks = 0;
 #define MAX_ALARMS 32
 static timer_alarm_t alarms[MAX_ALARMS];
 static int next_alarm_id = 0;
@@ -20,6 +20,7 @@ static uint32_t calibrated_frequency = 0;
 
 void timer_handler(void) {
     timer_ticks++;
+    system_ticks++;
     timer_ms += TIMER_MS_PER_TICK;
 
     timer_info.ticks = timer_ticks;

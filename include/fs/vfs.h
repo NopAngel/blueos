@@ -11,6 +11,7 @@
 #define VFS_MAX_ENTRIES 500
 #define VFS_MAX_OPEN_FILES 32
 #define MAX_VFS_NODES 256
+#define MAX_MOUNTS 8
 
 #ifndef NULL
 #define NULL ((void*)0)
@@ -20,13 +21,19 @@ typedef enum {
     VFS_TYPE_FILE,
     VFS_TYPE_DIRECTORY
 } vfs_entry_type;
+
+typedef struct {
+    char target[VFS_MAX_PATH]; 
+    char type[16];             
+    int active;
+} vfs_mount_point;
+
 typedef struct {
     void (*init)(void);
     void (*mkdir)(const char* name);
     void (*touch)(const char* name);
     void (*ls)(void);
 } fs_ops_t;
-
 
 
 typedef struct {
@@ -61,8 +68,13 @@ typedef struct {
     unsigned int ref_count;
 } vfs_file_handle;
 
+struct vfs_driver {
+    char name[16];
+    int (*mount)(const char *source, const char *target);
+};
+void vfs_register_driver(struct vfs_driver *driver);
 void vfs_register_fs(const char* name, fs_ops_t ops);
-
+extern vfs_mount_point mount_table[MAX_MOUNTS];
 void vfs_init(void);
 int vfs_mkdir(const char *name);
 int vfs_create(const char *name, const char *content);
@@ -82,7 +94,7 @@ vfs_entry* vfs_find_entry(const char *name, vfs_entry_type type);
 vfs_entry* vfs_get_entry_by_inode(unsigned int inode);
 void vfs_rmdir(const char *name);
 void vfs_rm(const char *name);
-
+int vfs_mount(const char *source, const char *target, const char *type);
 static void vfs_memset(void *ptr, char value, unsigned int size);
 static void vfs_memcpy(void *dest, const void *src, unsigned int size);
 static void vfs_strcat(char *dest, const char *src);

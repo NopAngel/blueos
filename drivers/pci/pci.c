@@ -17,20 +17,11 @@ void pci_write_config(unsigned char bus, unsigned char slot, unsigned char func,
     outl(PCI_CONFIG_DATA, val);
 }
 
- unsigned int pci_read_config(unsigned char bus, unsigned char slot, unsigned char func, unsigned char offset) {
-    unsigned int address;
-    unsigned int lbus  = (unsigned int)bus;
-    unsigned int lslot = (unsigned int)slot;
-    unsigned int lfunc = (unsigned int)func;
-    unsigned int tmp = 0;
-
-    address = (unsigned int)((lbus << 16) | (lslot << 11) |
-              (lfunc << 8) | (offset & 0xfc) | ((unsigned int)0x80000000));
-
-    outl(PCI_CONFIG_ADDRESS, address);
-    tmp = inl(PCI_CONFIG_DATA);
-    
-    return tmp;
+uint32_t pci_read_config(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset) {
+    uint32_t address = (uint32_t)((uint32_t)bus << 16) | ((uint32_t)slot << 11) |
+                       ((uint32_t)func << 8) | (offset & 0xfc) | ((uint32_t)0x80000000);
+    outl(0xCF8, address);
+    return inl(0xCFC);
 }
 
 

@@ -1,4 +1,4 @@
-// arch/ports.h
+
 #ifndef PORTS_H
 #define PORTS_H
 

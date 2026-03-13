@@ -138,3 +138,51 @@ int strcmp(const char *s1, const char *s2) {
     }
     return *(unsigned char *)s1 - *(unsigned char *)s2;
 }
+
+int atoi(const char *s) {
+    int res = 0;
+    while (*s >= '0' && *s <= '9') {
+        res = res * 10 + (*s - '0');
+        s++;
+    }
+    return res;
+}
+
+void itoa(int n, char* s) {
+    int i = 0;
+    s[i++] = n + '0';
+    s[i] = '\0';
+}
+
+long simple_strtol(const char *cp, char **endp, unsigned int base) {
+    long result = 0;
+    
+    if (!base) {
+        if (*cp == '0') {
+            base = 8;
+            cp++;
+            if ((*cp == 'x' || *cp == 'X')) {
+                base = 16;
+                cp++;
+            }
+        } else {
+            base = 10;
+        }
+    }
+
+    while (1) {
+        unsigned int value;
+        if (*cp >= '0' && *cp <= '9') value = *cp - '0';
+        else if (*cp >= 'a' && *cp <= 'f') value = *cp - 'a' + 10;
+        else if (*cp >= 'A' && *cp <= 'F') value = *cp - 'A' + 10;
+        else break;
+
+        if (value >= base) break;
+        result = result * base + value;
+        cp++;
+    }
+
+    if (endp) *endp = (char *)cp;
+    return result;
+}
+

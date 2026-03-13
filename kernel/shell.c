@@ -1,214 +1,33 @@
 #include <lib/string.h>
+#include <stdint.h>
 #include <blueos/printk.h>
 #include <blueos/colors.h>
-#include <version.h>
-#include <auth.h>
 
-extern int current_user_index;
-extern char current_user[];
+/* External references from commands.c */
+extern void execute_shell_command(char* input);
+extern void print_prompt();
 
-extern int cursor_x;
-extern int cursor_y;
+/* This function can be called from kmain or after login */
+void init_shell() {
+    clear_screen();
+    printk(CYAN, "BlueOS Shell Interface\n");
+    printk(GRAY, "Type 'help' to see available commands.\n\n");
+    print_prompt();
+}
 
-
-
-
-void execute_shell_command(char* input) {
-    if (strlen(input) == 0) goto prompt;
-
-    if (current_user_index == -1) {
-        if (strncmp(input, "login ", 6) == 0) {
-            char* name = input + 6;
-            char* pass = strchr(name, ' '); 
-            if (pass) {
-                *pass = '\0';
-                pass++;
-                if (check_login(name, pass)) {
-                    strncpy(current_user, name, 31);
-                    current_user[31] = '\0';
-                    clear_screen();
-                    cursor_y = 0; cursor_x = 0; 
-                    printk(GREEN, "Welcome to BlueOS. System ready.\n");
-                } else {
-                    printk(RED, "\nLogin Failed!\n");
-                }
-            }
-        } 
-    else if (strlen(input) > 0) {
-            printk(RED, "\nPermission denied. Please login first.\n");
-        }
-    } 
-
-    else {
-        if (strcmp(input, "main") == 0)  printk(GREEN, "\nTHANKS GOD FOR ALL!\n");
-
-        else if (strcmp(input, "version") == 0) 
-        {
-            printk(CYAN, "\nBlueOS Kernel v%s\n", UTS_RELEASE);
-            printk(WHITE, "Arch: %s | Compiler: %s\n", BLUEOS_ARCH, COMPILER_INFO);
-        }
-
-        else if (strcmp(input, "whoami") == 0) printk(CYAN, "\nYou are: %s\n", users[current_user_index].username);
-        else if (strncmp(input, "login ", 6) == 0) {
-            char *name = input + 6; 
-            char *pass = strchr(name, ' '); 
-
-            if (pass) {
-                *pass = '\0'; 
-                pass++;     
-
-                if (check_login(name, pass)) {
-                    strncpy(current_user, name, 31);
-                    current_user[31] = '\0';
-                    
-                    clear_screen();
-                    cursor_y = 0; cursor_x = 0;
-                    printk(GREEN, "Access Granted. Welcome back, %s!\n", name);
-                } else {
-                    printk(RED, "\nLogin Failed: Invalid credentials.\n");
-                }
-            } else {
-                printk(RED, "\nUsage: login <user> <pass>\n");
-            }
-        }
-        else if (strncmp(input, "usr add ", 8) == 0) 
-        {
-            char *name = input + 8; 
-            char *pass = 0;
-
-            for (int i = 0; name[i] != '\0'; i++) {
-                if (name[i] == ' ') {
-                    name[i] = '\0';      
-                    pass = &name[i + 1];
-                    break;
-                }
-            }
-
-            if (pass && *pass != '\0') {
-                add_user(name, pass);
-            } else {
-                printk(RED, "Error: Usage: usr add <name> <pass>\n");
-            }
-        }
-        else if (strncmp(input, "sysctl -a", 9) == 0) {
-            sysctl_list();
-        }
-        else if (strcmp(input, "battery") == 0) {
-            int bat = get_bat_level();
-            char* status = get_bat_charging() ? "Charging" : "Discharging";
-            
-            printk(YELLOW, "Battery: %d%% [%s]\n", bat, status);
-        }
-        else if (strncmp(input, "cat ", 4) == 0) {
-            cat(input + 4);
-        }
-        else if (strcmp(input, "logout") == 0) {
-            current_user_index = -1;
-            mm_memset(current_user, 0, 32);
-            printk(YELLOW, "\nLogged out. Session closed.\n");
-        }
-        else if (strncmp(input, "sysctl -w ", 10) == 0) {
-            char *cmd = input + 10;
-            char *name = cmd;
-            char *value = strchr(cmd, '=');
-
-            if (value) {
-                *value = '\0'; 
-                value++;       
-                if (sysctl_set(name, value) == 0) {
-                    printk(GREEN, "Variable updated.\n");
-                } else {
-                    printk(RED, "Error updating variable.\n");
-                }
-            }
-        }
-        else if (strcmp(input, "logout") == 0) {
-            current_user_index = -1;
-            printk(YELLOW, "\nLogged out. Session closed.\n");
-            printk(WHITE, "blueos login: ");
-        }
-        else if (strncmp(input, "cd ", 3) == 0) {
-            cd(input + 3);
-        }
-        else if (strcmp(input, "help") == 0) {
-            vfs_cat("/base/inf/info.bluehelp");
-        }
-        else if (strncmp(input, "rm ", 3) == 0) {
-            fs_rm(input + 3);
-        }
-        else if (strncmp(input, "rmdir ", 6) == 0) {
-            fs_rmdir(input + 6);
-        }
-        else if (strcmp(input, "clear") == 0) {
-            clear_screen();
-            cursor_y = 0;
-            cursor_x = 0; 
-        }
-        else if (strcmp(input, "pwd") == 0) {
-            pwd();
-        }
-        else if (strcmp(input, "ls") == 0) {
-            printk(WHITE, "\n"); 
-            list_items();
-     
-        }
-        else if (strcmp(input, "vfs-ls") == 0) {
-            printk(WHITE, "\n"); 
-            vfs_ls();
-     
-        }
-        else if (strncmp(input, "cat ", 8) == 0) {
-            printk(WHITE, "\n"); 
-            vfs_cat(input + 8);
-     
-        }
-        else if (strncmp(input, "mkdir ", 6) == 0) {
-            mkdir(input + 6);
-        }
-
-        else if (strncmp(input, "jfs-mkdir ", 10) == 0) {
-            jfs_mkdir(input + 10);
-        }
-        else if (strcmp(input, "jfs-ls") == 0) {
-            printk(WHITE, "\n"); 
-            jfs_ls();
-        }
-        else if (strncmp(input, "jfs-touch ", 10) == 0) {
-            jfs_touch(input + 10);
-        }
-        else if (strncmp(input, "touch ", 6) == 0) {
-            touch(input + 6, "");
-            printk(GREEN, "\nFile created.\n");
-        }
-        else if (strcmp(input, "xfs-ls") == 0)
-        {
-           xfs_ls(); 
-        }
-        else if (strncmp(input, "xfs-createnode ", 10) == 0)
-        {
-            xfs_create(input + 10);
-        }
-        else if (strcmp(input, "bluefetch") == 0) {
-            print_raccoon_real(); 
-        }
-        else if (strcmp(input, "reboot") == 0 || strcmp(input, "restart") == 0) {
-            sys_reboot(); 
-        }
-        else if (strcmp(input, "poweroff") == 0 || strcmp(input, "shutdown") == 0) {
-            sys_shutdown(); 
-        }
-        else if (strlen(input) > 0) {
-            printk(RED, "\nERR: Command not found\n");
-        }
+/* The logic for actually 'running' the shell is handled by 
+   interrupts in keyboard.c, which calls execute_shell_command().
+   
+   You can keep display_system_palette here if you use it 
+   for debugging colors.
+*/
+void display_system_palette() {
+    for (int i = 0; i < 8; i++) {
+        printk(i, "%c%c", 219, 219); 
     }
-
-prompt:
-    if (current_user_index != -1) {
-        printk(GREEN, "%s@blueos", users[current_user_index].username);
-        printk(WHITE, ":");
-        printk(CYAN, "%s", users[current_user_index].cwd); 
-        printk(WHITE, "$ ");
-    } else {
-        printk(WHITE, "blueos login: ");
+    printk(WHITE, "\n  ");
+    for (int i = 8; i < 16; i++) {
+        printk(i, "%c%c", 219, 219);
     }
+    printk(WHITE, "\n\n");
 }

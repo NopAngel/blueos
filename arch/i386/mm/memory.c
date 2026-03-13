@@ -86,35 +86,45 @@ static uint32_t calculate_memory(struct multiboot_info* mbi) {
     return mem_kb * 1024;
 }
 
+void i386_memory_prepare(struct multiboot_info* mbi) {
+    if (!mbi || !(mbi->flags & 0x01)) {
+        total_memory_kb = 128 * 1024; // Safe fallback
+        return;
+    }
+    
+    // mbi->mem_upper is memory starting at 1MB, in KB.
+    total_memory_kb = mbi->mem_upper + 1024;
+}
+
 /**
  * mm_init - Initializes the Physical Memory Manager
  */
 void mm_init(struct multiboot_info* mbi) {
     if (mm.initialized) return;
 
-    mm.total_memory = calculate_memory(mbi);
+    // 1. Detección temprana si no se hizo antes
+    i386_memory_prepare(mbi);
+    
+    mm.total_memory = (uint64_t)total_memory_kb * 1024;
     mm.total_pages = mm.total_memory / PAGE_SIZE;
-
     mm.bitmap = bitmap_storage;
     mm.bitmap_size = (mm.total_pages + 7) / 8;
 
-    // Safety: Don't overflow our static bitmap storage
+    // Safety check for bitmap boundaries
     if (mm.bitmap_size > BITMAP_SIZE) {
         mm.bitmap_size = BITMAP_SIZE;
         mm.total_pages = BITMAP_SIZE * 8;
-        mm.total_memory = mm.total_pages * PAGE_SIZE;
     }
 
-    // 1. Clear the entire bitmap (Mark all as FREE)
+    // 2. Mark all as FREE (Clear bitmap)
     mm_memset(mm.bitmap, 0, mm.bitmap_size);
 
-    // 2. Protect Low Memory (0 - 1MB) - BIOS, VGA, IVT live here
+    // 3. RESERVED: Low Memory (0x0 - 0x100000)
+    // Here live IVT, BIOS data, and VGA buffer.
     uint32_t low_mem_pages = 0x100000 / PAGE_SIZE;
-    for (uint32_t i = 0; i < low_mem_pages; i++) {
-        set_bit(i, 1);
-    }
+    for (uint32_t i = 0; i < low_mem_pages; i++) set_bit(i, 1);
 
-    // 3. Protect Kernel Image
+    // 4. RESERVED: Kernel Image
     uint32_t k_start_page = KERNEL_START_ADDR / PAGE_SIZE;
     uint32_t k_end_addr = (uint32_t)&_end;
     uint32_t k_pages = (k_end_addr - KERNEL_START_ADDR + PAGE_SIZE - 1) / PAGE_SIZE;
@@ -123,13 +133,8 @@ void mm_init(struct multiboot_info* mbi) {
         set_bit(k_start_page + i, 1);
     }
 
-    // 4. Update stats
     mm.next_free = k_start_page + k_pages;
-    mm.used_memory = (uint32_t)mm_get_used(); // Calculated by counting bits if needed
-    mm.free_memory = mm.total_memory - mm.used_memory;
-    mm.free_pages = mm.free_memory / PAGE_SIZE;
-
-    mm.initialized = 1;
+    mm.initialized = true;
 }
 
 /* --- Allocation Engine --- */

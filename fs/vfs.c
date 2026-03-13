@@ -24,6 +24,18 @@ vfs_system* get_vfs_instance(void) {
     return &vfs;
 }
 
+#define MAX_DRIVERS 4
+static struct vfs_driver *registered_drivers[MAX_DRIVERS];
+static int num_registered_drivers = 0;
+
+void vfs_register_driver(struct vfs_driver *driver) {
+    if (num_registered_drivers < MAX_DRIVERS) {
+        registered_drivers[num_registered_drivers] = driver;
+        num_registered_drivers++;
+        printk(GREEN, "VFS: Registered driver [%s]\n", driver->name);
+    }
+}
+
 void vfs_memset(void *ptr, char value, unsigned int size) {
     char *p = (char *)ptr;
     for (unsigned int i = 0; i < size; i++) {
@@ -222,15 +234,33 @@ int vfs_create(const char *name, const char *content) {
 }
 
 char* vfs_read(const char *name) {
-    vfs_entry *file = vfs_find_in_directory(vfs.current_directory, name, VFS_TYPE_FILE);
-    if (file == NULL) {
-        printk(RED, "ERR: File not found");
-        return NULL;
+    // 1. Obtener la ruta completa (pwd + name)
+    char full_path[VFS_MAX_PATH];
+    strcpy(full_path, vfs_pwd());
+    if (full_path[strlen(full_path)-1] != '/') vfs_strcat(full_path, "/");
+    vfs_strcat(full_path, name);
+
+    // 2. ¿Esta ruta empieza con algún punto de montaje?
+    for (int i = 0; i < MAX_MOUNTS; i++) {
+        if (mount_table[i].active && strncmp(full_path, mount_table[i].target, strlen(mount_table[i].target)) == 0) {
+            
+            if (strcmp(mount_table[i].type, "9p") == 0) {
+                // LLAMAR AL DRIVER DE 9P REAL
+                return v9p_driver_read(full_path); 
+            }
+            if (strcmp(mount_table[i].type, "adfs") == 0) {
+                // LLAMAR AL DRIVER DE ADFS
+                return adfs_driver_read(full_path);
+            }
+        }
     }
+
+    // 3. Si no es un montaje, usar tu lógica de RAM actual
+    vfs_entry *file = vfs_find_in_directory(vfs.current_directory, name, VFS_TYPE_FILE);
+    if (file == NULL) return NULL;
     
     vfs_memcpy(read_buffer, data_blocks[file->data_block], file->size);
     read_buffer[file->size] = '\0';
-    
     return read_buffer;
 }
 
@@ -317,30 +347,46 @@ int vfs_delete(const char *name) {
 }
 
 void vfs_ls(void) {
-
-    
+    vfs_system* sys = get_vfs_instance();
     unsigned int count = 0;
-    
-    
-    
-    if (count == 0) {
-        printk(RED, "Empty directory");
-    } else 
-    {
-        printk(CYAN, "  .  \n  .. "); 
+    char* current_p = vfs_pwd(); // Obtenemos la ruta actual (ej: "/mnt")
 
+    printk(CYAN, "  .  \n  .. ");
+
+    // --- NUEVO: Mostrar puntos de montaje ---
+    for (int i = 0; i < MAX_MOUNTS; i++) {
+        if (mount_table[i].active) {
+            // Si estamos en la raíz "/" y el montaje es "/mnt", 
+            // queremos que aparezca "mnt/" en la lista.
+            
+            // Lógica simple: si el target del montaje empieza con el path actual
+            // pero es un nivel más profundo, lo mostramos.
+            if (strncmp(mount_table[i].target, current_p, strlen(current_p)) == 0) {
+                // Evitamos mostrar el "." si el target es igual al actual
+                if (strcmp(mount_table[i].target, current_p) != 0) {
+                    printk(BLUE, "\n  %s/ (MOUNT: %s)", mount_table[i].target, mount_table[i].type);
+                    count++;
+                }
+            }
+        }
     }
-    for (unsigned int i = 0; i < vfs.entry_count; i++) {
-        if (vfs.entries[i].parent == vfs.current_directory) {
-            if (vfs.entries[i].type == VFS_TYPE_DIRECTORY) {
-                printk(BLUE, "\n  %s/", vfs.entries[i].name);
+
+    // --- Lógica original: Mostrar entradas de la RAM ---
+    for (unsigned int i = 0; i < sys->entry_count; i++) {
+        if (sys->entries[i].parent == sys->current_directory) {
+            if (sys->entries[i].type == VFS_TYPE_DIRECTORY) {
+                printk(BLUE, "\n  %s/", sys->entries[i].name);
             } else {
-                printk(GRAY, "\n  %s", vfs.entries[i].name);
+                printk(GRAY, "\n  %s", sys->entries[i].name);
             }
             count++;
         }
     }
-    cursor_y++;
+
+    if (count == 0) {
+        printk(RED, "\n  Empty directory\n");
+    }
+    printk(WHITE, "\n");
 }
 
 int vfs_cd(const char *path) {
@@ -587,3 +633,19 @@ void vfs_rmdir(const char *name) {
     }
     printk(RED, "\nrmdir: %s not found.\n", name);
 }
+
+int vfs_mount(const char *source, const char *target, const char *type) {
+    for (int i = 0; i < MAX_MOUNTS; i++) {
+        if (!mount_table[i].active) {
+            strcpy(mount_table[i].target, target);
+            strcpy(mount_table[i].type, type);
+            mount_table[i].active = 1;
+
+            pr_info("VFS: %s mounted on %s as %s\n", source, target, type);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+vfs_mount_point mount_table[MAX_MOUNTS];

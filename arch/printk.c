@@ -6,6 +6,7 @@
 
 int redirect_to_file = 0;
 char* redirect_buffer = NULL;
+extern int console_loglevel;
 int redirect_ptr = 0;
 
 extern int cursor_x;
@@ -162,10 +163,24 @@ unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
 }
 
 unsigned int printk(unsigned int color, const char *fmt, ...) {
+    char buffer[1024];
     va_list args;
+    const char *p = fmt;
+    int msg_level = 7; 
+
+    if (fmt[0] == KERN_SOH[0] && fmt[1] >= '0' && fmt[1] <= '7') {
+        msg_level = fmt[1] - '0';
+        p = fmt + 2; 
+    }
+
+    if (msg_level > console_loglevel) {
+        return 0;
+    }
+    add_to_kernel_log(buffer);
     va_start(args, fmt);
-    unsigned int result = vprintk(color, fmt, args);
+    unsigned int result = vprintk(color, p, args); 
     va_end(args);
+
     return result;
 }
 
@@ -177,4 +192,33 @@ void print_hash(unsigned int color, uint8_t* hash) {
         if (i % 4 == 3) put_char(' ', color); 
     }
     put_char('\n', color);
+}
+
+char kernel_log_buffer[LOG_BUFFER_SIZE];
+uint32_t log_ptr = 0;
+
+void add_to_kernel_log(const char* str) {
+    while (*str) {
+        kernel_log_buffer[log_ptr] = *str;
+        log_ptr = (log_ptr + 1) % LOG_BUFFER_SIZE; // Buffer circular
+        str++;
+    }
+}
+
+
+
+void print_mode_human(uint32_t mode) {
+
+    printk(WHITE, (mode & 0400) ? "r" : "-");
+    printk(WHITE, (mode & 0200) ? "w" : "-");
+    printk(WHITE, (mode & 0100) ? "x" : "-");
+
+    printk(WHITE, (mode & 0040) ? "r" : "-");
+    printk(WHITE, (mode & 0020) ? "w" : "-");
+    printk(WHITE, (mode & 0010) ? "x" : "-");
+
+    printk(WHITE, (mode & 0004) ? "r" : "-");
+    printk(WHITE, (mode & 0002) ? "w" : "-");
+    printk(WHITE, (mode & 0001) ? "x" : "-");
+    printk(WHITE, " ");
 }

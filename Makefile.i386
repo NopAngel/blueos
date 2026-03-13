@@ -1,0 +1,103 @@
+#
+# BlueOS / Makefile
+#
+# Copyright (C) 2024-2026  NopAngel <angelgabrielnieto@outlook.com>
+#
+
+include .config
+
+ifeq ($(V),1)
+  Q =
+else
+  Q = @
+endif
+
+CC      = gcc
+ASM     = nasm
+LD      = ld
+OBJCOPY = objcopy
+QEMU    = qemu-system-i386
+GRUB_MKRESCUE = grub-mkrescue
+
+GCC_INC = $(shell $(CC) -print-file-name=include)
+CFLAGS  = -m32 -ffreestanding -fno-builtin -std=gnu99 -nostdlib \
+          -fno-stack-protector -nostdinc -fno-pic -I. -Iinclude -I$(GCC_INC) -O2
+ASFLAGS = -f elf32
+LDFLAGS = -m elf_i386 -T arch/i386/link.ld -z noexecstack
+
+KERNEL_BIN = kernel.bin
+KERNEL_ISO = blueos.iso
+
+obj-y := arch/i386/boot.o arch/printk.o arch/i386/panic.o arch/i386/task.o lib/string.o \
+         arch/i386/interrupts.o arch/i386/interrupt_entry.o arch/i386/profile.o usr/auth.o \
+         arch/i386/switch.o arch/i386/bg.o drivers/multilru.o kernel/sysctl.o \
+         fs/help.o drivers/tty/tty.o drivers/keyboard/keyboard.o arch/i386/syscall.o \
+         drivers/scsi/scsi_core.o arch/i386/pic.o drivers/scsi/scsi_lsi.o \
+         drivers/pci/pci.o drivers/pinctrl/pinctrl.o arch/i386/idt.o arch/i386/interrupt_stubs.o \
+         arch/i386/irq.o fs/vboxfs.o drivers/power/power.o \
+         fs/9p.o drivers/net/mac80211.o kernel/vmcore_info.o drivers/leds/leds.o drivers/vhost/vhost_net.o \
+         arch/i386/apic.o arch/i386/kvm.o kernel/hlec.o arch/i386/timer.o kernel/hpet.o kernel/shell.o \
+         drivers/rtc/rtc.o drivers/battery/battery.o arch/i386/mm/memory.o arch/i386/acpi.o \
+         init/kernel.o init/init_fnc.o arch/i386/intel.o arch/i386/amd.o arch/i386/interrupts-a.o \
+         drivers/isapnp/isapnp.o drivers/usb/usb.o drivers/dma/hdc_dma.o crypto/sha256.o drivers/bcma/bcma.o kernel/module.o drivers/bluefetch.o kernel/ksyms.o fs/xfs.o fs/jfs.o fs/vfs.o fs/fs.o sound/sdw/s.o drivers/net/rtl8139.o lib/network.o \
+         fs/fat32.o drivers/ata/ata.o init/hyper.o arch/i386/cmdline.o drivers/amba/amba_pl011.o fs/vfs_9p.o drivers/virtio/virtio_9p.o fs/adfs.o fs/ext2.o arch/i386/commands.o 
+
+RUST_LIB = rust/target/i686-unknown-linux-gnu/release/librust.a
+
+all: $(KERNEL_BIN)
+
+$(KERNEL_BIN): rust_module $(obj-y)
+	@echo "  LD      $@"
+	$(Q)$(LD) $(LDFLAGS) -o $@ $(obj-y) --whole-archive $(RUST_LIB) --no-whole-archive
+	@echo "  DONE    BlueOS Kernel is ready."
+
+# --- NUEVA FUNCIÓN PARA ISO ---
+iso: $(KERNEL_BIN)
+	@echo "  MKISO   $(KERNEL_ISO)"
+	@mkdir -p iso_root/boot/grub
+	@cp $(KERNEL_BIN) iso_root/boot/$(KERNEL_BIN)
+	@echo 'set timeout=0' > iso_root/boot/grub/grub.cfg
+	@echo 'set default=0' >> iso_root/boot/grub/grub.cfg
+	@echo 'menuentry "BlueOS" {' >> iso_root/boot/grub/grub.cfg
+	@echo '  multiboot /boot/$(KERNEL_BIN)' >> iso_root/boot/grub/grub.cfg
+	@echo '  boot' >> iso_root/boot/grub/grub.cfg
+	@echo '}' >> iso_root/boot/grub/grub.cfg
+	$(Q)$(GRUB_MKRESCUE) -o $(KERNEL_ISO) iso_root
+	@rm -rf iso_root
+	@echo "  DONE    ISO image is ready."
+
+%.o: %.asm
+	@echo "  AS      $@"
+	$(Q)$(ASM) $(ASFLAGS) $< -o $@
+
+%.o: %.c
+	@echo "  CC      $@"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+# Reglas específicas que ya tenías
+kernel.o: init/kernel.c
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+init.o: init/init_fnc.c
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+# --- Rust Module ---
+rust_module:
+	@echo "  RUST    Building core module"
+	$(Q)cd rust && RUSTFLAGS="-C relocation-model=static" cargo build --release \
+		-Z build-std=core --target i686-unknown-linux-gnu
+
+run: all
+	$(Q)$(QEMU) -kernel $(KERNEL_BIN) -m 256M -vga std -append "quiet debug=1"
+
+# Para correr la ISO directamente
+run-iso: iso
+	$(Q)$(QEMU) -cdrom $(KERNEL_ISO) -m 256M
+
+clean:
+	@echo "  CLEAN   Objects and binaries"
+	$(Q)rm -f $(KERNEL_BIN) $(KERNEL_ISO) *.o *.a
+	$(Q)find . -name "*.o" -type f -delete
+	$(Q)cd rust && cargo clean
+
+.PHONY: all clean run rust_module iso run-iso
