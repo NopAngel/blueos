@@ -1,6 +1,6 @@
 #include <drivers/tty.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 struct tty_struct tty0;
 

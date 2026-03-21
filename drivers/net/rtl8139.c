@@ -1,7 +1,7 @@
 #include <net/network.h>
-#include <blueos/ports.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/ports.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 #include <lib/string.h>
 
 

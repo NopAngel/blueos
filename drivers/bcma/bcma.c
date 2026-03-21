@@ -1,8 +1,7 @@
+#include <kernel/io.h>
+#include <kernel/printk.h>
 #include <drivers/bcma.h>
-#include <blueos/io.h>
-#include <blueos/printk.h>
-#include <drivers/bcma.h>
-#include <blueos/colors.h>
+#include <kernel/colors.h>
 
 #define BCMA_ENUM_BASE    0x18000000 
 #define BCMA_CORE_SIZE    0x1000

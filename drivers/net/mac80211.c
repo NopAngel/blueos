@@ -1,6 +1,6 @@
-#include <blueos/types.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/types.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 extern void pci_check_device(uint8_t bus, uint8_t device, uint8_t func);
 

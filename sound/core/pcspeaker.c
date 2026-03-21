@@ -1,5 +1,5 @@
-#include <blueos/ports.h>
-#include <blueos/types.h>
+#include <kernel/ports.h>
+#include <kernel/types.h>
 
 
 static void play_sound(uint32_t nFrequence);

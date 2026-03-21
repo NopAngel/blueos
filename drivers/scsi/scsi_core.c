@@ -1,8 +1,8 @@
 #include <drivers/scsi.h>
-#include <blueos/printk.h>
+#include <kernel/printk.h>
 #include <lib/string.h>
-#include <blueos/ports.h>
-#include <blueos/colors.h>
+#include <kernel/ports.h>
+#include <kernel/colors.h>
 
 unsigned int LSI_BASE_PORT = 0;
 

@@ -1,4 +1,4 @@
-#include <blueos/ports.h>
+#include <kernel/ports.h>
 
 #define PIC1_COMMAND 0x20
 #define PIC2_COMMAND 0xA0

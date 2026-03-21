@@ -1,6 +1,6 @@
 #include <lib/string.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 struct tar_header {
     char name[100];   

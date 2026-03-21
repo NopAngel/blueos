@@ -1,8 +1,8 @@
 #include <stdint.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 #include <prdt.h>
-#include <blueos/io.h>
+#include <kernel/io.h>
 
 #define BM_COMMAND_REG 0xC000
 #define BM_STATUS_REG  0xC002

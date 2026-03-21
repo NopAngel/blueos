@@ -1,7 +1,7 @@
-#include <blueos/ports.h>
-#include <string.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/ports.h>
+#include <lib/string.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 struct rsdp_ptr {
     char signature[8];

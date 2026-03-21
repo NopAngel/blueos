@@ -1,37 +1,52 @@
-#include <blueos/ports.h>
-#include <blueos/types.h>
+#include <kernel/rtc.h>
+#include <kernel/printk.h>
 
-#define CMOS_ADDR 0x70
-#define CMOS_DATA 0x71
+#if defined(I386)
+#include <kernel/io.h>    /* Required for inb/outb on x86 */
+#define RTC_ADDR 0x70
+#define RTC_DATA 0x71
+#elif defined(RISCV)
+/* RISC-V uses Memory Mapped I/O (MMIO) instead of Port I/O */
+#define RTC_MMIO_BASE 0x101000  /* Standard QEMU Virt Goldfish RTC address */
+#endif
 
-int get_update_in_progress_flag() {
-    outb(CMOS_ADDR, 0x0A);
-    return (inb(CMOS_DATA) & 0x80);
-}
-
+/**
+ * get_rtc_register: Reads a specific CMOS/RTC register.
+ * @reg: The register number to read.
+ */
 uint8_t get_rtc_register(int reg) {
-    outb(CMOS_ADDR, reg);
-    return inb(CMOS_DATA);
+#if defined(I386)
+    /* Select the register via port 0x70 and read from 0x71 */
+    outb(RTC_ADDR, (uint8_t)reg);
+    return inb(RTC_DATA);
+
+#elif defined(RISCV)
+    /* On RISC-V, we usually read the offset from the MMIO base */
+    volatile uint32_t *rtc_ptr = (volatile uint32_t *)(RTC_MMIO_BASE + (reg * 4));
+    return (uint8_t)(*rtc_ptr);
+
+#else
+    #error "Architecture not supported in rtc.c"
+#endif
 }
 
-void read_rtc(int *second, int *minute, int *hour, int *day, int *month, int *year) {
-    while (get_update_in_progress_flag());
-
-    *second = get_rtc_register(0x00);
-    *minute = get_rtc_register(0x02);
-    *hour   = get_rtc_register(0x04);
-    *day    = get_rtc_register(0x07);
-    *month  = get_rtc_register(0x08);
-    *year   = get_rtc_register(0x09);
-
-    uint8_t registerB = get_rtc_register(0x0B);
-
-    if (!(registerB & 0x04)) {
-        *second = (*second & 0x0F) + ((*second / 16) * 10);
-        *minute = (*minute & 0x0F) + ((*minute / 16) * 10);
-        *hour = ((*hour & 0x0F) + (((*hour & 0x70) / 16) * 10)) | (*hour & 0x80);
-        *day = (*day & 0x0F) + ((*day / 16) * 10);
-        *month = (*month & 0x0F) + ((*month / 16) * 10);
-        *year = (*year & 0x0F) + ((*year / 16) * 10);
-    }
+/**
+ * get_rtc_second: Returns the current system second.
+ */
+uint8_t get_rtc_second(void) {
+    /* Register 0x00 is typically the seconds register in most RTCs */
+    return get_rtc_register(0x00);
 }
+
+/**
+ * rtc_init: Hardware-specific initialization for the clock.
+ */
+void rtc_init(void) {
+#if defined(I386)
+    pr_info("RTC: Hardware initialized via Port I/O (x86)\n");
+#elif defined(RISCV)
+    pr_info("RTC: Hardware initialized via MMIO (RISC-V)\n");
+#endif
+}
+
+device_initcall(rtc_init);

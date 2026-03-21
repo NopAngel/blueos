@@ -1,21 +1,21 @@
-#include <stdint.h>
-#include <blueos/printk.h>
+#include <kernel/initcall.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
-// NOOP NOOP
-void i386_init_noop(void) { 
-    // LOL
+extern initcall_t __initcall_start;
+extern initcall_t __initcall_end;
+
+void do_initcalls(void) {
+    initcall_t *call = &__initcall_start;
+    
+    printk(CYAN, "Kernel: Execution of initcalls starting...\n");
+
+    for (; call < &__initcall_end; call++) {
+        if (*call) {
+            int result = (*call)();
+            if (result != 0) {
+                printk(RED, "Initcall failed with error code: %d\n", result);
+            }
+        }
+    }
 }
-
-struct i386_init_ops {
-    void (*timer_init)(void);
-    void (*rtc_init)(void);
-    void (*keyboard_init)(void);
-    void (*pci_init)(void);
-};
-
-struct i386_init_ops blueos_init = {
-    .timer_init    = i386_init_noop,
-    .rtc_init      = i386_init_noop,
-    .keyboard_init = i386_init_noop,
-    .pci_init      = i386_init_noop
-};

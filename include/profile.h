@@ -1,9 +1,6 @@
 #ifndef PROFILE_H
 #define PROFILE_H
 
-#include <blueos/printk.h>
-
-
 #define PROF_SHIFT 2  
 extern unsigned int *prof_buffer;
 extern unsigned int prof_len;

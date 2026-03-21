@@ -1,7 +1,7 @@
 #include <drivers/leds.h>
-#include <blueos/io.h>
-#include <blueos/colors.h>
-#include <blueos/printk.h>
+#include <kernel/io.h>
+#include <kernel/colors.h>
+#include <kernel/printk.h>
 
 #define KBD_DATA_PORT 0x60
 #define KBD_STATUS_PORT 0x64

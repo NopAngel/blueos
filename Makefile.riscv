@@ -1,0 +1,204 @@
+# --- BlueOS / Makefile.riscv (Refactored) ---
+
+-include .config
+
+
+
+# --- Verbosity Control ---
+
+ifeq ($(V),1)
+  Q =
+else
+  Q = @
+endif
+
+
+
+# --- Toolchain Setup ---
+
+CC		:= riscv64-unknown-elf-gcc
+AS		:= riscv64-unknown-elf-as
+LD		:= riscv64-unknown-elf-ld
+QEMU	:= qemu-system-riscv32
+
+
+
+OBJDIR  := obj
+BINDIR  := build
+$(shell mkdir -p $(OBJDIR) $(BINDIR))
+
+
+GCC_INC := $(shell $(CC) -print-file-name=include)
+INCLUDES := -Iinclude -Iinclude/kernel -Iinclude/arch/riscv -Iinclude/drivers -I$(GCC_INC) -I.
+CFLAGS  := -march=rv32i_zicsr -mabi=ilp32 -ffreestanding -fno-builtin -std=gnu99 -nostdlib \
+		   -fno-stack-protector -nostdinc -fno-pic -O0 -g -DRISCV $(INCLUDES) -march=rv32g -march=rv32imafdc_h_zicsr_zifencei_zbkb_zbkc_zbkx_zknd_zkne_zknh
+
+CFLAGS += $(CONF_FLAGS)
+
+ASFLAGS := -march=rv32i_zicsr -mabi=ilp32 -g
+LDFLAGS := -m elf32lriscv -T arch/riscv/link.ld
+
+KERNEL_ELF := $(BINDIR)/blueos_riscv.elf
+
+
+
+obj-y := arch/riscv/boot.o \
+         arch/riscv/kernel.o \
+         arch/printk.o \
+         arch/riscv/acpi.o \
+         arch/riscv/plic.o \
+         arch/riscv/trap.o \
+         arch/riscv/trap_entry.o \
+         arch/riscv/trap_handler.o \
+         arch/riscv/interrupts.o \
+         arch/riscv/panic.o \
+         arch/riscv/commands.o \
+         arch/riscv/keyboard_io.o \
+         arch/riscv/shell.o \
+         arch/riscv/profile.o \
+         arch/riscv/kvm.o \
+         arch/riscv/mm/memory.o \
+         arch/riscv/vendor_h.o \
+         arch/riscv/intel_h.o \
+         arch/riscv/init_fnc.o \
+         arch/riscv/task.o \
+         arch/riscv/switch.o \
+         drivers/multilru.o \
+         drivers/vhost/vhost_net.o \
+         drivers/battery/battery.o \
+         drivers/bcma/bcma.o \
+         drivers/connector/connector.o \
+         drivers/pnp/pnp.o \
+         drivers/core/live_config.o \
+         fs/ramfs/fs.o \
+         fs/eventfs.o \
+         lib/string.o \
+         crypto/sha256.o \
+         usr/auth.o \
+		 sound/snd.o \
+		 kernel/sched.o \
+		 arch/riscv/timer.o \
+		 kernel/mm/malloc.o \
+		 kernel/mm/vmm.o \
+		 lib/list.o \
+		 crypto/aes.o \
+		 crypto/aes_riscv_glue.o \
+		 crypto/sm3_riscv_glue.o \
+		 arch/riscv/fpu.o \
+		 kernel/power/hibernate.o \
+		 arch/riscv/hibernate_asm.o \
+		 arch/riscv/intr.o \
+		 drivers/power/power.o \
+		 kernel/jump_label.o \
+		 arch/riscv/kvm/nmu.o \
+		 kernel/net/net.o \
+		 kernel/bpf/jit_rv64.o \
+		 kernel/mm/fault.o \
+		 kernel/process.o \
+		 kernel/mm/demand_paging.o \
+		 kernel/mm/pmm.o \
+		 kernel/mm/ptdump.o \
+		 drivers/xen/xen.o \
+		 drivers/watchdog/wdt.o \
+		 drivers/zorro/zorro.o \
+		 drivers/android/binder.o \
+		 drivers/android/ashmem.o \
+		 drivers/mailbox/mbox.o \
+		 drivers/ps3/ps3_ds3.o \
+		 drivers/tc/tc.o \
+		 drivers/cxl/cxl_m.o \
+		 drivers/ptp/ptp.o \
+		 drivers/pps/pps.o \
+		 drivers/firmware/firmware.o \
+		 drivers/w1/w1.o \
+		 drivers/hal/gpio.o \
+		 drivers/hal/timer.o \
+		 drivers/dax/dax.o \
+		 drivers/edac/edac.o \
+		 drivers/uio/uio.o \
+		 drivers/macintosh/adb.o \
+		 drivers/hx/haptics.o \
+		 drivers/i2c/i2c.o
+
+obj-$(CONFIG_DRIVER_RTC)      += drivers/rtc/rtc.o
+obj-$(CONFIG_FS_VFS) 	      += fs/vfs/vfs.o
+obj-$(CONFIG_DRIVER_KEYBOARD) += drivers/keyboard/keyboard.o
+
+
+
+
+
+REAL_OBJS := $(addprefix $(OBJDIR)/, $(obj-y))
+
+
+
+RUST_LIB := rust/target/riscv32i-unknown-none-elf/release/librust.a
+
+
+
+# --- Build Rules ---
+
+all: version_h $(KERNEL_ELF)
+
+
+
+version_h:
+	@echo "  UPD      include/version.h"
+	$(Q)sed -i 's/#define UTS_VERSION.*/#define UTS_VERSION    "#1 SMP PREEMPT '"$$(date +'%Y-%m-%d %H:%M:%S')"'"/' include/version.h 2>/dev/null || true
+
+
+
+$(KERNEL_ELF): rust_module $(REAL_OBJS)
+	@echo "  LD       $@"
+	$(Q)$(LD) $(LDFLAGS) -o $@ $(REAL_OBJS) --whole-archive $(RUST_LIB) --no-whole-archive
+	@echo "  DONE     BlueOS (RISC-V) Kernel is ready in $(BINDIR)/"
+
+
+
+# Rule for C files
+
+$(OBJDIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	@echo "  CC       $<"
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+
+
+# Rule for Assembly files (.s and .S)
+
+$(OBJDIR)/%.o: %.s
+	@mkdir -p $(dir $@)
+	@echo "  AS       $<"
+	$(Q)$(AS) $(ASFLAGS) $< -o $@
+
+
+
+# Rust Module for RISC-V
+
+rust_module:
+	@echo "  RUST     Building core module (RISC-V)"
+	$(Q)cd rust && RUSTFLAGS="-C relocation-model=static" cargo build --release \
+        -Z build-std=core --target riscv32i-unknown-none-elf
+
+
+
+run: all
+	$(Q)$(QEMU) -nographic -machine virt -bios $(KERNEL_ELF) 
+
+dint-run:
+	$(Q)$(QEMU) -nographic -machine virt -bios $(KERNEL_ELF) -d int
+
+debug: all
+	@echo "  GDB      Waiting for connection on :1234"
+    $(Q)$(QEMU) -nographic -serial mon:stdio -machine virt -s -S -bios $(KERNEL_ELF)
+
+
+
+clean:
+	@echo "  CLEAN    $(OBJDIR) $(BINDIR)"
+	$(Q)rm -rf $(OBJDIR) $(BINDIR)
+	$(Q)cd rust && cargo clean
+
+
+
+.PHONY: all clean run rust_module version_h debug

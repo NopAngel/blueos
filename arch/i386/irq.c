@@ -1,5 +1,5 @@
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 #include <drivers/pictrl.h>
 
 

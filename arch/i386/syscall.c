@@ -1,5 +1,5 @@
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 
 typedef unsigned int   uint32_t;
@@ -22,7 +22,7 @@ void syscall_handler(registers_t regs) {
             break;
 
         case SYS_CLEAR:
-            clear_screen();
+            clear_screen(); 
             break;
 
         default:

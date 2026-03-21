@@ -1,7 +1,7 @@
 #include <elf.h>
 #include <fs/vfs.h>
 #include <lib/string.h>
-#include <blueos/printk.h>
+#include <kernel/printk.h>
 extern uint8_t _binary_hello_elf_start[];
 typedef void (*elf_entry_t)(void);
 

@@ -1,7 +1,7 @@
 //#include <stdint.h>
-#include <blueos/io.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/io.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 
 #define USB_BASE_ADDR 0xD000 

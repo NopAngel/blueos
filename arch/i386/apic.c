@@ -1,6 +1,6 @@
-#include <blueos/apic.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <arch/i386/apic.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 void apic_write(uint32_t reg, uint32_t data) {
     volatile uint32_t *addr = (uint32_t *)(APIC_BASE_ADDR + reg);

@@ -1,6 +1,5 @@
-
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 #include <multilru.h>
 #include <stddef.h>
 #define PAGE_ACTIVE   1

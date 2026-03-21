@@ -1,6 +1,6 @@
-#include <blueos/printk.h>
-#include <blueos/colors.h>
-#include <blueos/bg.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
+#include <kernel/bg.h>
 #include <kernel/vmcore_info.h>
 #include <stdarg.h>
 

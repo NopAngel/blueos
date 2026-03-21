@@ -1,17 +1,21 @@
 #include <lib/string.h>
 #include <stdbool.h>
+#include <drivers/connector.h>
+#include <drivers/i2c.h>
 #include <stdint.h>
-#include <blueos/printk.h>
+#include <kernel/printk.h>
 #include <stddef.h>
-#include <blueos/colors.h>
-#include <blueos/commands.h>
+#include <kernel/colors.h>
+#include <kernel/commands.h>
 #include <drivers/keyboard.h>
 #include <fs/fs.h>
+#include <kernel/io.h>
 #include <fs/vfs.h>
 #include <stdbool.h>
 #include <version.h>
 #include <lib/string.h>
 #include <auth.h>
+#include <stdint.h>
 
 partition_t part_table[MAX_PARTITIONS];
 alias_t alias_table[MAX_ALIAS];
@@ -31,6 +35,7 @@ loop_device_t loop_devices[4];
 /* Global and External Dependencies */
 extern uint32_t system_ticks;
 extern int fs_needs_sync;
+extern uint16_t g_smbus_base;
 extern int current_user_index;
 extern char current_user[];
 extern uint32_t current_dir_cluster;
@@ -155,6 +160,7 @@ int copy_file(char* source, char* dest) {
     touch(dest, content); 
     return 0;
 }
+
 
 int move_file(char* source, char* dest) {
     int src_idx = find_file(source);
@@ -393,6 +399,123 @@ int cmd_help(char* args) {
     }
 }
 
+int cmd_sensors(char* args) {
+    int32_t temp = thermal_get_temp();
+
+    if (temp == -999) {
+        printk(RED, "Error: Thermal controller not initialized (Did you run pci_scan?)\n");
+        return 1;
+    }
+
+    printk(CYAN, "BlueOS Thermal Monitor\n");
+    printk(WHITE, "CPU/Package: ");
+
+    if (temp > 80)      printk(RED, "%d C (CRITICAL!)\n", temp);
+    else if (temp > 50) printk(YELLOW, "%d C (Warm)\n", temp);
+    else                printk(GREEN, "%d C (Normal)\n", temp);
+
+    return 0;
+}
+
+int cmd_msg(char* args) {
+    if (strlen(args) == 0) {
+        printk(RED, "Use: msg <text for kernel>\n");
+        return 1;
+    }
+
+    connector_write(args, strlen(args));
+    
+    char res[64] = "Message received by BlueOS Core";
+    connector_write(res, strlen(res));
+    
+    return 0;
+}
+
+extern uint16_t g_smbus_base;
+
+
+extern uint32_t pci_read_config(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+
+int cmd_pci_scan(char* args) {
+    printk(CYAN, "\nBus:Slot.Func | Vendor:Device | Class | Info\n");
+    printk(GRAY, "------------------------------------------------------\n");
+    int found = 0;
+
+    for (uint32_t bus = 0; bus < 256; bus++) {
+        for (uint32_t slot = 0; slot < 32; slot++) {
+            uint32_t id = pci_read_config(bus, slot, 0, 0);
+            
+            if (id == 0xFFFFFFFF) continue; 
+
+            uint16_t vendor = id & 0xFFFF;
+            uint16_t device = (id >> 16) & 0xFFFF;
+
+            uint32_t class_reg = pci_read_config(bus, slot, 0, 0x08);
+            uint8_t class_code = (class_reg >> 24) & 0xFF;
+            uint8_t sub_class  = (class_reg >> 16) & 0xFF;
+
+            printk(WHITE, "%s02x:%s02x.0       %s04x:%s04x     %s02x.%s02x | ", 
+                   bus, slot, vendor, device, class_code, sub_class);
+
+            if (class_code == 0x0C && sub_class == 0x05) {
+                uint32_t bar4 = pci_read_config(bus, slot, 0, 0x20);
+                g_smbus_base = bar4 & 0xFFFE;
+                printk(GREEN, "SMBus Controller (I2C)");
+            } else if (class_code == 0x03) {
+                printk(YELLOW, "VGA Adapter");
+            } else if (class_code == 0x02) {
+                printk(CYAN, "Network Controller");
+            } else if (class_code == 0x01) {
+                printk(GRAY, "Mass Storage (IDE/SATA)");
+            } else {
+                printk(GRAY, "Unknown Device");
+            }
+
+            printk(WHITE, "\n");
+            found++;
+        }
+    }
+
+    printk(GRAY, "------------------------------------------------------\n");
+    printk(WHITE, "%d PCI devices were found.\n\n", found);
+    
+    return 0;
+}
+
+int cmd_i2c_scan(char* args) {
+    if (g_smbus_base == 0) {
+        printk(RED, "Error: Run 'pci_scan' first to locate the SMBus.\n");
+        return 1;
+    }
+
+    printk(CYAN, "Scanning bus I2C (0x00 - 0x7F)...\n");
+    printk(GRAY, "Addr | Status | First Byte (Reg 0x00)\n");
+    printk(GRAY, "-------------------------------------\n");
+
+    for (uint8_t addr = 0; addr < 128; addr++) {
+        outb(g_smbus_base + 0x00, 0xFF); 
+        outb(g_smbus_base + 0x04, (addr << 1) | 1);
+        outb(g_smbus_base + 0x03, 0x00);
+        outb(g_smbus_base + 0x02, 0x48);
+
+        int timeout = 1000;
+        while (!(inb(g_smbus_base + 0x00) & 0x02) && --timeout > 0);
+        uint8_t status = inb(g_smbus_base + 0x00);
+        if (!(status & 0x04)) {
+            uint8_t data = inb(g_smbus_base + 0x05);
+            
+            printk(GREEN, "0x%x ", addr);
+            printk(WHITE, "|  [OK]  | 0x%x ", data);
+            
+            if (addr == 0x50) printk(YELLOW, "(Possible Memory SPD/EEPROM)");
+            else if (addr == 0x68) printk(YELLOW, "(Possible RTC/Clock)");
+            
+            printk(WHITE, "\n");
+        }
+    }
+    return 0;
+}
+
 int cmd_cat(char* args) {
     if (strlen(args) == 0) {
         printk(RED, "\nUse: cat <file>\n");
@@ -574,7 +697,7 @@ int cmd_version(char* args) {
 int cmd_clear(char* args) {
     clear_screen();
     cursor_x = 0; cursor_y = 0;
-    update_cursor(0, 0);
+    
 }
 
 int cmd_top(char* args) {
@@ -901,28 +1024,7 @@ int cmd_mdev(char* args) {
     return 0;
 }
 
-int cmd_stat(char* args) {
-    if (strlen(args) == 0) {
-        printk(RED, "Use: stat <file>\n");
-        return 1;
-    }
 
-    int idx = find_file(args);
-    if (idx == -1) {
-        printk(RED, "ERR: The file was not found '%s'\n", args);
-        return 1;
-    }
-
-    printk(CYAN, "\n  File: "); printk(WHITE, "%s\n", file_table[idx].name);
-    printk(CYAN, "  Size: "); printk(WHITE, "%d bytes\n", file_table[idx].size);
-    printk(CYAN, "  Mode: "); printk(YELLOW, "(%o) ", file_table[idx].permissions); 
-    print_mode_human(file_table[idx].permissions); 
-    printk(WHITE, "\n");
-    
-    printk(CYAN, "  Owner ID: "); printk(WHITE, "%d\n", file_table[idx].owner_id);
-    
-    return 0;
-}
 
 int cmd_free(char* args) {
     extern uint32_t total_memory_kb; 
@@ -994,11 +1096,13 @@ shell_command_t commands_table[] = {
     {"rm",        "Delete file",                                               cmd_rm},
     {"uptime",    "Shows the current date",                                    cmd_uptime},
     {"beep",      "Play system sound",                                         cmd_beep},
+    {"sensors",   "Displays the system temperature",                           cmd_sensors},
     {"battery",   "Show battery status",                                       cmd_battery},
     {"ping",      "Send ICMP request",                                         cmd_ping},
     {"sysctl",    "Kernel Parameters",                                         cmd_sysctl},
     {"bluefetch", "System information",                                        cmd_bluefetch},
     {"logout",    "Close session",                                             cmd_logout},
+    {"msg",       "Send a message to the kernel through the connector",          cmd_msg},
     {"halt",      "It stops the system safely",                                cmd_halt},
     {"reboot",    "Restart BlueOS",                                            cmd_reboot},
     {"set",       "Define a variable",                                         cmd_set},
@@ -1010,7 +1114,8 @@ shell_command_t commands_table[] = {
     {"cp",        "Copy files or directories",                                 cmd_cp},
     {"mv",        "Move or rename files/directories",                          cmd_mv},
     {"chmod",     "It allows you to set permissions for directories/files",    cmd_mv},
-    {"stat",      "Displays detailed information about a file",                cmd_stat},
+    {"i2c_scan",  "Scans and reads devices on the I2C/SMBus",                  cmd_i2c_scan},
+    {"pci_scan",  "Search for devices on the PCI bus",                         cmd_pci_scan},
     {0, 0, 0} 
 };
 

@@ -1,6 +1,6 @@
-#include <blueos/ports.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/ports.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 #define GPIO_BASE_ADDR 0x0500 
 #define GPIO_USE_SEL   (GPIO_BASE_ADDR + 0x00) 

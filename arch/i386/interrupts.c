@@ -1,8 +1,8 @@
-extern int virt_irq_is_pending(unsigned char irq);
-extern void virt_irq_ack(unsigned char irq);
-extern void virt_irq_unmask(unsigned char irq);
+#include <stdint.h>
 
-
+extern void virt_irq_ack(uint8_t irq);
+extern int virt_irq_is_pending(uint8_t irq);
+extern void virt_irq_unmask(uint8_t irq);
 
 void handle_virtual_device(unsigned char irq) {
     switch(irq) {

@@ -1,7 +1,7 @@
-#include <blueos/kvm.h>
-#include <blueos/io.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/kvm.h>
+#include <kernel/io.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 #define MSR_IA32_FEATURE_CONTROL    0x0000003A
 

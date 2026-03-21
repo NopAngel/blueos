@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 int init_amd_svm() {
     uint32_t eax, ebx, ecx, edx;

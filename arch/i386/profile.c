@@ -1,5 +1,5 @@
 #include <profile.h>
-#include <blueos/colors.h>
+#include <kernel/colors.h>
 
 unsigned int *prof_buffer;
 unsigned int prof_len;

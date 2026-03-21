@@ -1,7 +1,7 @@
 #include <kernel/vmcore_info.h>
 #include <version.h>
-#include <blueos/types.h>
-#include <blueos/task.h>
+#include <kernel/types.h>
+#include <kernel/task.h>
 #include <stddef.h>
 void dump_vmcoreinfo(void) {
     printk("--- BEGIN VMCOREINFO ---\n");

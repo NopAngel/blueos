@@ -1,6 +1,8 @@
 #ifndef FS_H
 #define FS_H
 
+#include <stdint.h>
+
 #define LOOP_DEVICE_START 100
 #define MAX_DIRECTORIES 300
 #define MAX_FILES 300

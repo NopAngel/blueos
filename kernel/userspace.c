@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <lib/string.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 
 #define MAX_NS_NAME 32

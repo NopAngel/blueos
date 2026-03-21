@@ -1,7 +1,7 @@
 #include <stdint.h>
-#include <blueos/io.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/io.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 #define ISAPNP_ADDR  0x279
 #define ISAPNP_WRITE 0xA79

@@ -1,7 +1,7 @@
-#include <idt.h>        
-#include <blueos/ports.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <arch/i386/idt.h>        
+#include <kernel/ports.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 
 extern void rtl8139_handler();

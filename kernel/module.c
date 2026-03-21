@@ -3,8 +3,8 @@
  */
 
 #include <kernel/module.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 #include <lib/string.h>
 
 #define MAX_MODULES 16

@@ -1,6 +1,6 @@
-#include <blueos/ports.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/ports.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 #define LSI_BASE_PORT 0xC000
 
@@ -14,8 +14,8 @@ void scsi_lsi_check() {
     printk(WHITE, "[ SCSI ] LSI Controller ISTAT: 0x%x\n", istat);
     
     if (istat == 0xFF) {
-        printk(RED, "Error: Controlador no responde en 0xC000\n");
+        printk(RED, "Error: Controller not responding at 0xC000\n");
     } else {
-        printk(GREEN, "Controlador LSI detectado y respondiendo en BAR0!\n");
+        printk(GREEN, "LSI controller detected and responding on BAR0!\n");
     }
 }

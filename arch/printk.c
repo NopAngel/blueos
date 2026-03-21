@@ -1,182 +1,193 @@
-#include <blueos/printk.h>
-#include <blueos/colors.h>
-#include <stdint.h>
-#include <stddef.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 #include <stdarg.h>
+#include <stddef.h>
 
-int redirect_to_file = 0;
-char* redirect_buffer = NULL;
-extern int console_loglevel;
-int redirect_ptr = 0;
+/* --- Global Variables --- */
+int console_loglevel = 7;
+char kernel_log_buffer[LOG_BUFFER_SIZE];
+uint32_t log_ptr = 0;
 
+/* External cursors (defined in your arch-specific task or boot files) */
 extern int cursor_x;
 extern int cursor_y;
-extern void put_char(char c, unsigned int color);
+
+/* --- Hardware Definitions --- */
+
+#if defined(__riscv) || defined(RISCV)
+    /* RISC-V QEMU Virt Machine UART0 */
+    #define UART0_BASE 0x10000000
+    #define UART_DR    ((volatile uint8_t *)(UART0_BASE + 0))
+    #define UART_LSR   ((volatile uint8_t *)(UART0_BASE + 5))
+    #define UART_LSR_EMPTY 0x20
+
+#elif defined(__i386__) || defined(I386)
+    /* x86 VGA Video Memory */
+    #define VIDEO_MEM  ((char *)0xb8000)
+    #define VGA_WIDTH  80
+    #define VGA_HEIGHT 25
+#endif
+
+/* --- Low Level Output --- */
+
+/**
+ * putchar: Outputs a single character to the hardware.
+ * Detects architecture at compile-time to use UART or VGA memory.
+ */
 void putchar(char c, unsigned int color) {
-    char *vidmem = (char *) 0xb8000;
-    
+    /* 1. Logic for RISC-V (UART) */
+#if defined(__riscv) || defined(RISCV)
+    while (!(*UART_LSR & UART_LSR_EMPTY)); /* Wait for UART to be ready */
+    *UART_DR = c;
+
     if (c == '\n') {
         cursor_x = 0;
         cursor_y++;
+        while (!(*UART_LSR & UART_LSR_EMPTY));
+        *UART_DR = '\r'; /* Carriage return for serial terminals */
     } else {
-        int index = (cursor_y * 80 + cursor_x) * 2;
-        vidmem[index] = c;
-        vidmem[index + 1] = (char)color;
         cursor_x++;
     }
 
-    if (cursor_x >= 80) {
+    /* 2. Logic for x86 (VGA Text Buffer) */
+#elif defined(__i386__) || defined(I386)
+    if (c == '\n') {
+        cursor_x = 0;
+        cursor_y++;
+    } else if (c == '\r') {
+        cursor_x = 0;
+    } else {
+        int index = (cursor_y * VGA_WIDTH + cursor_x) * 2;
+        VIDEO_MEM[index] = c;
+        VIDEO_MEM[index + 1] = (char)color;
+        cursor_x++;
+    }
+
+    /* Handle screen wrap-around for x86 */
+    if (cursor_x >= VGA_WIDTH) {
         cursor_x = 0;
         cursor_y++;
     }
+#endif
 }
 
-void print_int(int num, int base, unsigned int color) {
+/**
+ * add_to_kernel_log_char: Internal circular buffer for dmesg-like logging.
+ */
+void add_to_kernel_log_char(char c) {
+    kernel_log_buffer[log_ptr] = c;
+    log_ptr = (log_ptr + 1) % LOG_BUFFER_SIZE;
+}
+
+/**
+ * print_int: Helper to convert integers to strings and print them.
+ */
+void print_int(long num, int base, unsigned int color, int precision) {
     char buffer[32];
     int i = 0;
-    unsigned int n = (num < 0 && base == 10) ? -num : num;
-    if (num < 0 && base == 10) putchar('-', color);
+    unsigned long n = (num < 0 && base == 10) ? -num : (unsigned long)num;
+    
+    if (num < 0 && base == 10) {
+        putchar('-', color);
+        add_to_kernel_log_char('-');
+    }
+
+    char hex_chars[] = "0123456789abcdef";
     do {
-        int rem = n % base;
-        buffer[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        buffer[i++] = hex_chars[n % base];
         n /= base;
     } while (n > 0);
-    while (i > 0) putchar(buffer[--i], color);
+
+    /* Fill leading zeros if precision is requested */
+    while (i < precision) buffer[i++] = '0';
+
+    /* Print buffer in reverse */
+    while (i > 0) {
+        char c = buffer[--i];
+        putchar(c, color);
+        add_to_kernel_log_char(c);
+    }
 }
 
-/*unsigned int printk(unsigned int color, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
+/* --- High Level Printk Implementation --- */
 
-    if (redirect_to_file && redirect_buffer != NULL) {
-        return;
-    }
+unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
     for (const char *p = fmt; *p != '\0'; p++) {
         if (*p != '%') {
-            put_char(*p, color);
+            putchar(*p, color);
+            add_to_kernel_log_char(*p);
             continue;
         }
 
-        p++; 
+        p++; /* Move past '%' */
         
+        /* Check for padding/precision (e.g., %08x) */
+        int precision = 0;
+        if (*p == '0') {
+            p++;
+            if (*p >= '0' && *p <= '9') {
+                precision = *p - '0';
+                p++;
+            }
+        }
+
         switch (*p) {
             case 's': {
                 char *s = va_arg(args, char *);
                 if (!s) s = "(null)";
                 while (*s) {
-                    put_char(*s++, color);
+                    putchar(*s, color);
+                    add_to_kernel_log_char(*s++);
                 }
                 break;
             }
-            case 'd': {
-                int d = va_arg(args, int);
-                print_int(d, 10, color);
+            case 'd':
+            case 'i':
+                print_int(va_arg(args, int), 10, color, precision);
                 break;
-            }
-            case 'x': {
-                put_char('0', color);
-                put_char('x', color);
-                int x = va_arg(args, int);
-                print_int(x, 16, color);
+            case 'u':
+                print_int(va_arg(args, unsigned int), 10, color, precision);
                 break;
-            }
+            case 'x':
+            case 'X':
+                print_int(va_arg(args, unsigned int), 16, color, precision);
+                break;
+            case 'p':
+                printk(color, "0x");
+                print_int(va_arg(args, unsigned long), 16, color, 8);
+                break;
             case 'c': {
                 char c = (char)va_arg(args, int);
-                put_char(c, color);
+                putchar(c, color);
+                add_to_kernel_log_char(c);
                 break;
             }
-            case '%': {
-                put_char('%', color);
-                break;
-            }
-            default:
-                put_char('%', color);
-                put_char(*p, color);
-                break;
-        }
-    }
-
-    va_end(args);
-    return 1;
-}*/
-
-void clear_screen() {
-    char *vidmem = (char *) 0xb8000;
-    for (int i = 0; i < (80 * 25 * 2); i += 2) {
-        vidmem[i] = ' ';
-        vidmem[i+1] = WHITE;
-    }
-    cursor_x = 0;
-    cursor_y = 0;
-}
-
-
-
-unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
-    if (redirect_to_file && redirect_buffer != NULL) {
-        return 0;
-    }
-
-    for (const char *p = fmt; *p != '\0'; p++) {
-        if (*p != '%') {
-            put_char(*p, color);
-            continue;
-        }
-
-        p++; 
-        
-        switch (*p) {
-            case 's': {
-                char *s = va_arg(args, char *);
-                if (!s) s = "(null)";
-                while (*s) put_char(*s++, color);
-                break;
-            }
-            case 'd': {
-                int d = va_arg(args, int);
-                print_int(d, 10, color);
-                break;
-            }
-            case 'x': {
-                put_char('0', color);
-                put_char('x', color);
-                int x = va_arg(args, int);
-                print_int(x, 16, color);
-                break;
-            }
-            case 'c': {
-                char c = (char)va_arg(args, int);
-                put_char(c, color);
-                break;
-            }
-            case '%': {
-                put_char('%', color);
-                break;
-            }
-            default:
-                put_char('%', color);
-                put_char(*p, color);
+            case '%':
+                putchar('%', color);
+                add_to_kernel_log_char('%');
                 break;
         }
     }
     return 1;
 }
 
+/**
+ * printk: Main kernel logging function with color and loglevel support.
+ */
 unsigned int printk(unsigned int color, const char *fmt, ...) {
-    char buffer[1024];
     va_list args;
     const char *p = fmt;
-    int msg_level = 7; 
+    int msg_level = 4; /* Default to Warning level */
 
-    if (fmt[0] == KERN_SOH[0] && fmt[1] >= '0' && fmt[1] <= '7') {
+    /* Check for loglevel prefix: <n> */
+    if (fmt[0] == '<' && fmt[1] >= '0' && fmt[1] <= '7' && fmt[2] == '>') {
         msg_level = fmt[1] - '0';
-        p = fmt + 2; 
+        p = fmt + 3; 
     }
 
-    if (msg_level > console_loglevel) {
-        return 0;
-    }
-    add_to_kernel_log(buffer);
+    /* Filter by console_loglevel */
+    if (msg_level > console_loglevel) return 0;
+
     va_start(args, fmt);
     unsigned int result = vprintk(color, p, args); 
     va_end(args);
@@ -184,41 +195,20 @@ unsigned int printk(unsigned int color, const char *fmt, ...) {
     return result;
 }
 
-void print_hash(unsigned int color, uint8_t* hash) {
-    char hex_chars[] = "01234564789abcdef";
-    for (int i = 0; i < 32; i++) {
-        put_char(hex_chars[(hash[i] >> 4) & 0x0F], color);
-        put_char(hex_chars[hash[i] & 0x0F], color);
-        if (i % 4 == 3) put_char(' ', color); 
+/**
+ * clear_screen: Wipes the console output.
+ */
+void clear_screen() {
+#if defined(__riscv) || defined(RISCV)
+    /* ANSI escape code to clear terminal */
+    printk(WHITE, "\033[2J\033[H");
+#elif defined(__i386__) || defined(I386)
+    /* Manual VGA memory clear */
+    for (int i = 0; i < (VGA_WIDTH * VGA_HEIGHT * 2); i += 2) {
+        VIDEO_MEM[i] = ' ';
+        VIDEO_MEM[i+1] = 0x07; /* Light grey on black */
     }
-    put_char('\n', color);
-}
-
-char kernel_log_buffer[LOG_BUFFER_SIZE];
-uint32_t log_ptr = 0;
-
-void add_to_kernel_log(const char* str) {
-    while (*str) {
-        kernel_log_buffer[log_ptr] = *str;
-        log_ptr = (log_ptr + 1) % LOG_BUFFER_SIZE; // Buffer circular
-        str++;
-    }
-}
-
-
-
-void print_mode_human(uint32_t mode) {
-
-    printk(WHITE, (mode & 0400) ? "r" : "-");
-    printk(WHITE, (mode & 0200) ? "w" : "-");
-    printk(WHITE, (mode & 0100) ? "x" : "-");
-
-    printk(WHITE, (mode & 0040) ? "r" : "-");
-    printk(WHITE, (mode & 0020) ? "w" : "-");
-    printk(WHITE, (mode & 0010) ? "x" : "-");
-
-    printk(WHITE, (mode & 0004) ? "r" : "-");
-    printk(WHITE, (mode & 0002) ? "w" : "-");
-    printk(WHITE, (mode & 0001) ? "x" : "-");
-    printk(WHITE, " ");
+#endif
+    cursor_x = 0;
+    cursor_y = 0;
 }

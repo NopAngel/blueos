@@ -1,14 +1,14 @@
-#include <blueos/ports.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/ports.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
+
+uint16_t g_smbus_base = 0;
 
 #define PCI_CONFIG_ADDRESS 0xCF8
 #define PCI_CONFIG_DATA    0xCFC
 
-/**
- * pci_read_config - Lee un registro de 32 bits del espacio PCI
- */
+
 void pci_write_config(unsigned char bus, unsigned char slot, unsigned char func, unsigned char offset, unsigned int val) {
     unsigned int address = (unsigned int)((((unsigned int)bus) << 16) | (((unsigned int)slot) << 11) |
               (((unsigned int)func) << 8) | (offset & 0xfc) | ((unsigned int)0x80000000));
@@ -18,8 +18,14 @@ void pci_write_config(unsigned char bus, unsigned char slot, unsigned char func,
 }
 
 uint32_t pci_read_config(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset) {
-    uint32_t address = (uint32_t)((uint32_t)bus << 16) | ((uint32_t)slot << 11) |
-                       ((uint32_t)func << 8) | (offset & 0xfc) | ((uint32_t)0x80000000);
+    uint32_t address;
+    uint32_t lbus  = (uint32_t)bus;
+    uint32_t lslot = (uint32_t)slot;
+    uint32_t lfunc = (uint32_t)func;
+
+    address = (uint32_t)((lbus << 16) | (lslot << 11) |
+              (lfunc << 8) | (offset & 0xFC) | ((uint32_t)0x80000000));
+    
     outl(0xCF8, address);
     return inl(0xCFC);
 }
@@ -79,4 +85,27 @@ uint32_t pci_find_device(uint16_t vendor, uint16_t device) {
         }
     }
     return 0xFFFFFFFF; 
+}
+
+void pci_scan_bus() {
+    printk(CYAN, "PCI: Scanning devices...\n");
+    
+
+    for (int bus = 0; bus < 256; bus++) {
+        for (int slot = 0; slot < 32; slot++) {
+            uint32_t vendor = pci_read_config(bus, slot, 0, 0);
+            if (vendor == 0xFFFFFFFF) continue;
+
+            uint32_t class_data = pci_read_config(bus, slot, 0, 0x08);
+            uint8_t class_code = (class_data >> 24) & 0xFF;
+            uint8_t sub_class = (class_data >> 16) & 0xFF;
+
+            if (class_code == 0x0C && sub_class == 0x05) {
+                uint32_t bar4 = pci_read_config(bus, slot, 0, 0x20);
+                uint16_t i2c_base = bar4 & 0xFFFE;
+                printk(GREEN, "PCI: SMBus Controller (I2C) found at 0x%x\n", i2c_base);
+
+            }
+        }
+    }
 }

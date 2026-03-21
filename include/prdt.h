@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <blueos/io.h>
+#include <kernel/io.h>
 
 struct prd_entry {
     uint32_t base_addr; 

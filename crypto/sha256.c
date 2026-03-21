@@ -1,7 +1,7 @@
 #include <stdint.h>
-#include <string.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <lib/string.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 #define ROTRIGHT(word, bits) (((word) >> (bits)) | ((word) << (32 - (bits))))
 #define CH(x, y, z) (((x) & (y)) ^ (~(x) & (z)))

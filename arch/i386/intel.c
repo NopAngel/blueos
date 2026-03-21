@@ -1,7 +1,7 @@
 // arch/i386/intel.c
 #include <stdint.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 #define IA32_FEATURE_CONTROL_MSR 0x3A
 

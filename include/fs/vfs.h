@@ -1,9 +1,6 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
-#include <blueos/printk.h>
-#include <blueos/colors.h>
-#include <lib/string.h>
 
 #define VFS_MAX_PATH 256
 #define VFS_MAX_NAME 30

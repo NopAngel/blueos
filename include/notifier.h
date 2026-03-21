@@ -1,7 +1,7 @@
 #ifndef _LINUX_NOTIFIER_H
 #define _LINUX_NOTIFIER_H
 
-#include <blueos/printk.h>
+#include <kernel/printk.h>
 
 #define NOTIFY_DONE      0x0000   
 #define NOTIFY_OK        0x0001   

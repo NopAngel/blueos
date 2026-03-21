@@ -1,4 +1,4 @@
-#include <blueos/ports.h>
+#include <kernel/ports.h>
 
 static int battery_percentage = 100;
 static int is_charging = 0;

@@ -4,8 +4,8 @@
  * Copyright (C) 2024-2026  NopAngel <angelgabrielnieto@outlook.com>
  */
 
-#include <blueos/printk.h>    
-#include <sysctl.h>   
+#include <kernel/printk.h> 
+#include <kernel/sysctl.h>   
 
 typedef struct {
     char *name;

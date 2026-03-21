@@ -1,9 +1,10 @@
-#include <timer.h>
-#include <blueos/io.h>
+
+#include <kernel/io.h>
 #include <lib/string.h>
 #include <stdint.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
+#include <arch/i386/timer.h>
 
 extern int cursor_y;
 volatile uint32_t current_ticks = 0;

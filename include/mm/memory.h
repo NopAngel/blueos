@@ -1,7 +1,7 @@
 
 #ifndef MEMORY_H
 #define MEMORY_H
-#include <blueos/types.h>
+#include <kernel/types.h>
 
 
 typedef int bool;
@@ -27,6 +27,15 @@ struct multiboot_info {
     uint32_t mmap_addr;
 };
 
+struct memory_manager {
+    uint8_t* bitmap;
+    uintptr_t total_memory;
+    uint32_t  total_pages;
+    uint32_t  bitmap_size;
+    uint32_t  next_free;
+    int       initialized;
+};
+
 struct memory_map_entry {
     uint32_t size;
     uint32_t base_low;
@@ -36,20 +45,8 @@ struct memory_map_entry {
     uint32_t type;
 };
 
-struct memory_manager {
-    uint32_t total_memory;
-    uint32_t free_memory;
-    uint32_t used_memory;
-    uint32_t total_pages;
-    uint32_t free_pages;
-    uint32_t next_free;
-    uint8_t* bitmap;
-    uint32_t bitmap_size;
-    int initialized;
-};
 
-
-void mm_init(struct multiboot_info* mbi);
+//void mm_init(struct multiboot_info* mbi);
 void* kmalloc(uint32_t size);
 void kfree(void* ptr, uint32_t size);
 void* kcalloc(uint32_t num, uint32_t size);

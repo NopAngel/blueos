@@ -9,8 +9,8 @@
 
 #define MEMORY_C
 #include <mm/memory.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 
 /* --- Configuration Macros --- */
 #define KERNEL_START_ADDR 0x100000  // 1MB mark

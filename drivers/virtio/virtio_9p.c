@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include <blueos/printk.h>
+#include <kernel/printk.h>
 
 bool virtio_9p_present(void) {
     // return pci_find_device(0x1AF4, 0x1009); 

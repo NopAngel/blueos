@@ -12,6 +12,15 @@
 #define P9_RREAD    117
 #define P9_MAX_BUF 8192
 
+enum {
+    Tversion = 100,
+    Rversion,
+    Tauth = 102,
+    Rauth,
+    Tattach = 104,
+    Rattach
+};
+
 struct p9_header {
     uint32_t size;   
     uint8_t  type;    
@@ -32,3 +41,9 @@ struct p9_qid {
     uint32_t version;   
     uint64_t path;      
 } __attribute__((packed));
+
+typedef struct {
+    uint32_t size;
+    uint8_t  type; 
+    uint16_t tag;  
+} __attribute__((packed)) p9_header;

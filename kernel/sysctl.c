@@ -2,10 +2,10 @@
  * BlueOS / kernel / sysctl.c
  */
 
-#include <sysctl.h>
+#include <kernel/sysctl.h>
 #include <lib/string.h>
-#include <blueos/colors.h>
-#include <blueos/printk.h>
+#include <kernel/colors.h>
+#include <kernel/printk.h>
 
 int kernel_debug_level = 1;
 char kernel_hostname[32] = "BlueOS-Machine";

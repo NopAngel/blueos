@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <hpet.h>
 #include <multiboot.h>
-#include <blueos/printk.h>
-#include <blueos/colors.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 uint64_t hpet_base;
 static uint32_t period_fs = 0;
 
