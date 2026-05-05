@@ -57,13 +57,13 @@ static void boot_msg(const char* subsystem, const char* msg, int status) {
  */
 static void verify_kernel_integrity(void) {
     uint8_t hash_output[32];
-    if (hash_output[0] != 0x00) { 
+    if (hash_output[0] != 0x00) {
         k_panic(__FILE__, __LINE__, "SECURITY VIOLATION: Disk signature mismatch!");
     }
     boot_msg("SECURITY", "Kernel integrity verified via SHA-256", 0);
 }
 
-extern int g_high_res_enabled; 
+extern int g_high_res_enabled;
 
 
 
@@ -72,10 +72,10 @@ extern int g_high_res_enabled;
  * init_all - Main kernel entry sequence
  */
 void init_all() {
-    clear_screen(); 
+    clear_screen();
 
     kmalloc_init((uintptr_t)&_end, 1024 * 1024);
-    mm_init(128); 
+    mm_init(128);
     printk(GREEN, "Memory Manager initialized.\n");
 
     fpu_init();

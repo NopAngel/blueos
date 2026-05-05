@@ -20,8 +20,8 @@ typedef struct {
     bool active;
 } env_var_t;
 
-extern shell_command_t commands_table[]; 
-extern void list_matches(char* prefix);  
+extern shell_command_t commands_table[];
+extern void list_matches(char* prefix);
 
 #define MAX_ALIAS 20
 #define ALIAS_NAME_LEN 16
@@ -36,12 +36,9 @@ typedef struct {
 
 
 typedef struct {
-    char name[8];      
-    uint32_t start_lba; 
-    uint32_t sectors;   
-    uint8_t type;      
+    char name[8];
+    uint32_t start_lba;
+    uint32_t sectors;
+    uint8_t type;
     bool active;
 } partition_t;
-
-extern partition_t part_table[MAX_PARTITIONS];
-extern alias_t alias_table[MAX_ALIAS];

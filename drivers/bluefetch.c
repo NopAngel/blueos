@@ -25,14 +25,13 @@ void print_raccoon_real() {
 
 
     printk(r[0], "                   __        .-. \n");
-    printk(r[1], "               .-\"` .`'.    /\\\\\\| \n"); 
-    printk(r[2], "       _(\\-/)\" ,  .   ,\\  /\\\\\\\\/ ");           printk(LIGHT_MAGENTA, " -----------------------\n"); 
+    printk(r[1], "               .-\"` .`'.    /\\\\\\| \n");
+    printk(r[2], "       _(\\-/)\" ,  .   ,\\  /\\\\\\\\/ ");           printk(LIGHT_MAGENTA, " -----------------------\n");
     printk(r[3], "      {(#b^d#)} .   ./,  |/\\\\\\\\/   ");            printk(WHITE, " User:   "); printk(CYAN, "%s@users\n", current_user);
     printk(r[4], "      `-.(Y).-`  ,  |  , |\\.-`     ");               printk(WHITE, " OS:     "); printk(CYAN, "%s %s\n", BLUEOS_NAME, UTS_RELEASE);
     printk(r[5], "           /~/,_/~~~\\,__.-`        ");               printk(WHITE, " Kernel: "); printk(CYAN, "%s\n", UTS_RELEASE);
     printk(r[6], "          ////~    // ~\\\\          ");              printk(WHITE, " Arch:   "); printk(CYAN, "%s\n", BLUEOS_ARCH);
-    printk(r[0], "        ==`==`   ==`   ==`         ");                printk(WHITE, " RAM:    "); printk(CYAN, "%dMB / %dMB\n", used_memory_kb/1024, total_memory_kb/1024);
-    display_system_palette();
+    printk(r[0], "        ==`==`   ==`   ==`         ");
 }
 
 

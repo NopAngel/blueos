@@ -1,100 +1,58 @@
-#ifndef __VFS_H__
-#define __VFS_H__
+#ifndef VFS_H
+#define VFS_H
 
+#include <stdint.h>
+#include <stddef.h>
 
-#define VFS_MAX_PATH 256
-#define VFS_MAX_NAME 30
-#define VFS_MAX_CONTENT 1024
-#define VFS_MAX_ENTRIES 500
-#define VFS_MAX_OPEN_FILES 32
-#define MAX_VFS_NODES 256
-#define MAX_MOUNTS 8
+#define VFS_NAME_MAX 32
+#define VFS_MAX_CONTENT 200
 
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
 
 typedef enum {
-    VFS_TYPE_FILE,
-    VFS_TYPE_DIRECTORY
-} vfs_entry_type;
+    VFS_TYPE_FILE = 1,
+    VFS_TYPE_DIR,
+    VFS_TYPE_CHARDEV,
+    VFS_TYPE_BLKDEV,
+    VFS_TYPE_MOUNTPOINT
+} vfs_type_t;
+
+struct vfs_node;
 
 typedef struct {
-    char target[VFS_MAX_PATH]; 
-    char type[16];             
-    int active;
-} vfs_mount_point;
-
-typedef struct {
-    void (*init)(void);
-    void (*mkdir)(const char* name);
-    void (*touch)(const char* name);
-    void (*ls)(void);
-} fs_ops_t;
+    int (*open)(struct vfs_node* node, uint32_t flags);
+    int (*close)(struct vfs_node* node);
+    int (*read)(struct vfs_node* node, void* buffer, uint32_t size, uint32_t offset);
+    int (*write)(struct vfs_node* node, const void* buffer, uint32_t size, uint32_t offset);
+    struct vfs_node* (*finddir)(struct vfs_node* node, const char* name);
+    int (*mkdir)(struct vfs_node* node, const char* name, uint16_t mode);
+    int (*readdir)(struct vfs_node* node, uint32_t index, struct vfs_dirent* dirent_out);
+} vfs_ops_t;
 
 
-typedef struct {
-    char name[VFS_MAX_NAME];
-    vfs_entry_type type;
-    unsigned int parent;          
-    unsigned int size;           
-    unsigned int inode;           
-    unsigned int data_block;     
-    unsigned int created_time;   
-    unsigned int modified_time;
-} vfs_entry;
 
-typedef struct {
-    vfs_entry entries[VFS_MAX_ENTRIES];
-    unsigned int entry_count;
-    unsigned int current_directory; 
-    unsigned int root_directory;    
-} vfs_system;
-
-typedef struct {
-    char path[255];
-    int is_directory;
-    int (*read_callback)(char *);
+// vnode/inode
+typedef struct vfs_node {
+    char name[VFS_NAME_MAX];
+    uint32_t inode;
+    uint32_t size;
+    uint32_t flags;
+    vfs_type_t type;
+    vfs_ops_t* ops;
+    void* private_data;
+    struct vfs_node* ptr;
+    struct vfs_node* parent;
 } vfs_node_t;
 
-
-typedef struct {
-    unsigned int inode;
-    unsigned int position;  
-    unsigned int mode;      
-    unsigned int ref_count;
-} vfs_file_handle;
-
-struct vfs_driver {
-    char name[16];
-    int (*mount)(const char *source, const char *target);
+struct vfs_dirent {
+    char name[VFS_NAME_MAX];
+    uint32_t inode;
+    uint32_t type;
 };
-void vfs_register_driver(struct vfs_driver *driver);
-void vfs_register_fs(const char* name, fs_ops_t ops);
-extern vfs_mount_point mount_table[MAX_MOUNTS];
-void vfs_init(void);
-int vfs_mkdir(const char *name);
-int vfs_create(const char *name, const char *content);
-int vfs_write(const char *name, const char *content);
-char* vfs_read(const char *name);
-int vfs_delete(const char *name);
-int vfs_cd(const char *path);
-void vfs_ls(void);
-char* vfs_pwd(void);
-void vfs_list_files_in_dir(const char *dir_path);
-int vfs_exists(const char *path);
-int vfs_open(const char *name, unsigned int mode);
-int vfs_close(int fd);
-int vfs_read_fd(int fd, char *buffer, unsigned int size);
-int vfs_write_fd(int fd, const char *buffer, unsigned int size);
-vfs_entry* vfs_find_entry(const char *name, vfs_entry_type type);
-vfs_entry* vfs_get_entry_by_inode(unsigned int inode);
-void vfs_rmdir(const char *name);
-void vfs_rm(const char *name);
-int vfs_mount(const char *source, const char *target, const char *type);
-static void vfs_memset(void *ptr, char value, unsigned int size);
-static void vfs_memcpy(void *dest, const void *src, unsigned int size);
-static void vfs_strcat(char *dest, const char *src);
-void vfs_cat(const char *name);
 
-#endif // __VFS_H__
+void vfs_init(void);
+vfs_node_t* vfs_get_root(void);
+int vfs_read(vfs_node_t* node, void* buffer, uint32_t size, uint32_t offset);
+int vfs_write(vfs_node_t* node, const void* buffer, uint32_t size, uint32_t offset);
+vfs_node_t* vfs_lookup(const char* path);
+
+#endif

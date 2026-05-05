@@ -61,7 +61,7 @@ char* get_env_var(char* name) {
             return env_vars[i].value;
         }
     }
-    return ""; 
+    return "";
 }
 
 
@@ -96,7 +96,7 @@ void expand_variables(char* input, char* output) {
     char* dest = output;
     while (*src != '\0') {
         if (*src == '$') {
-            src++; 
+            src++;
             char var_name[VAR_NAME_LEN];
             int i = 0;
             while ((*src >= 'A' && *src <= 'Z') || (*src >= '0' && *src <= '9') || *src == '_') {
@@ -126,26 +126,15 @@ int cmd_echo(char* args) {
     return 0;
 }
 
-int cmd_version(char* args) {
-    printk(CYAN, "\nBlueOS Kernel v%s\n", UTS_RELEASE);
-    printk(WHITE, "Architecture: RISC-V (rv32i_zicsr)\n");
-    printk(WHITE, "Compiler: %s\n", COMPILER_INFO);
-    return 0;
-}
-
 int cmd_clear(char* args) {
     clear_screen();
     return 0;
 }
 
-int cmd_reboot(char* args) {
-    sys_reboot(); 
-    return 0;
-}
 
 int cmd_halt(char* args) {
     printk(RED, "\nShutting down BlueOS (RISC-V)...\n");
-    sys_shutdown(); 
+    sys_shutdown();
     return 0;
 }
 
@@ -216,7 +205,7 @@ shell_command_t commands_table[] = {
     {"touch",     "Create a file",                  cmd_touch},
     {"cd",        "Create a folder",                cmd_cd},
     {"ls",        "List folders/files",             cmd_ls},
-    {0, 0, 0} 
+    {0, 0, 0}
 };
 
 
@@ -225,15 +214,15 @@ void execute_shell_command(char* input) {
 
     char expanded[INPUT_BUFFER_SIZE];
     expand_variables(input, expanded);
-    
+
     char* args = get_args(expanded);
-    
+
     for (int i = 0; commands_table[i].name != 0; i++) {
         if (strcmp(expanded, commands_table[i].name) == 0) {
             commands_table[i].function(args);
             return;
         }
     }
-    
+
     printk(RED, "Unknown command: %s\n", expanded);
 }

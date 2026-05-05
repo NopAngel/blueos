@@ -5,8 +5,6 @@
 
 #define IA32_FEATURE_CONTROL_MSR 0x3A
 
-extern void rust_init_vmcs(void* ptr, uint32_t rev_id);
-extern void* rust_allocate_vmx_region(); 
 
 static inline uint64_t read_msr(uint32_t msr) {
     uint32_t low, high;
@@ -26,7 +24,7 @@ int init_intel_vtx() {
     asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(0));
     if (ebx != 0x756e6547 || edx != 0x49656e69 || ecx != 0x6c65746e) {
         printk(YELLOW, "CPU: No Intel processor detected. Skipping VMX.\n");
-        return 0; 
+        return 0;
     }
 
 
@@ -37,7 +35,7 @@ int init_intel_vtx() {
     }
 
     uint64_t feature_control = read_msr(IA32_FEATURE_CONTROL_MSR);
-    
+
 
     uint32_t msr_low, msr_high;
     asm volatile("rdmsr" : "=a"(msr_low), "=d"(msr_high) : "c"(IA32_FEATURE_CONTROL_MSR));
@@ -50,25 +48,35 @@ int init_intel_vtx() {
 
     uint32_t cr4;
     asm volatile("mov %%cr4, %0" : "=r"(cr4));
-    cr4 |= (1 << 13); 
+    cr4 |= (1 << 13);
     asm volatile("mov %0, %%cr4" : : "r"(cr4));
 
     printk(GREEN, "Intel: Virtualization (VMX) successfully enabled.\n");
-    return 1; 
+    return 1;
+}
+
+uint32_t _allocate_vmx_region() {
+    return 0; //
+}
+
+void _init_vmcs(uint32_t* vmcs_ptr, uint32_t vmx_basic_low) {
+
+    *vmcs_ptr = vmx_basic_low;
+
 }
 
 int setup_vmcs() {
-    void* vmcs_ptr = rust_allocate_vmx_region();
-    
+    void* vmcs_ptr = _allocate_vmx_region();
+
     uint32_t vmx_basic_low, vmx_basic_high;
     asm volatile("rdmsr" : "=a"(vmx_basic_low), "=d"(vmx_basic_high) : "c"(0x480));
 
-    rust_init_vmcs(vmcs_ptr, vmx_basic_low);
+    _init_vmcs(vmcs_ptr, vmx_basic_low);
 
     uint8_t error;
     asm volatile (
         "vmptrld %[region];"
-        "setna %[err]" 
+        "setna %[err]"
         : [err] "=rm" (error)
         : [region] "m" (vmcs_ptr)
         : "cc", "memory"

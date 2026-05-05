@@ -10,11 +10,11 @@ extern void virt_irq_unmask(uint8_t irq);
 
 void handle_virtual_device(unsigned char irq) {
     switch(irq) {
-        case 10: 
+        case 10:
             // uart_handler();
             printk(CYAN, "Interrupt: UART activity detected (IRQ 10)\n");
             break;
-        case 1:  
+        case 1:
             printk(YELLOW, "Interrupt: Virtual Device 1\n");
             break;
         default:
@@ -31,14 +31,5 @@ void dispatch_interrupts() {
         handle_virtual_device((unsigned char)irq);
 
         plic_complete(irq);
-    }
-}
-
-void dispatch_virtual_interrupts() {
-    for (int i = 0; i < 16; i++) {
-        if (virt_irq_is_pending(i)) {
-            handle_virtual_device(i);
-            virt_irq_ack(i);
-        }
     }
 }

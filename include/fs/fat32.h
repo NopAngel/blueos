@@ -7,7 +7,7 @@ struct fat32_bpb {
     uint8_t  sectors_per_cluster;
     uint16_t reserved_sectors;
     uint8_t  fat_count;
-    uint16_t root_entries_count; // 0 para FAT32
+    uint16_t root_entries_count; // 0 for FAT32
     uint16_t total_sectors_16;
     uint8_t  media_type;
     uint16_t fat_size_16;
@@ -16,7 +16,6 @@ struct fat32_bpb {
     uint32_t hidden_sectors;
     uint32_t total_sectors_32;
 
-    // Campos específicos de FAT32
     uint32_t fat_size_32;
     uint16_t ext_flags;
     uint16_t fs_version;
@@ -41,7 +40,7 @@ struct fat32_directory_entry {
     uint16_t create_time;
     uint16_t create_date;
     uint16_t last_access_date;
-    uint16_t first_cluster_high; // Importante para FAT32
+    uint16_t first_cluster_high;
     uint16_t write_time;
     uint16_t write_date;
     uint16_t first_cluster_low;

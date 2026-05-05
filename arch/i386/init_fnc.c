@@ -20,14 +20,11 @@
 
 #define RTL_VENDOR_ID 0x10EC
 #define RTL_DEVICE_ID 0x8139
-extern int console_loglevel;
 
 extern uint32_t total_blocks;
-extern uint32_t _end; 
+extern uint32_t _end;
 extern int current_user_index;
-extern int cursor_x;
-extern int cursor_y;
-int g_high_res_enabled = 1;
+
 const char *readme_lol = "  BLUEOS  \nExplanation:\n It's a kernel inspired by GNU/Linux and Unix.\n\n How to use it?\n\nIt works similarly to Bash. Up and down arrows: to see the commands\nTab: to see the continuation of the command\nDouble Tab: for when there are two identical commands and you need to see the 'similar'\n\nThe commands:\n You can use 'help' to see the list of commands\n\nCreated by: NopAngel   Repo: github.com/NopAngel/blueos";
 
 static void x86_wallclock_init(void);
@@ -39,7 +36,6 @@ void detect_hypervisor(void);
 bool i386_is_guest(void);
 const char* i386_hyper_name(void);
 void i386_memory_prepare(struct multiboot_info* mbi);
-extern void k_main();
 static void i386_mem_init(struct multiboot_info *mbd) {
     if (mbd) {
         mm_init(mbd);
@@ -48,12 +44,12 @@ static void i386_mem_init(struct multiboot_info *mbd) {
 
 struct i386_hyper_ops {
     void (*init_platform)(void);
-    bool (*is_guest)(void);      // Ahora 'bool' será reconocido
+    bool (*is_guest)(void);
     const char* (*get_name)(void);
 };
 
 struct i386_init_ops {
-    void (*resources_setup)(struct multiboot_info *); // <--- Nueva: Configura límites
+    void (*resources_setup)(struct multiboot_info *);
     void (*arch_setup)(void);
     void (*mem_init)(struct multiboot_info *);
     void (*fs_init)(void);
@@ -68,7 +64,7 @@ struct i386_init_ops blueos_init = {
     .arch_setup = idt_init,
     .mem_init   = mm_init,
     .fs_init    = fs_init,
-    
+
     .hyper = {
         .init_platform = detect_hypervisor,
         .is_guest      = i386_is_guest,
@@ -104,25 +100,19 @@ static void verify_kernel_integrity(void) {
     hdcdma_init(disk_buffer, 512);
     outb(0x1F7, 0xC8); // READ DMA command
     wait_for_disk();
-    
+
     sha256_quick_hash(disk_buffer, 512, hash_output);
-    if (hash_output[0] != 0x00) { 
+    if (hash_output[0] != 0x00) {
         k_panic(__FILE__, __LINE__, "SECURITY VIOLATION: Disk signature mismatch!");
     }
     boot_msg("SECURITY", "Kernel integrity verified via SHA-256", 0);
 }
 
-extern int g_high_res_enabled; 
-
-
-
-
 /**
  * init_all - Main kernel entry sequence
  */
 void init_all(unsigned int magic, struct multiboot_info *mbd) {
-    clear_screen(); 
-
+    clear_screen();
 
     blueos_init.arch_setup();
     boot_msg("CPU", "IDT and CPU descriptors ready", 0);
@@ -157,8 +147,8 @@ void init_all(unsigned int magic, struct multiboot_info *mbd) {
     boot_msg("CMDLINE", "Kernel parameters parsed", 0 );
 
     blueos_init.hyper.init_platform();
-    
-    
+
+
     if (blueos_init.hyper.is_guest()) {
         boot_msg("HYPER", "Virtual environment detected", 0);
         printk(CYAN, "             Platform: %s\n", blueos_init.hyper.get_name());
@@ -167,33 +157,14 @@ void init_all(unsigned int magic, struct multiboot_info *mbd) {
     }
 
     vfs_init();
-    if (virtio_9p_present()) {
-        v9p_init();
-        vfs_mkdir("mnt");
-        vfs_mount("/mnt/host", "9p", 0); 
-        
-        boot_msg("9PFS", "Shared folder mounted via 9P", 0);
-
-        vfs_mount("host", "/mnt/shared", "9p");
-        boot_msg("ADFS", "Shared folder mounted via 9P", 0);
-
-
-    }
     blueos_init.fs_init();
-    jfs_init();
+    //jfs_init();
     boot_msg("FS", "VFS and Journaling FS (JFS) ready", 0);
-
-    pnp_init();
 
     isapnp_init();
     bcma_scan_bus();
     usbscan_init();
     scsi_init();
-   // pr_info("Protected Mode");
-   // go_to_protected_mode((uint32_t)k_main);
-    if (find_wifi_card() == 0) {
-        boot_msg("NET", "No WiFi adapter found", 1);
-    }
 
     uint32_t net_dev = pci_find_device(RTL_VENDOR_ID, RTL_DEVICE_ID);
     if (net_dev != 0xFFFFFFFF) {
@@ -213,5 +184,7 @@ void init_all(unsigned int magic, struct multiboot_info *mbd) {
     printk(WHITE, "--------------------------------------------------\n");
     touch("ReadMe.md", readme_lol);
 
+
     __asm__ volatile ("sti");
+
 }

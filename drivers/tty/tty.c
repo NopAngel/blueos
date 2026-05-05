@@ -1,44 +1,97 @@
-#include <drivers/tty.h>
+#include <drivers/keyboard.h>
 #include <kernel/printk.h>
 #include <kernel/colors.h>
+#include <lib/string.h>
 
-struct tty_struct tty0;
+#define TTY_BUFFER_SIZE 1024
+#define CTRL(c) ((c) & 0x1F)
 
-void console_write(const char *buf, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        putchar(buf[i], WHITE); 
+/* --- Estructura termios (Estilo Linux) --- */
+typedef struct {
+    uint32_t c_iflag;      /* input modes */
+    uint32_t c_oflag;      /* output modes */
+    uint32_t c_lflag;      /* local modes (ECHO, ICANON, etc) */
+    uint8_t  c_cc[20];     /* control characters (VINTR, VEOF...) */
+} struct_termios;
+
+/* Flags básicos de Linux */
+#define ICANON  0000002    /* Modo canónico (por líneas) */
+#define ECHO    0000010    /* Hacer eco de los caracteres */
+#define ISIG    0000001    /* Habilitar señales (Ctrl+C) */
+
+typedef struct {
+    char buffer[TTY_BUFFER_SIZE];
+    uint32_t head;
+    uint32_t tail;
+    uint32_t count;
+    struct_termios conf;
+    void (*write_out)(char c); /* Función para escupir al hardware */
+} tty_t;
+
+static tty_t main_tty;
+
+/**
+ * tty_init: Inicializa el TTY estilo Linux
+ */
+void tty_init(void (*hw_write)(char)) {
+    memset(&main_tty, 0, sizeof(tty_t));
+    main_tty.write_out = hw_write;
+
+    /* Configuración por defecto: Modo Linux clásico */
+    main_tty.conf.c_lflag = ICANON | ECHO | ISIG;
+    main_tty.conf.c_cc[0] = CTRL('c'); /* VINTR */
+
+    printk(CYAN, "TTY: BlueOS driver initialized\n");
+}
+
+/**
+ * tty_input: El "Line Discipline" (N_TTY)
+ * Aquí es donde el driver de teclado o UART inyecta datos
+ */
+void tty_input(char c) {
+    /* 1. Manejo de señales (ISIG) */
+    if (main_tty.conf.c_lflag & ISIG) {
+        if (c == main_tty.conf.c_cc[0]) {
+            printk(RED, "\n^C - SIGINT recibido (BlueOS Signal)\n");
+            // signal_send(current_process, SIGINT);
+            return;
+        }
     }
-}
 
-void tty_init() {
-    tty0.index = 0;
-    tty0.head = tty0.tail = tty0.count = 0;
-    tty0.echo = 1;
-    tty0.raw_mode = 0;
-    tty0.write = console_write;
-    
-    printk(GREEN, "[  OK  ] TTY driver initialized: tty0\n");
-}
+    /* 2. Modo Canónico (ICANON) */
+    if (main_tty.conf.c_lflag & ICANON) {
+        if (c == '\b' || c == 127) {
+            if (main_tty.count > 0) {
+                main_tty.head = (main_tty.head - 1) % TTY_BUFFER_SIZE;
+                main_tty.count--;
+                if (main_tty.conf.c_lflag & ECHO) main_tty.write_out('\b');
+            }
+            return;
+        }
+    }
 
-void tty_receive_char(struct tty_struct *tty, char c) {
-    if (tty->count < TTY_BUFFER_SIZE) {
-        tty->input_buffer[tty->head] = c;
-        tty->head = (tty->head + 1) % TTY_BUFFER_SIZE;
-        tty->count++;
+    /* 3. Almacenar en el buffer circular */
+    if (main_tty.count < TTY_BUFFER_SIZE) {
+        main_tty.buffer[main_tty.head] = c;
+        main_tty.head = (main_tty.head + 1) % TTY_BUFFER_SIZE;
+        main_tty.count++;
 
-        if (tty->echo) {
-            tty->write(&c, 1); 
+        /* 4. ECO */
+        if (main_tty.conf.c_lflag & ECHO) {
+            main_tty.write_out(c);
         }
     }
 }
 
-int tty_read(struct tty_struct *tty, char *buf, size_t n) {
-    size_t i = 0;
-    while (i < n && tty->count > 0) {
-        buf[i] = tty->input_buffer[tty->tail];
-        tty->tail = (tty->tail + 1) % TTY_BUFFER_SIZE;
-        tty->count--;
-        i++;
+/**
+ * tty_read: Lo que llamaría la syscall 'read' desde el espacio de usuario
+ */
+int tty_read(char* user_buf, int n) {
+    int i = 0;
+    while (i < n && main_tty.count > 0) {
+        user_buf[i++] = main_tty.buffer[main_tty.tail];
+        main_tty.tail = (main_tty.tail + 1) % TTY_BUFFER_SIZE;
+        main_tty.count--;
     }
     return i;
 }

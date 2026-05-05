@@ -4,7 +4,7 @@
 /* --- Version Core --- */
 #define BLUEOS_MAJOR    2
 #define BLUEOS_MINOR    2
-#define BLUEOS_PATCH    1
+#define BLUEOS_PATCH    2
 
 /* Helper to compare versions in code: #if BLUEOS_VERSION_CODE >= KERNEL_VERSION(2,3,0) */
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
@@ -34,7 +34,7 @@
 #define COMPILER_INFO   "gcc " __VERSION__
 #define UTS_RELEASE     "2.2.1-blueos"
 
-#define UTS_VERSION    "#1 SMP PREEMPT 2026-03-19 11:37:41"
+#define UTS_VERSION    "#1 SMP PREEMPT 2026-05-05 00:20:35"
 #define UTS_MACHINE     BLUEOS_ARCH
 
 /* --- Helpful Macros --- */

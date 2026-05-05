@@ -27,12 +27,12 @@ KERNEL_ISO = blueos.iso
 
 obj-y := arch/i386/boot.o arch/printk.o arch/i386/panic.o arch/i386/task.o lib/string.o \
          arch/i386/interrupts.o arch/i386/interrupt_entry.o arch/i386/profile.o usr/auth.o \
-         arch/i386/switch.o arch/i386/bg.o drivers/multilru.o kernel/sysctl.o \
+         arch/i386/switch.o arch/i386/bg.o drivers/multilru.o \
          fs/help.o drivers/tty/tty.o drivers/keyboard/keyboard.o arch/i386/syscall.o \
          drivers/scsi/scsi_core.o arch/i386/pic.o drivers/scsi/scsi_lsi.o \
          drivers/pci/pci.o drivers/pinctrl/pinctrl.o arch/i386/idt.o arch/i386/interrupt_stubs.o \
-         arch/i386/irq.o fs/vboxfs/vboxfs.o drivers/power/power.o arch/i386/keyboard_io.o \
-         fs/9p/9p.o drivers/net/mac80211.o kernel/vmcore_info.o drivers/leds/leds.o drivers/vhost/vhost_net.o \
+         arch/i386/irq.o kernel/sysctl.o fs/vboxfs/vboxfs.o drivers/power/power.o arch/i386/keyboard_io.o \
+         fs/9p/9p.o kernel/vmcore_info.o drivers/leds/leds.o drivers/vhost/vhost_net.o \
          arch/i386/apic.o arch/i386/kvm.o kernel/hlec.o arch/i386/timer.o kernel/hpet.o arch/i386/shell.o \
          drivers/rtc/rtc.o drivers/battery/battery.o arch/i386/mm/memory.o arch/i386/acpi.o \
          arch/i386/kernel.o arch/i386/init_fnc.o arch/i386/intel.o arch/i386/amd.o arch/i386/interrupts-a.o \
@@ -80,8 +80,8 @@ iso: all
 	$(Q)$(GRUB_MKRESCUE) -o $(KERNEL_ISO) iso_root
 	@rm -rf iso_root
 
-run: all
-	$(Q)$(QEMU) -kernel $(KERNEL_BIN) -m 256M -nographic  
+run:
+	$(Q)$(QEMU) -kernel $(KERNEL_BIN) -m 256M -d int
 
 clean:
 	@echo "  CLEAN    Objects and binaries"

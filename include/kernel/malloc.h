@@ -5,13 +5,14 @@
 #include <stddef.h>
 
 typedef struct header {
-    size_t size;            
-    struct header *next;    
-    int is_free;            
+    size_t size;
+    struct header *next;
+    int is_free;
 } header_t;
 
 void kmalloc_init(uintptr_t start, size_t size);
 void *kmalloc(size_t size);
 void kfree(void *ptr);
+
 
 #endif

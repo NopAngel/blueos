@@ -8,6 +8,8 @@ int console_loglevel = 7;
 char kernel_log_buffer[LOG_BUFFER_SIZE];
 uint32_t log_ptr = 0;
 
+extern void update_cursor();
+
 /* External cursors (defined in your arch-specific task or boot files) */
 extern int cursor_x;
 extern int cursor_y;
@@ -34,47 +36,18 @@ extern int cursor_y;
  * putchar: Outputs a single character to the hardware.
  * Detects architecture at compile-time to use UART or VGA memory.
  */
-void putchar(char c, unsigned int color) {
-    /* 1. Logic for RISC-V (UART) */
-#if defined(__riscv) || defined(RISCV)
-    while (!(*UART_LSR & UART_LSR_EMPTY)); /* Wait for UART to be ready */
-    *UART_DR = c;
-
-    if (c == '\n') {
-        cursor_x = 0;
-        cursor_y++;
-        while (!(*UART_LSR & UART_LSR_EMPTY));
-        *UART_DR = '\r'; /* Carriage return for serial terminals */
-    } else {
-        cursor_x++;
-    }
-
-    /* 2. Logic for x86 (VGA Text Buffer) */
-#elif defined(__i386__) || defined(I386)
-    if (c == '\n') {
-        cursor_x = 0;
-        cursor_y++;
-    } else if (c == '\r') {
-        cursor_x = 0;
-    } else {
-        int index = (cursor_y * VGA_WIDTH + cursor_x) * 2;
-        VIDEO_MEM[index] = c;
-        VIDEO_MEM[index + 1] = (char)color;
-        cursor_x++;
-    }
-
-    /* Handle screen wrap-around for x86 */
-    if (cursor_x >= VGA_WIDTH) {
-        cursor_x = 0;
-        cursor_y++;
-    }
-#endif
+void
+putchar(char c, unsigned int color)
+{
+	arch_put_char(c, color);
 }
 
 /**
  * add_to_kernel_log_char: Internal circular buffer for dmesg-like logging.
  */
-void add_to_kernel_log_char(char c) {
+void
+add_to_kernel_log_char(char c)
+{
     kernel_log_buffer[log_ptr] = c;
     log_ptr = (log_ptr + 1) % LOG_BUFFER_SIZE;
 }
@@ -82,11 +55,13 @@ void add_to_kernel_log_char(char c) {
 /**
  * print_int: Helper to convert integers to strings and print them.
  */
-void print_int(long num, int base, unsigned int color, int precision) {
+void
+print_int(long num, int base, unsigned int color, int precision)
+{
     char buffer[32];
     int i = 0;
     unsigned long n = (num < 0 && base == 10) ? -num : (unsigned long)num;
-    
+
     if (num < 0 && base == 10) {
         putchar('-', color);
         add_to_kernel_log_char('-');
@@ -111,7 +86,9 @@ void print_int(long num, int base, unsigned int color, int precision) {
 
 /* --- High Level Printk Implementation --- */
 
-unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
+unsigned int
+vprintk(unsigned int color, const char *fmt, va_list args)
+{
     for (const char *p = fmt; *p != '\0'; p++) {
         if (*p != '%') {
             putchar(*p, color);
@@ -120,7 +97,7 @@ unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
         }
 
         p++; /* Move past '%' */
-        
+
         /* Check for padding/precision (e.g., %08x) */
         int precision = 0;
         if (*p == '0') {
@@ -152,8 +129,9 @@ unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
             case 'X':
                 print_int(va_arg(args, unsigned int), 16, color, precision);
                 break;
-            case 'p':
-                printk(color, "0x");
+        case 'p':
+                putchar('0', color);
+                putchar('x', color);
                 print_int(va_arg(args, unsigned long), 16, color, 8);
                 break;
             case 'c': {
@@ -174,7 +152,9 @@ unsigned int vprintk(unsigned int color, const char *fmt, va_list args) {
 /**
  * printk: Main kernel logging function with color and loglevel support.
  */
-unsigned int printk(unsigned int color, const char *fmt, ...) {
+unsigned int
+printk(unsigned int color, const char *fmt, ...)
+{
     va_list args;
     const char *p = fmt;
     int msg_level = 4; /* Default to Warning level */
@@ -182,33 +162,34 @@ unsigned int printk(unsigned int color, const char *fmt, ...) {
     /* Check for loglevel prefix: <n> */
     if (fmt[0] == '<' && fmt[1] >= '0' && fmt[1] <= '7' && fmt[2] == '>') {
         msg_level = fmt[1] - '0';
-        p = fmt + 3; 
+        p = fmt + 3;
     }
 
     /* Filter by console_loglevel */
     if (msg_level > console_loglevel) return 0;
 
     va_start(args, fmt);
-    unsigned int result = vprintk(color, p, args); 
+    unsigned int result = vprintk(color, p, args);
     va_end(args);
 
     return result;
 }
 
-/**
- * clear_screen: Wipes the console output.
- */
-void clear_screen() {
+void
+clear_screen()
+{
 #if defined(__riscv) || defined(RISCV)
-    /* ANSI escape code to clear terminal */
+    /* ANSI escape code to clear terminal and move cursor to home */
     printk(WHITE, "\033[2J\033[H");
 #elif defined(__i386__) || defined(I386)
-    /* Manual VGA memory clear */
     for (int i = 0; i < (VGA_WIDTH * VGA_HEIGHT * 2); i += 2) {
         VIDEO_MEM[i] = ' ';
-        VIDEO_MEM[i+1] = 0x07; /* Light grey on black */
+        VIDEO_MEM[i+1] = 0x07;
     }
 #endif
     cursor_x = 0;
     cursor_y = 0;
+#if defined(I386)
+    update_cursor();
+#endif
 }

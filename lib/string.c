@@ -1,3 +1,11 @@
+#include <stdarg.h>
+#include <lib/string.h>
+#include <kernel/colors.h>
+
+extern char get_char();
+
+#define NULL 0
+
 int strlen(const char *str)
 {
     int length = 0;
@@ -15,7 +23,7 @@ int strncmp(const char *str1, const char *str2, unsigned int n) {
         n--;
     }
     if (n == 0) {
-        return 0; 
+        return 0;
     }
     return *(unsigned char *)str1 - *(unsigned char *)str2;
 }
@@ -50,7 +58,7 @@ int bcmp(const void* s1, const void* s2, int n) {
     return memcmp(s1, s2, n);
 }
 
-char *strcpy(char *dest, const char *src) 
+char *strcpy(char *dest, const char *src)
 {
     char *dest_start = dest;
     while (*src != '\0') {
@@ -58,7 +66,7 @@ char *strcpy(char *dest, const char *src)
         dest++;
         src++;
     }
-    *dest = '\0'; 
+    *dest = '\0';
     return dest_start;
 }
 
@@ -108,7 +116,7 @@ char *strncpy(char *dest, const char *src, int n) {
     for (i = 0; i < n && src[i] != '\0'; i++) {
         dest[i] = src[i];
     }
-    
+
     /* Fill the rest of the buffer with null bytes if src is shorter than n */
     for (; i < n; i++) {
         dest[i] = '\0';
@@ -156,7 +164,7 @@ void itoa(int n, char* s) {
 
 long simple_strtol(const char *cp, char **endp, unsigned int base) {
     long result = 0;
-    
+
     if (!base) {
         if (*cp == '0') {
             base = 8;
@@ -186,3 +194,89 @@ long simple_strtol(const char *cp, char **endp, unsigned int base) {
     return result;
 }
 
+
+
+char *strtok(char *str, const char *delim) {
+    static char *last;
+    if (str) last = str;
+    if (!last) return NULL;
+
+    while (*last && strchr(delim, *last)) last++;
+    if (!*last) return NULL;
+
+    char *result = last;
+    while (*last && !strchr(delim, *last)) last++;
+
+    if (*last) {
+        *last = '\0';
+        last++;
+    } else {
+        last = NULL;
+    }
+    return result;
+}
+
+void kgets(char* buffer, int limit) {
+    int i = 0;
+    char c;
+
+    while (i < limit - 1) {
+        c = get_char();
+
+        if (c == '\n' || c == '\r') {
+            buffer[i] = '\0';
+            printk(WHITE, "\n");
+            break;
+        } else if (c == '\b' && i > 0) {
+            i--;
+            printk(WHITE, "\b \b");
+        } else if (c >= 32 && c <= 126) {
+            buffer[i++] = c;
+            char str[2] = {c, '\0'};
+            printk(WHITE, str);
+        }
+    }
+}
+
+int kscanf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    char input[256];
+    kgets(input, 256);
+
+    int count = 0;
+    char* input_ptr = input;
+
+    while (*format) {
+        if (*format == '%') {
+            format++;
+            if (*format == 'd') {
+                int* val = va_arg(args, int*);
+                *val = atoi(input_ptr);
+                count++;
+                while (*input_ptr && *input_ptr != ' ') input_ptr++;
+            }
+            else if (*format == 's') {
+                char* val = va_arg(args, char*);
+                int i = 0;
+                while (*input_ptr && *input_ptr != ' ') {
+                    val[i++] = *input_ptr++;
+                }
+                val[i] = '\0';
+                count++;
+            }
+            else if (*format == 'c') {
+                char* val = va_arg(args, char*);
+                *val = *input_ptr++;
+                count++;
+            }
+        } else if (*format == ' ') {
+            while (*input_ptr == ' ') input_ptr++;
+        }
+        format++;
+    }
+
+    va_end(args);
+    return count;
+}

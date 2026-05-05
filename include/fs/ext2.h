@@ -37,7 +37,6 @@ typedef struct {
     uint32_t rev_level;
     uint16_t def_resuid;
     uint16_t def_resgid;
-    // Campos específicos para EXT2 Dinámico (rev >= 1)
     uint32_t first_ino;
     uint16_t inode_size;
 } __attribute__((packed)) ext2_superblock_t;
@@ -66,7 +65,7 @@ typedef struct {
     uint32_t blocks;
     uint32_t flags;
     uint32_t osd1;
-    uint32_t block[15]; // 0-11: Directos, 12: Indirecto simple
+    uint32_t block[15]; // 0-11
     uint32_t generation;
     uint32_t file_acl;
     uint32_t dir_acl;

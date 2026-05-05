@@ -16,6 +16,8 @@
 #include <fs/fs.h>
 #include <fs/vfs.h>
 
+#define VFS_MAX_ENTRIES 200
+
 unsigned int directory_count = 0;
 unsigned int file_count = 0;
 extern char data_blocks[VFS_MAX_ENTRIES][VFS_MAX_CONTENT];
@@ -30,14 +32,14 @@ FileEntry file_table[MAX_FILES];
 
 
 
-#define DISK_START_SECTOR 100 
+#define DISK_START_SECTOR 100
 
 
 
 void fs_init_clean() {
 
     strcpy(directory_table[0].name, "/");
-    directory_table[0].parent_dir = 0; 
+    directory_table[0].parent_dir = 0;
     directory_count = 1;
     file_count = 0;
     current_directory = 0;
@@ -53,7 +55,7 @@ void fs_init() {
     /* Create the Root (/) directory at index 0 */
 
     strcpy(directory_table[0].name, "/");
-    directory_table[0].parent_dir = 0; 
+    directory_table[0].parent_dir = 0;
     directory_count = 1;
     current_directory = 0;
 }
@@ -67,7 +69,7 @@ int mkdir(const char *dirname) {
 
     /* Check if directory already exists in the current level */
     for (unsigned int i = 0; i < directory_count; i++) {
-        if (directory_table[i].parent_dir == current_directory && 
+        if (directory_table[i].parent_dir == current_directory &&
             strcmp(directory_table[i].name, dirname) == 0) {
             printk(RED, "\nERR: Directory exists.\n");
             return -1;
@@ -76,7 +78,7 @@ int mkdir(const char *dirname) {
 
     /* Set the metadata and the PARENT relationship */
     strcpy(directory_table[directory_count].name, dirname);
-    directory_table[directory_count].parent_dir = current_directory; 
+    directory_table[directory_count].parent_dir = current_directory;
     directory_count++;
 
     printk(GREEN, "\nDir '%s' created.\n", dirname);
@@ -101,7 +103,7 @@ int touch(const char *filename, const char *content) {
         strcpy(file_table[file_count].name, filename);
         strcpy(file_table[file_count].content, content);
         file_table[file_count].size = strlen(content);
-        file_table[file_count].parent_dir = current_directory; 
+        file_table[file_count].parent_dir = current_directory;
         file_count++;
         return 0;
     }
@@ -114,7 +116,7 @@ int touch(const char *filename, const char *content) {
  */
 void list_items() {
     printk(WHITE, "\n");
-    printk(CYAN, "  .  \n  .. "); 
+    printk(CYAN, "  .  \n  .. ");
     unsigned int count = 0;
     for (unsigned int i = 0; i < directory_count; i++) {
         if (directory_table[i].parent_dir == current_directory) {
@@ -129,11 +131,11 @@ void list_items() {
     for (unsigned int i = 0; i < file_count; i++) {
         if (file_table[i].parent_dir == current_directory) {
             printk(WHITE, "\n  %s", file_table[i].name);
-    
+
             int len = strlen(file_table[i].name);
-            int spaces = 20 - len; 
-            if (spaces < 1) spaces = 1; 
-            
+            int spaces = 20 - len;
+            if (spaces < 1) spaces = 1;
+
             for (int s = 0; s < spaces; s++) {
                 printk(WHITE, " ");
             }
@@ -201,14 +203,14 @@ void fs_rm(const char *name) {
     int found = 0;
 
     for (unsigned int i = 0; i < file_count; i++) {
-        if (strcmp(file_table[i].name, name) == 0 && 
+        if (strcmp(file_table[i].name, name) == 0 &&
             file_table[i].parent_dir == current_directory) {
-            
+
             for (unsigned int j = i; j < file_count - 1; j++) {
                 file_table[j] = file_table[j + 1];
             }
 
-            file_count--; 
+            file_count--;
             found = 1;
             printk(GREEN, "\nFile '%s' deleted successfully.\n", name);
             break;
@@ -229,10 +231,10 @@ void fs_rmdir(const char *name) {
             return;
         }
 
-        if (strcmp(directory_table[i].name, name) == 0 && 
+        if (strcmp(directory_table[i].name, name) == 0 &&
             directory_table[i].parent_dir == current_directory) {
-            
-         
+
+
             for (unsigned int f = 0; f < file_count; f++) {
                 if (file_table[f].parent_dir == i) {
                     printk(RED, "\nfs_rmdir: directory not empty.\n");

@@ -1,4 +1,5 @@
 #include <profile.h>
+#include <kernel/printk.h>
 #include <kernel/colors.h>
 
 unsigned int *prof_buffer;
@@ -7,7 +8,7 @@ unsigned int prof_start;
 
 void profile_init(unsigned int start_addr, unsigned int end_addr) {
     prof_start = start_addr;
-  
+
     prof_len = (end_addr - start_addr) >> PROF_SHIFT;
     prof_buffer = (unsigned int *)0x200000;
 

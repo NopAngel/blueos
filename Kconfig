@@ -1,0 +1,37 @@
+mainmenu "BlueOS Configuration"
+
+menu "Architecture"
+    config ARCH_I386
+        bool "x86 Architecture (i386)"
+        default y
+
+    config ARCH_RISCV
+        bool "RISC-V Architecture"
+        default n
+endmenu
+
+menu "Drivers"
+    config DRIVER_KEYBOARD
+        bool "Enable PS/2 Keyboard"
+        default y
+        help
+          Enable support for standard PS/2 keyboards on i386.
+
+    config DRIVER_SERIAL
+        bool "Enable UART/Serial"
+        default y
+
+    config KEYBOARD_ECHO
+        bool "Keyboard Echo"
+        depends on DRIVER_KEYBOARD
+        default y
+        help
+          Automatically print characters as they are typed.
+endmenu
+
+menu "Kernel Features"
+    config LOG_LEVEL
+        int "System Log Level"
+        range 0 3
+        default 1
+endmenu

@@ -1,15 +1,17 @@
 #include <kernel/vmcore_info.h>
+#include <kernel/printk.h>
+#include <kernel/colors.h>
 #include <version.h>
 #include <kernel/types.h>
 #include <kernel/task.h>
 #include <stddef.h>
 void dump_vmcoreinfo(void) {
-    printk("--- BEGIN VMCOREINFO ---\n");
+    printk(WHITE, "--- BEGIN VMCOREINFO ---\n");
 
-    printk("VMCOREINFO: OSRELEASE=%s\n", UTS_RELEASE);
-    printk("VMCOREINFO: PAGESIZE=%d\n", 4096);
+    printk(WHITE, "VMCOREINFO: OSRELEASE=%s\n", UTS_RELEASE);
+    printk(WHITE, "VMCOREINFO: PAGESIZE=%d\n", 4096);
 
-  
+
     VMCOREINFO_SIZE(task_t);
     VMCOREINFO_OFFSET(task_t, id);
     VMCOREINFO_OFFSET(task_t, state);
@@ -23,10 +25,10 @@ void dump_vmcoreinfo(void) {
     #endif
     VMCOREINFO_OFFSET(task_t, rsp);
     #if defined(__i386__)
-        printk("VMCOREINFO: ARCH=i386\n");
+        printk(CYAN, "VMCOREINFO: ARCH=i386\n");
     #elif defined(__x86_64__)
-        printk("VMCOREINFO: ARCH=x86_64\n");
+        printk(CYAN, "VMCOREINFO: ARCH=x86_64\n");
     #endif
 
-    printk("--- END VMCOREINFO ---\n");
+    printk(WHITE, "--- END VMCOREINFO ---\n");
 }

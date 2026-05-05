@@ -1,4 +1,5 @@
 #include <kernel/printk.h>
+#include <kernel/panic.h>
 #include <kernel/colors.h>
 #include <drivers/pictrl.h>
 
@@ -11,7 +12,7 @@ struct registers {
 };
 
 void irq_handler(struct registers r) {
-  
+
     if (r.int_no == 33) {
         printk(CYAN, "key pressed!\n");
     }
@@ -20,7 +21,7 @@ void irq_handler(struct registers r) {
 }
 
 void exception_handler(struct registers r) {
-    k_panic("Exception HANDLER");
-    
+    k_panic(__FILE__, __LINE__, "Exception HANDLER");
+
     for(;;);
 }

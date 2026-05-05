@@ -20,9 +20,9 @@ void sysctl_list() {
     printk(WHITE, "\nAvailable kernel parameters:\n");
     for (int i = 0; sysctl_table[i].name != 0; i++) {
         printk(CYAN, "  %s = ", sysctl_table[i].name);
-        if (sysctl_table[i].type == 0) 
+        if (sysctl_table[i].type == 0)
             printk(WHITE, "%d\n", *(int*)sysctl_table[i].value);
-        else 
+        else
             printk(WHITE, "%s\n", (char*)sysctl_table[i].value);
     }
 }

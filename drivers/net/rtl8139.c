@@ -10,19 +10,17 @@ static uint32_t io_base;
 static uint8_t mac[6];
 static uint32_t rx_ptr = 0;
 
-// IMPORTANTE: Variables de red globales para que todo el driver las vea
 uint8_t gateway_mac[6] = {0, 0, 0, 0, 0, 0};
 uint32_t tcp_seq = 0x12345678;
 uint32_t tcp_ack = 0;
 
-// Buffer de Recepción alineado a 4KB (Requisito de la tarjeta)
 static uint8_t rx_buffer[8192 + 16 + 1500] __attribute__((aligned(4096)));
 uint16_t htons(uint16_t v) {
     return (uint16_t)((v << 8) | (v >> 8));
 }
 
 uint16_t ntohs(uint16_t v) {
-    return htons(v); // Es la misma operación de voltear bytes
+    return htons(v);
 }
 
 uint32_t htonl(uint32_t v) {
@@ -37,9 +35,7 @@ uint32_t ntohl(uint32_t v) {
 
 
 
-/* --- FUNCIONES DE AYUDA --- */
 
-// Checksum para IP e ICMP
 uint16_t net_checksum(void *vdata, uint32_t length)  {
     uint8_t *data = vdata;
     uint32_t acc = 0xffff;
@@ -100,7 +96,7 @@ void send_tcp_ack(uint32_t dest_ip, uint16_t dest_port, uint16_t src_port) {
     eth->type = htons(0x0800);
 
     ip->ver_ihl = 0x45;
-    ip->proto = 6; 
+    ip->proto = 6;
     ip->len = htons(40);
     ip->ttl = 64;
     uint8_t *s = (uint8_t*)&ip->src_ip;
@@ -163,57 +159,48 @@ void send_http_get(uint32_t dest_ip, uint16_t dest_port, uint16_t src_port) {
  * RTL8139_HANDLER - El motor de red corregido para BlueOS
  */
 void rtl8139_handler() {
-    // 1. Leer y limpiar el estado de interrupción de inmediato
     uint16_t status = inw(io_base + 0x3E);
-    outw(io_base + 0x3E, status); 
+    outw(io_base + 0x3E, status);
 
-    // Solo procesamos si hay paquetes (ROK) o errores
-    if (status & 0x01) { 
-        // Mientras el bit de "Buffer Vacío" (0x01 en el registro 0x37) sea 0
+    if (status & 0x01) {
         while(!(inb(io_base + 0x37) & 0x01)) {
-            
-            // Estructura en el buffer: [Header 2 bytes][Len 2 bytes][DATA...]
+
             uint16_t *packet_header = (uint16_t*)(rx_buffer + rx_ptr);
             uint16_t packet_status = packet_header[0];
             uint16_t packet_len    = packet_header[1];
-            
-            // Los datos reales del paquete Ethernet
+
             uint8_t *data = (uint8_t*)(rx_buffer + rx_ptr + 4);
 
-            // --- CAPA 2: ETHERNET ---
             struct eth_header *eth = (struct eth_header *)data;
             uint16_t eth_type = htons(eth->type);
 
-            // --- CAPA 3: IP / ARP ---
             if (eth_type == 0x0806) { // ARP
                 struct arp_packet *arp = (struct arp_packet *)(data + 14);
                 if (htons(arp->opcode) == 2) { // Reply
                     for(int i=0; i<6; i++) gateway_mac[i] = arp->src_mac[i];
                     printk(GREEN, "[ ARP ] Gateway MAC resolved!\n");
                 }
-            } 
+            }
             else if (eth_type == 0x0800) { // IPv4
                 struct ip_header *ip = (struct ip_header *)(data + 14);
-                
+
                 if (ip->proto == 1) { // ICMP (Ping)
                     printk(GREEN, "[ NET ] PONG received!\n");
-                } 
+                }
                 else if (ip->proto == 6) { // TCP (Curl)
                     struct tcp_header *tcp = (struct tcp_header *)(data + 34);
-                    
-                    // Debug de Flags para ver el SYN-ACK
-                    // printk(YELLOW, "TCP Flags: %x\n", tcp->flags);
+
 
                     if (tcp->flags == 0x12) { // SYN-ACK
                         tcp_ack = htonl(tcp->seq_num) + 1;
                         tcp_seq = htonl(tcp->ack_num);
-                        
+
                         send_tcp_ack(ip->src_ip, tcp->src_port, tcp->dest_port);
                         send_http_get(ip->src_ip, tcp->src_port, tcp->dest_port);
-                    } 
-                    else if ((tcp->flags & 0x08) || packet_len > 60) { // PSH o Datos
+                    }
+                    else if ((tcp->flags & 0x08) || packet_len > 60) {
                         uint8_t *html = (uint8_t *)(data + 54);
-                        int h_len = packet_len - 54 - 4; // -4 por el CRC al final
+                        int h_len = packet_len - 54 - 4; // -4
 
                         if (h_len > 0) {
                             printk(WHITE, "\n--- BLUEOS WEB CONTENT ---\n");
@@ -227,18 +214,12 @@ void rtl8139_handler() {
                 }
             }
 
-            // --- MANTENIMIENTO DEL PUNTERO (EL "FIX") ---
-            // 1. Avanzar puntero: Header(4) + Datos + CRC(4)
-            // 2. Alinear a 4 bytes (requisito de la RTL8139)
             rx_ptr = (rx_ptr + packet_len + 4 + 3) & ~3;
 
-            // 3. Manejar el Wrap-around del buffer circular (8KB)
             if (rx_ptr >= 8192) {
                 rx_ptr -= 8192;
             }
 
-            // 4. Actualizar CAPR: Avisar a la tarjeta qué ya leímos
-            // Se resta 16 por un tema de diseño del hardware de Realtek
             outw(io_base + 0x38, rx_ptr - 16);
         }
     }
@@ -257,7 +238,7 @@ void rtl8139_init(uint8_t bus, uint8_t slot) {
 
     for(int i = 0; i < 6; i++) mac[i] = inb(io_base + i);
     outl(io_base + 0x30, (uint32_t)&rx_buffer);
-    outw(io_base + 0x3C, 0x0005); 
+    outw(io_base + 0x3C, 0x0005);
     outl(io_base + 0x44, 0xf | (1 << 7));
     outb(io_base + 0x37, 0x0C);
 

@@ -1,4 +1,4 @@
-// include/net/network.h o ponlo arriba de rtl8139.c para probar
+// include/net/network.h
 #ifndef NETWORK_H
 #define NETWORK_H
 
@@ -36,7 +36,7 @@ struct tcp_header {
     uint16_t dest_port;
     uint32_t seq_num;
     uint32_t ack_num;
-    uint8_t  data_offset; // Offset y Reservado
+    uint8_t  data_offset; // Offset
     uint8_t  flags;       // FIN, SYN, RST, PSH, ACK, URG
     uint16_t window_size;
     uint16_t checksum;
@@ -63,10 +63,8 @@ struct arp_packet {
     uint32_t dest_ip;
 } __attribute__((packed));
 
-// Prototipos para que no den "implicit declaration"
 uint16_t htons(uint16_t hostshort);
 uint32_t htonl(uint32_t hostlong);
 uint16_t net_checksum(void *vdata, uint32_t length);
 
 #endif
-

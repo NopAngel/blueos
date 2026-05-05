@@ -24,10 +24,10 @@ alias_t alias_table[MAX_ALIAS];
 #define PRECISION 100
 
 typedef struct {
-    char source_file[32]; 
-    uint32_t offset;      
+    char source_file[32];
+    uint32_t offset;
     bool active;
-    uint32_t device_id;   
+    uint32_t device_id;
 } loop_device_t;
 
 loop_device_t loop_devices[4];
@@ -57,7 +57,7 @@ env_var_t env_vars[MAX_ENV_VARS];
 /* History Buffer */
 char command_history[HISTORY_MAX][INPUT_BUFFER_SIZE];
 int history_count = 0;
-int history_current_index = -1; 
+int history_current_index = -1;
 int history_browse_index = -1;
 
 /* --- Utility Functions --- */
@@ -71,16 +71,34 @@ char* get_args(char* input) {
     }
     return "";
 }
+unsigned char kbd_us[128] = {
+    0,  27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
+    '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
+    0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
+    'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ', 0
+};
 
+char raw_get_char() {
+    char c = 0;
+    while (1) {
+        if (inb(0x64) & 1) {
+            uint8_t scancode = inb(0x60);
+            if (!(scancode & 0x80)) {
+                c = kbd_us[scancode];
+                if (c > 0) return c;
+            }
+        }
+    }
+}
 
 int has_permission(uint32_t file_mode, char mask) {
 
-    if (file_mode == 0) return 1; 
+    if (file_mode == 0) return 1;
 
     if (mask == 'r') return (file_mode & 0444);
-    if (mask == 'w') return (file_mode & 0222); 
-    if (mask == 'x') return (file_mode & 0111); 
-    
+    if (mask == 'w') return (file_mode & 0222);
+    if (mask == 'x') return (file_mode & 0111);
+
     return 0;
 }
 
@@ -100,7 +118,7 @@ int evaluate_arithmetic(char* exp) {
                 num = num * 10 + (exp[i] - '0');
                 i++;
             }
-            num *= PRECISION; 
+            num *= PRECISION;
 
             if (exp[i] == '.') {
                 i++;
@@ -112,7 +130,7 @@ int evaluate_arithmetic(char* exp) {
                 }
                 while (exp[i] >= '0' && exp[i] <= '9') i++;
             }
-            
+
             if (op == '+') res += num;
             else if (op == '-') res -= num;
             else if (op == '*' || op == 'x') res = (res * num) / PRECISION;
@@ -157,7 +175,7 @@ int copy_file(char* source, char* dest) {
         printk(YELLOW, "WARN: Destiny already exists. Overwriting...\n");
     }
 
-    touch(dest, content); 
+    touch(dest, content);
     return 0;
 }
 
@@ -173,8 +191,8 @@ int move_file(char* source, char* dest) {
         return -1;
     }
 
-    
-    
+
+
     strncpy(file_table[src_idx].name, dest, 31);
     file_table[src_idx].name[31] = '\0';
 
@@ -188,7 +206,7 @@ int create_partition(char* name, uint32_t start, uint32_t size) {
             strncpy(part_table[i].name, name, 8);
             part_table[i].start_lba = start;
             part_table[i].sectors = size;
-            part_table[i].type = 0x83; 
+            part_table[i].type = 0x83;
             part_table[i].active = true;
             return i;
         }
@@ -211,7 +229,7 @@ bool match_wildcard(const char *pattern, const char *text) {
     while (*pattern && *text) {
         if (*pattern == '*') {
             pattern++;
-            if (!*pattern) return true; 
+            if (!*pattern) return true;
             while (*text) {
                 if (match_wildcard(pattern, text)) return true;
                 text++;
@@ -228,7 +246,7 @@ bool match_wildcard(const char *pattern, const char *text) {
 
 void list_items_wildcard(const char *pattern) {
     bool has_wildcard = (pattern && strchr(pattern, '*'));
-    
+
     for (unsigned int i = 0; i < directory_count; i++) {
         if (directory_table[i].parent_dir == current_directory) {
             if (!has_wildcard || match_wildcard(pattern, directory_table[i].name)) {
@@ -249,17 +267,17 @@ void list_items_wildcard(const char *pattern) {
 
 void fs_rm_wildcard(const char *pattern) {
     if (strchr(pattern, '*') == NULL) {
-        fs_rm(pattern); 
+        fs_rm(pattern);
         return;
     }
 
     int deleted_count = 0;
     for (int i = (int)file_count - 1; i >= 0; i--) {
-        if (file_table[i].parent_dir == current_directory && 
+        if (file_table[i].parent_dir == current_directory &&
             match_wildcard(pattern, file_table[i].name)) {
-            
+
             printk(GRAY, "Deleting: %s...\n", file_table[i].name);
-            
+
             for (unsigned int j = i; j < file_count - 1; j++) {
                 file_table[j] = file_table[j + 1];
             }
@@ -267,7 +285,7 @@ void fs_rm_wildcard(const char *pattern) {
             deleted_count++;
         }
     }
-    
+
     if (deleted_count > 0) printk(GREEN, "Successfully removed %d files.\n", deleted_count);
     else printk(RED, "No files matched the pattern '%s'.\n", pattern);
 }
@@ -275,7 +293,7 @@ void fs_rm_wildcard(const char *pattern) {
 bool match_pattern(const char *pattern, const char *name) {
     while (*pattern) {
         if (*pattern == '*') {
-            if (!*(++pattern)) return true; 
+            if (!*(++pattern)) return true;
             while (*name) {
                 if (match_pattern(pattern, name)) return true;
                 name++;
@@ -315,7 +333,7 @@ char* get_env_var(char* name) {
             return env_vars[i].value;
         }
     }
-    return ""; 
+    return "";
 }
 
 void resolve_alias(char* input, char* output) {
@@ -325,13 +343,13 @@ void resolve_alias(char* input, char* output) {
             return;
         }
     }
-    strcpy(output, input); 
+    strcpy(output, input);
 }
 
 void read_block(int device, int block_num, char* buffer) {
     if (device >= LOOP_DEVICE_START) {
         int loop_idx = device - LOOP_DEVICE_START;
-        
+
         if (loop_devices[loop_idx].active) {
             fs_read_at(loop_devices[loop_idx].source_file, block_num * 512, 512, buffer);
         }
@@ -346,7 +364,7 @@ void expand_variables(char* input, char* output) {
 
     while (*src != '\0') {
         if (*src == '$') {
-            src++; 
+            src++;
             char var_name[VAR_NAME_LEN];
             int i = 0;
             while ((*src >= 'A' && *src <= 'Z') || (*src >= '0' && *src <= '9') || *src == '_') {
@@ -368,7 +386,7 @@ void expand_variables(char* input, char* output) {
 
 void add_device_to_dev(const char* name, uint8_t major, uint8_t minor, bool block) {
     // touch("/dev/name", [device info]);
-    printk(GRAY, "  Found %s: %s device (%d,%d)\n", 
+    printk(GRAY, "  Found %s: %s device (%d,%d)\n",
            name, block ? "block" : "char", major, minor);
 }
 
@@ -424,10 +442,10 @@ int cmd_msg(char* args) {
     }
 
     connector_write(args, strlen(args));
-    
+
     char res[64] = "Message received by BlueOS Core";
     connector_write(res, strlen(res));
-    
+
     return 0;
 }
 
@@ -444,8 +462,8 @@ int cmd_pci_scan(char* args) {
     for (uint32_t bus = 0; bus < 256; bus++) {
         for (uint32_t slot = 0; slot < 32; slot++) {
             uint32_t id = pci_read_config(bus, slot, 0, 0);
-            
-            if (id == 0xFFFFFFFF) continue; 
+
+            if (id == 0xFFFFFFFF) continue;
 
             uint16_t vendor = id & 0xFFFF;
             uint16_t device = (id >> 16) & 0xFFFF;
@@ -454,7 +472,7 @@ int cmd_pci_scan(char* args) {
             uint8_t class_code = (class_reg >> 24) & 0xFF;
             uint8_t sub_class  = (class_reg >> 16) & 0xFF;
 
-            printk(WHITE, "%s02x:%s02x.0       %s04x:%s04x     %s02x.%s02x | ", 
+            printk(WHITE, "%s02x:%s02x.0       %s04x:%s04x     %s02x.%s02x | ",
                    bus, slot, vendor, device, class_code, sub_class);
 
             if (class_code == 0x0C && sub_class == 0x05) {
@@ -478,7 +496,7 @@ int cmd_pci_scan(char* args) {
 
     printk(GRAY, "------------------------------------------------------\n");
     printk(WHITE, "%d PCI devices were found.\n\n", found);
-    
+
     return 0;
 }
 
@@ -493,7 +511,7 @@ int cmd_i2c_scan(char* args) {
     printk(GRAY, "-------------------------------------\n");
 
     for (uint8_t addr = 0; addr < 128; addr++) {
-        outb(g_smbus_base + 0x00, 0xFF); 
+        outb(g_smbus_base + 0x00, 0xFF);
         outb(g_smbus_base + 0x04, (addr << 1) | 1);
         outb(g_smbus_base + 0x03, 0x00);
         outb(g_smbus_base + 0x02, 0x48);
@@ -503,13 +521,13 @@ int cmd_i2c_scan(char* args) {
         uint8_t status = inb(g_smbus_base + 0x00);
         if (!(status & 0x04)) {
             uint8_t data = inb(g_smbus_base + 0x05);
-            
+
             printk(GREEN, "0x%x ", addr);
             printk(WHITE, "|  [OK]  | 0x%x ", data);
-            
+
             if (addr == 0x50) printk(YELLOW, "(Possible Memory SPD/EEPROM)");
             else if (addr == 0x68) printk(YELLOW, "(Possible RTC/Clock)");
-            
+
             printk(WHITE, "\n");
         }
     }
@@ -604,7 +622,7 @@ int cmd_bc(char* args) {
     }
 
     int result = evaluate_arithmetic(args);
-    
+
     int integer_part = result / PRECISION;
     int fractional_part = result % PRECISION;
     if (fractional_part < 0) fractional_part = -fractional_part;
@@ -614,7 +632,7 @@ int cmd_bc(char* args) {
     } else {
         printk(GREEN, "= %d.%d\n", integer_part, fractional_part);
     }
-    
+
     return 0;
 }
 
@@ -634,7 +652,7 @@ int cmd_losetup(char* args) {
     }
     dev_name[i] = '\0';
 
-    if (args[i] == ' ') i++; 
+    if (args[i] == ' ') i++;
 
     int j = 0;
     while (args[i] != '\0' && j < 31) {
@@ -651,7 +669,7 @@ int cmd_losetup(char* args) {
 
     strncpy(loop_devices[0].source_file, file_name, 32);
     loop_devices[0].active = true;
-    
+
     printk(GREEN, "Success: %s is now mapped to %s\n", file_name, dev_name);
     return 0;
 }
@@ -673,7 +691,7 @@ int cmd_alias(char* args) {
     if (value) {
         *value = '\0';
         value++;
-        
+
         for (int i = 0; i < MAX_ALIAS; i++) {
             if (!alias_table[i].active || strcmp(alias_table[i].name, name) == 0) {
                 strncpy(alias_table[i].name, name, ALIAS_NAME_LEN);
@@ -697,7 +715,7 @@ int cmd_version(char* args) {
 int cmd_clear(char* args) {
     clear_screen();
     cursor_x = 0; cursor_y = 0;
-    
+
 }
 
 int cmd_top(char* args) {
@@ -710,7 +728,7 @@ int cmd_top(char* args) {
         printk(WHITE, " User:    "); printk(RED, "None (Not logged in)\n");
     }
 
-    printk(WHITE, " Files:   "); 
+    printk(WHITE, " Files:   ");
     printk(YELLOW, "%d/%d ", file_count, MAX_FILES);
 
     int file_perc = (file_count * 100) / MAX_FILES;
@@ -721,7 +739,7 @@ int cmd_top(char* args) {
     }
     printk(GRAY, "] %d%%\n", file_perc);
 
-    printk(WHITE, " Dirs:    "); 
+    printk(WHITE, " Dirs:    ");
     printk(YELLOW, "%d/%d\n", directory_count, MAX_DIRECTORIES);
 
     uint32_t total_bytes = 0;
@@ -735,7 +753,7 @@ int cmd_top(char* args) {
     for (unsigned int i = 0; i < file_count; i++) {
         used_bytes += file_table[i].size;
     }
-    uint32_t total_capacity = MAX_FILES * VFS_MAX_CONTENT; 
+    uint32_t total_capacity = MAX_FILES * VFS_MAX_CONTENT;
 
     int mem_perc = (used_bytes * 100) / total_capacity;
 
@@ -750,11 +768,11 @@ int cmd_top(char* args) {
     printk(GRAY, "] %d%%\n", mem_perc);
 
     int files_perc = (file_count * 100) / MAX_FILES;
-    printk(WHITE, " Table:   "); 
+    printk(WHITE, " Table:   ");
     printk(YELLOW, "%d/%d Slots used (%d%%)\n", file_count, MAX_FILES, files_perc);
     printk(CYAN,  "----------------------------------\n");
-    
-    return 0; 
+
+    return 0;
 }
 
 int cmd_whoami(char* args) {
@@ -763,7 +781,7 @@ int cmd_whoami(char* args) {
 }
 
 int cmd_ls(char* args) {
-    printk(WHITE, "\n"); 
+    printk(WHITE, "\n");
     list_items();
 }
 
@@ -785,8 +803,8 @@ int cmd_set(char* args) {
     char *value = strchr(args, '=');
 
     if (value) {
-        *value = '\0'; 
-        value++;       
+        *value = '\0';
+        value++;
         set_env_var(name, value);
         printk(GREEN, "Variable set: %s = %s\n", name, value);
     } else {
@@ -837,7 +855,7 @@ int cmd_chmod(char* args) {
     }
 
     int new_mode = simple_strtol(mode_str, NULL, 8);
-    
+
     file_table[idx].permissions = new_mode;
     printk(GREEN, "Permissions for '%s' updated to %s\n", file_name, mode_str);
 
@@ -855,8 +873,8 @@ int cmd_usr(char* args) {
     char *next_args = strchr(args, ' ');
 
     if (next_args) {
-        *next_args = '\0'; 
-        next_args++;      
+        *next_args = '\0';
+        next_args++;
     } else {
         printk(RED, "Error: Missing sub-command (add).\n");
         return;
@@ -868,8 +886,8 @@ int cmd_usr(char* args) {
         char *pass = strchr(next_args, ' ');
 
         if (pass) {
-            *pass = '\0'; 
-            pass++;      
+            *pass = '\0';
+            pass++;
             while (*pass == ' ') pass++;
 
             if (*name != '\0' && *pass != '\0') {
@@ -950,12 +968,12 @@ int cmd_halt(char* args) {
     printk(WHITE, "  It is now safe to turn off your computer.\n");
     printk(GRAY, "  Goodbye!\n");
 
-    asm volatile("cli"); 
-    
+    asm volatile("cli");
+
     while(1) {
         asm volatile("hlt");
     }
-    
+
     return 0;
 }
 
@@ -1010,11 +1028,11 @@ int cmd_mdev(char* args) {
 
     for (int i = 0; i < 4; i++) {
         if (loop_devices[i].active) {
-            char name[10] = "loop"; 
+            char name[10] = "loop";
             char num[2];
-            itoa(i, num);    
-            strcat(name, num); 
-            
+            itoa(i, num);
+            strcat(name, num);
+
             add_device_to_dev(name, 7, i, true);
         }
     }
@@ -1027,19 +1045,19 @@ int cmd_mdev(char* args) {
 
 
 int cmd_free(char* args) {
-    extern uint32_t total_memory_kb; 
-    
+    extern uint32_t total_memory_kb;
+
     uint32_t used_memory_kb = 0;
-    
-    
+
+
     uint32_t total_mb = total_memory_kb / 1024;
-    uint32_t free_mb = total_mb; 
+    uint32_t free_mb = total_mb;
 
     printk(CYAN, "\n              total        used        free\n");
     printk(GRAY, "RAM usage: [");
     int blocks = 20;
     for(int i=0; i<blocks; i++) {
-        if(i < 2) printk(GREEN, "#"); 
+        if(i < 2) printk(GREEN, "#");
         else printk(GRAY, ".");
     }
     printk(GRAY, "]\n\n");
@@ -1053,7 +1071,7 @@ int cmd_echo(char* args) {
         printk(WHITE, "\n");
         return 0;
     }
-    printk(WHITE, "%s\n", args); 
+    printk(WHITE, "%s\n", args);
     return 0;
 }
 
@@ -1116,7 +1134,7 @@ shell_command_t commands_table[] = {
     {"chmod",     "It allows you to set permissions for directories/files",    cmd_mv},
     {"i2c_scan",  "Scans and reads devices on the I2C/SMBus",                  cmd_i2c_scan},
     {"pci_scan",  "Search for devices on the PCI bus",                         cmd_pci_scan},
-    {0, 0, 0} 
+    {0, 0, 0}
 };
 
 /* --- Shell Engine --- */
@@ -1125,7 +1143,7 @@ void print_prompt() {
     if (current_user_index != -1) {
         printk(GREEN, "%s@blueos", users[current_user_index].username);
         printk(WHITE, ":");
-        printk(CYAN, "%s", users[current_user_index].cwd); 
+        printk(CYAN, "%s", users[current_user_index].cwd);
         printk(WHITE, "$ ");
     } else {
         printk(WHITE, "blueos login: ");
@@ -1135,15 +1153,15 @@ void print_prompt() {
 int execute_single_with_return(char* input) {
     char expanded[INPUT_BUFFER_SIZE];
     expand_variables(input, expanded);
-    
+
     char* args = get_args(expanded);
     for (int i = 0; commands_table[i].name != 0; i++) {
         if (strcmp(expanded, commands_table[i].name) == 0) {
-            return commands_table[i].function(args); // Retorna 0 o 1
+            return commands_table[i].function(args); // return 0 o 1
         }
     }
     printk(RED, "Unknown command: %s\n", expanded);
-    return 1; 
+    return 1;
 }
 
 
@@ -1156,47 +1174,83 @@ void execute_shell_command(char* input) {
     }
 
     if (current_user_index == -1) {
-        if (strncmp(input, "login ", 6) == 0) {
-            char* name = input + 6;
-            char* pass = strchr(name, ' '); 
-            if (pass) {
-                *pass = '\0';
-                pass++;
-                if (check_login(name, pass)) {
-                    strncpy(current_user, name, 31);
+            if (strcmp(input, "login") == 0) {
+                char temp_user[32];
+                char temp_pass[32];
+                int i;
+                char c;
+
+                printk(WHITE, "Username: ");
+                i = 0;
+                while (i < 31) {
+                    c = raw_get_char();
+                    if (c == '\n') {
+                        temp_user[i] = '\0';
+                        printk(WHITE, "\n");
+                        break;
+                    } else if (c == '\b' && i > 0) {
+                        i--;
+                        printk(WHITE, "\b \b");
+                    } else if (c >= 32 && c <= 126) {
+                        temp_user[i++] = c;
+                        char str[2] = {c, '\0'};
+                        printk(WHITE, str);
+                    }
+                    for(volatile int d=0; d<100000; d++);
+                }
+
+                printk(WHITE, "Password: ");
+                i = 0;
+                while (i < 31) {
+                    c = raw_get_char();
+                    if (c == '\n') {
+                        temp_pass[i] = '\0';
+                        printk(WHITE, "\n");
+                        break;
+                    } else if (c == '\b' && i > 0) {
+                        i--;
+                    } else if (c >= 32 && c <= 126) {
+                        temp_pass[i++] = c;
+                        printk(WHITE, "*");
+                    }
+                    for(volatile int d=0; d<100000; d++);
+                }
+
+                if (check_login(temp_user, temp_pass)) {
+                    strncpy(current_user, temp_user, 31);
                     current_user[31] = '\0';
                     clear_screen();
-                    cursor_y = 0; cursor_x = 0; 
-                    printk(GREEN, "Welcome to BlueOS. System ready.\n");
+                    printk(GREEN, "Welcome to BlueOS, %s!\n", current_user);
                 } else {
-                    printk(RED, "\nLogin Failed!\n");
+
+                    printk(RED, "usr:%s, pass:%s\nLogin incorrect.\n", temp_user, temp_pass);
                 }
+            } else {
+                printk(RED, "Please type 'login' to continue.\n");
             }
-        } else {
-            printk(RED, "\nPermission denied. Please login first.\n");
+            print_prompt();
+            return;
         }
-        print_prompt();
-        return;
-    }
+
 
     char* next_ptr = input;
     char* token;
 
     while ((token = strstr(next_ptr, "&&")) != NULL) {
-        *token = '\0'; 
-        
+        *token = '\0';
+
         int result = execute_single_with_return(next_ptr);
-        
+
         if (result != 0) {
             print_prompt();
             return;
         }
-        
-        next_ptr = token + 2; 
-        while (*next_ptr == ' ') next_ptr++; 
+
+        next_ptr = token + 2;
+        while (*next_ptr == ' ') next_ptr++;
     }
 
     execute_single_with_return(next_ptr);
-    
+
     print_prompt();
 }
