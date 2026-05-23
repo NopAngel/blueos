@@ -1,0 +1,16 @@
+isodir/*
+build/*
+dist/*
+*.o
+*.bin
+*.elf
+*.iso
+*.elf
+*.log
+*.a
+*.vhd
+*.BIN
+*.img
+*.vdi
+
+
