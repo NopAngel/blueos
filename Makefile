@@ -55,6 +55,7 @@ ifeq ($(ARCH),x86)
              drivers/virtio/virtio_9p.o fs/ext2/ext2.o usr/commands.o  \
              drivers/connector/connector.o drivers/i2c/i2c.o drivers/thermal/lm75.o drivers/soc/soc_intel.o \
              drivers/pnp/pnp.o drivers/core/live_config.o arch/x86/pm.o kernel/mm/malloc.o \
+             arch/x86/elf.o \
              arch/common/hal.o drivers/gpio/gpio.o arch/x86/arch.o kernel/sched.o init/version.o usr/lib/syscall_wrapper.o drivers/input/joystick/ps3/ps3_ds3.o drivers/input/mouse/8042/mouse.o
 
 else ifeq ($(ARCH),riscv)
@@ -125,7 +126,7 @@ prepare:
 
 version_h:
 	@echo "  UPD       include/version.h"
-	$(Q)sed -i 's/#define UTS_VERSION.*/#define UTS_VERSION    "#1 SMP PREEMPT '"$$(date +'%Y-%m-%d %H:%M:%S')"'"/' include/version.h 2>/dev/null || true
+	$(Q)sed -i 's/#define UTS_VERSION.*/#define UTS_VERSION    "#1 SMP PREEMPT '"$$(date +'%Y-%m-%d %H:%M:%S')"'/' include/version.h 2>/dev/null || true
 
 $(KERNEL_BIN): $(obj-y)
 	@echo "  LD        $@"
