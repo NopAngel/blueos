@@ -1,1 +1,1 @@
-Hola desde el InitRAMFS, Angel!
+Hello from the InitRAMFS! :D
