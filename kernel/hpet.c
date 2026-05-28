@@ -18,7 +18,7 @@ void hpet_init(hpet_table_t* table) {
 
 uint64_t hpet_get_nanos() {
     uint64_t counter = *(volatile uint64_t*)(hpet_base + 0xf0);
-
+   
     return counter * (period_fs / 1000000);
 }
 

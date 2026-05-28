@@ -30,7 +30,10 @@ void _blueos_banner() {
 void k_main(unsigned int magic, void* arch_data) {
     init_all(arch_data);
     _blueos_banner();
+
     while (1) {
         arch_idle();
     }
+
+    
 }
