@@ -22,13 +22,13 @@ void pnp_register_device(const char* name, uint16_t io, uint8_t irq) {
         pnp_registry[device_count].irq = irq;
         pnp_registry[device_count].is_active = 1;
         device_count++;
-        printk(GREEN, "[PnP] Device detected: %s in I/O 0x%x, IRQ %d\n", name, io, irq);
+        printk("[PnP] Device detected: %s in I/O 0x%x, IRQ %d\n", name, io, irq);
     }
 }
 
 
 void pnp_init() {
-    printk(CYAN, "[PnP] Starting Plug and Play subsystem...\n");
+    printk("[PnP] Starting Plug and Play subsystem...\n");
 
     pnp_register_device("PS/2 Keyboard", 0x60, 1);
     pnp_register_device("PS/2 Mouse", 0x60, 12);

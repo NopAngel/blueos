@@ -48,7 +48,7 @@ void acpi_init() {
     }
 
     if (!rsdp) {
-        printk(RED, "ACPI: RSDP not found\n");
+        printk("ACPI: RSDP not found\n");
         return;
     }
 
@@ -65,8 +65,8 @@ void acpi_init() {
             uint32_t fadt_addr = entry[i];
             PM1a_CNT_BLK = *(uint32_t*)(fadt_addr + 64); 
             
-            printk(GREEN, "ACPI: FADT found in 0x%x\n", fadt_addr);
-            printk(GREEN, "ACPI: Real port detected: 0x%x\n", PM1a_CNT_BLK);
+            printk("\033[32mACPI: FADT found in 0x%x\033[0m\n", fadt_addr);
+            printk("\033[32mACPI: Real port detected: 0x%x\033[0m\n", PM1a_CNT_BLK);
             return;
         }
     }
@@ -86,7 +86,7 @@ void sys_shutdown() {
 }
 
 void sys_reboot() {
-    printk(YELLOW, "\nBlueOS: Reboot...\n");
+    printk("\nBlueOS: Reboot...\n");
 
   
     while ((inb(0x64) & 0x02) != 0);
@@ -94,7 +94,7 @@ void sys_reboot() {
     outb(0x64, 0xFE);
 
    
-    printk(RED, "Reset for 8042 failed. Attempting Triple Fault...\n");
+    printk("Reset for 8042 failed. Attempting Triple Fault...\n");
     
 
     struct {

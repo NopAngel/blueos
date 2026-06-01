@@ -12,7 +12,7 @@ void kmalloc_init(uintptr_t start, size_t size) {
     heap_start->next = NULL;
     heap_start->is_free = 1;
 
-    printk(WHITE, "[MM] Heap initialized at %p (%d KB)\n", (void*)aligned_start, size / 1024);
+    printk("[MM", "Heap initialized", 0);
 }
 
 

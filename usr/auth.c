@@ -16,7 +16,7 @@ void auth_init() {
         users[i].active = 0;
     }
 
-    printk(WHITE, "Auth system initialized. User 'root' created.\n");
+    printk("Auth system initialized. User 'root' created.\n");
 }
 
 void add_user(const char *name, const char *pass) {
@@ -27,11 +27,11 @@ void add_user(const char *name, const char *pass) {
             strcpy(users[i].cwd, "/");
             users[i].active = 1;
 
-            printk(GREEN, "User '%s' registered successfully.\n", name);
+            printk("\033[32mUser '%s' registered successfully.\033[0m\n", name);
             return;
         }
     }
-    printk(RED, "Error: User limit reached.\n");
+    printk("Error: User limit reached.\n");
 }
 
 

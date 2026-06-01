@@ -8,13 +8,13 @@ extern initcall_t __initcall_end;
 void do_initcalls(void) {
     initcall_t *call = &__initcall_start;
     
-    printk(CYAN, "Kernel: Execution of initcalls starting...\n");
+    printk("\033[36mKernel: Execution of initcalls starting...\033[0m\n");
 
     for (; call < &__initcall_end; call++) {
         if (*call) {
             int result = (*call)();
             if (result != 0) {
-                printk(RED, "Initcall failed with error code: %d\n", result);
+                printk("Initcall failed with error code: %d\n", result);
             }
         }
     }

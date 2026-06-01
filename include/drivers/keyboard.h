@@ -14,6 +14,12 @@
 #define KBD_F6 0x40
 #define KBD_F7 0x41
 
+/* Arrow Keys Scancodes */
+#define SCAN_UP    0x48
+#define SCAN_DOWN  0x50
+#define SCAN_LEFT  0x4B
+#define SCAN_RIGHT 0x4D
+
 /* Shared State */
 extern char input_buffer[INPUT_BUFFER_SIZE];
 extern int input_index;

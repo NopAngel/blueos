@@ -4,29 +4,29 @@
 #include <version.h>
 #include <kernel/types.h>
 #include <kernel/task.h>
-#include <kernel/arch.h>      
+#include <kernel/arch.h>
 #include <stddef.h>
 
 
 void dump_vmcoreinfo(void) {
-    printk(WHITE, "--- BEGIN VMCOREINFO ---\n");
+    printk("--- BEGIN VMCOREINFO ---\n");
 
-    printk(WHITE, "VMCOREINFO: OSRELEASE=%s\n", UTS_RELEASE);
+    printk("VMCOREINFO: OSRELEASE=%s\n", UTS_RELEASE);
 
     #ifdef PAGE_SIZE
-        printk(WHITE, "VMCOREINFO: PAGESIZE=%d\n", PAGE_SIZE);
+        printk("VMCOREINFO: PAGESIZE=%d\n", PAGE_SIZE);
     #else
-        printk(WHITE, "VMCOREINFO: PAGESIZE=%d\n", 4096); // Fallback 
+        printk("VMCOREINFO: PAGESIZE=%d\n", 4096); // Fallback
     #endif
 
     VMCOREINFO_SIZE(task_t);
-    VMCOREINFO_OFFSET(task_t, pid);   
-    VMCOREINFO_OFFSET(task_t, name); 
+    VMCOREINFO_OFFSET(task_t, pid);
+    VMCOREINFO_OFFSET(task_t, name);
 
     #ifdef CONFIG_MODULES
         VMCOREINFO_CONFIG(MODULES);
     #endif
-    
+
     #ifdef CONFIG_VFS
         VMCOREINFO_CONFIG(VFS);
     #endif
@@ -34,7 +34,7 @@ void dump_vmcoreinfo(void) {
 
     VMCOREINFO_OFFSET(task_t, esp);
 
-    printk(CYAN, "VMCOREINFO: ARCH=%s\n", BLUEOS_ARCH);
+    printk("VMCOREINFO: ARCH=%s\n", BLUEOS_ARCH);
 
-    printk(WHITE, "--- END VMCOREINFO ---\n");
+    printk("--- END VMCOREINFO ---\n");
 }

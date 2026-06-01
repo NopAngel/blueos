@@ -40,5 +40,5 @@ void sysfs_init() {
     vfs_register_node("/sys/kernel", 1, 0);  /* Sub-Directory */
     vfs_register_node("/sys/kernel/version", 0, sysfs_read_version); /* File's */
     
-    printk(WHITE, "[    0.080000] sysfs: initialized and mounted on /sys\n");
+    printk("[    0.080000] sysfs: initialized and mounted on /sys\n");
 }

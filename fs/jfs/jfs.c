@@ -15,7 +15,7 @@ void jfs_checkpoint() {
     for (int i = 0; i < JOURNAL_SIZE; i++) {
         if (journal[i].status == JFS_TRANS_COMMIT) {
             journal[i].status = JFS_TRANS_REVOKE;
-            printk(CYAN, "[ JFS ] Checkpoint: Block %d synced to disk.\n", journal[i].target_block);
+            printk("[ JFS ] Checkpoint: Block %d synced to disk.\n", journal[i].target_block);
         }
     }
 }
@@ -32,7 +32,7 @@ int jfs_write(unsigned int block_id, const char* buffer) {
 
     if (entry_found == -1) {
         jfs_checkpoint();
-        return jfs_write(block_id, buffer); 
+        return jfs_write(block_id, buffer);
     }
 
     journal[entry_found].transaction_id = ++current_tx_id;
@@ -40,21 +40,21 @@ int jfs_write(unsigned int block_id, const char* buffer) {
     journal[entry_found].status = JFS_TRANS_COMMIT;
     memcpy(journal[entry_found].data, buffer, BLOCK_SIZE);
 
-    printk(YELLOW, "[ JFS ] Logged: TX %d for Block %d\n", current_tx_id, block_id);
+    printk("[ JFS ] Logged: TX %d for Block %d\n", current_tx_id, block_id);
 
     return 0;
 }
 
 void jfs_init() {
     sb.magic = JFS_MAGIC;
-    printk(GREEN, "[  OK  ] BlueJFS initialized and Journal ready.\n");
+    printk("[  OK  ] BlueJFS initialized and Journal ready.\n");
 }
 
 void jfs_recover() {
-    printk(WHITE, "[ JFS ] Checking journal for uncommitted transactions...\n");
+    printk("[ JFS ] Checking journal for uncommitted transactions...\n");
     for (int i = 0; i < JOURNAL_SIZE; i++) {
         if (journal[i].status == JFS_TRANS_COMMIT) {
-            printk(RED, "[ JFS ] Recovering TX %d -> Block %d\n", 
+            printk("[ JFS ] Recovering TX %d -> Block %d\n",
                    journal[i].transaction_id, journal[i].target_block);
         }
     }
@@ -70,7 +70,7 @@ int find_free_inode() {
 void jfs_mkdir(const char* name) {
     int slot = find_free_inode();
     if (slot == -1) {
-        printk(RED, "\nError: No free inodes\n");
+        printk("\nError: No free inodes\n");
         return;
     }
 
@@ -79,14 +79,14 @@ void jfs_mkdir(const char* name) {
     inode_table[slot].size = 0;
     inode_table[slot].used = 1;
 
-    jfs_write(slot, (char*)&inode_table[slot]); 
-    printk(GREEN, "\nDirectory '%s' created.\n", name);
+    jfs_write(slot, (char*)&inode_table[slot]);
+    printk("\nDirectory '%s' created.\n", name);
 }
 
 void jfs_touch(const char* name) {
     int slot = find_free_inode();
     if (slot == -1) {
-        printk(RED, "\nError: No free inodes\n");
+        printk("\nError: No free inodes\n");
         return;
     }
 
@@ -97,16 +97,16 @@ void jfs_touch(const char* name) {
     inode_table[slot].start_block = 100 + slot;
 
     jfs_write(slot, (char*)&inode_table[slot]);
-    printk(GREEN, "File '%s' created.\n", name);
+    printk("File '%s' created.\n", name);
 }
 
 void jfs_ls() {
-    printk(WHITE, "Type       Size         Name\n");
-    printk(WHITE, "----------------------------\n");
+    printk("Type       Size         Name\n");
+    printk("----------------------------\n");
     for (int i = 0; i < MAX_FILES; i++) {
         if (inode_table[i].used) {
             char* type_str = (inode_table[i].type == TYPE_DIR) ? "<DIR>" : "<FILE>";
-            printk(CYAN, "%s\t%d\t%s\n", type_str, inode_table[i].size, inode_table[i].name);
+            printk("%s\t%d\t%s\n", type_str, inode_table[i].size, inode_table[i].name);
         }
     }
 }

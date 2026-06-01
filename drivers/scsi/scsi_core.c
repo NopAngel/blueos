@@ -3,9 +3,9 @@
 #include <lib/string.h>
 #include <kernel/ports.h>
 #include <kernel/colors.h>
-#include <kernel/hal.h> // Assuming this contains your MMIO/Port wrappers
+#include <kernel/hal.h>
 
-/* * Base address/port for the LSI Logic SCSI Controller.
+/*
  * On x86, this is usually an I/O Port.
  * On RISC-V, this is a Memory Mapped I/O address.
  */
@@ -53,13 +53,13 @@ int scsi_send_command(scsi_cdb10_t *cdb, void *data_buffer) {
     }
 
     if (timeout == 0) {
-        printk(RED, "[ SCSI ] Error: Controller timeout.\n");
+        printk("[ SCSI ] Error: Controller timeout.\n");
         return -1;
     }
 
     /* Send the opcode to the data register */
     lsi_write8(0x00, cdb->opcode);
-    
+
     return 0;
 }
 
@@ -69,20 +69,20 @@ int scsi_send_command(scsi_cdb10_t *cdb, void *data_buffer) {
 void scsi_init() {
     /* PCI scan should return the BAR (Base Address Register) */
     unsigned int addr = pci_find_lsi_scsi();
-    
+
     if (addr == 0) {
-        printk(RED, "[ SCSI ] Error: No LSI controller found on PCI bus.\n");
+        printk("[ SCSI ] Error: No LSI controller found on PCI bus.\n");
         return;
     }
 
-    LSI_BASE_ADDR = addr; 
+    LSI_BASE_ADDR = addr;
 
     /* Prepare a SCSI Inquiry command to probe the device */
     scsi_cdb10_t inq;
     memset(&inq, 0, sizeof(scsi_cdb10_t));
     inq.opcode = 0x12; // SCSI_CMD_INQUIRY
 
-    printk(YELLOW, "[ SCSI ] Probing device at %s 0x%x...\n", 
+    printk("[ SCSI ] Probing device at %s 0x%x...\n",
 #ifdef x86
         "port",
 #else
@@ -92,6 +92,6 @@ void scsi_init() {
 
     /* Send the initial probe command */
     if (scsi_send_command(&inq, NULL) == 0) {
-        printk(GREEN, "[ SCSI ] Success: Device detected and ready.\n");
+        printk("[ SCSI ] Success: Device detected and ready.\n");
     }
 }

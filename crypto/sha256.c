@@ -59,6 +59,5 @@ void sha256_transform(SHA256_CTX *ctx, const uint8_t data[]) {
 void sha256_quick_hash(const uint8_t* data, uint32_t len, uint8_t out[32]) {
     SHA256_CTX ctx;
     sha256_init(&ctx);
-    printk(GREEN, "SHA-256: Processing %d bytes...\n", len);
+    printk("SHA-256: Processing %d bytes...\n", len);
 }
-

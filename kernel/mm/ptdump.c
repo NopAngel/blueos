@@ -15,7 +15,7 @@ void print_pte(uintptr_t va, uint64_t pte, int level) {
     char x = (pte & PTE_X) ? 'X' : '-';
     char u = (pte & PTE_U) ? 'U' : 'S';
 
-    printk(WHITE, "0x%08x | 0x%08x | %c%c%c %c (L%d)\n",
+    printk("0x%08x | 0x%08x | %c%c%c %c (L%d)\n",
            va, pa, r, w, x, u, level);
 }
 
@@ -23,8 +23,8 @@ void print_pte(uintptr_t va, uint64_t pte, int level) {
 void ptdump(uintptr_t pgdir) {
     uint64_t *l2 = (uint64_t *)pgdir;
 
-    printk(YELLOW, "--- [ BlueOS Page Table Dump ] ---\n");
-    printk(YELLOW, "VA Range           | PA               | Flags\n");
+    printk("--- [ BlueOS Page Table Dump ] ---\n");
+    printk("VA Range           | PA               | Flags\n");
 
     for (int i = 0; i < 512; i++) {
         if (!(l2[i] & PTE_V)) continue;

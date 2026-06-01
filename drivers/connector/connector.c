@@ -10,7 +10,7 @@ int connector_write(const char* data, uint32_t size) {
     memcpy(blue_connector.buffer, data, size);
     blue_connector.head = size;
 
-    printk(YELLOW, "[CONNECTOR] The user says: %s\n", blue_connector.buffer);
+    printk("[CONNECTOR] The user says: %s\n", blue_connector.buffer);
     return size;
 }
 

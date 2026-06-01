@@ -34,12 +34,12 @@ void vfs_ls(const char* path) {
     vfs_node_t* dir = (path && path[0] != '\0') ? vfs_lookup(path) : vfs_get_current();
 
     if (!dir) {
-        printk(RED, "ls: %s: No such directory\n", path);
+        printk("ls: %s: No such directory\n", path);
         return;
     }
 
     if (dir->type != VFS_TYPE_DIR) {
-        printk(RED, "ls: %s: Not a directory\n", path);
+        printk("ls: %s: Not a directory\n", path);
         return;
     }
 
@@ -52,12 +52,12 @@ void vfs_ls(const char* path) {
             }
 
             if (entry.type == VFS_TYPE_DIR)
-                printk(BLUE, "%s/  ", entry.name);
+                printk("%s/  ", entry.name);
             else
-                printk(WHITE, "%s  ", entry.name);
+                printk("%s  ", entry.name);
         } else {
             break;
         }
     }
-    printk(WHITE, "\n");
+    printk("\n");
 }

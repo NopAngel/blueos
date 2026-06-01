@@ -23,5 +23,6 @@ typedef struct {
 
 void vmm_init();
 void map_page(page_table_t *root, vaddr_t vaddr, paddr_t paddr, uint32_t flags);
+void vmm_map(void* virtual, uint32_t physical, uint32_t size, uint32_t flags);
 void* vmm_map_io(uintptr_t phys_addr, size_t size);
 #endif

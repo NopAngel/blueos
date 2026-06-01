@@ -5,5 +5,6 @@ void arch_init(void);
 void arch_disable_interrupts(void);
 void arch_enable_interrupts(void);
 void arch_idle(void);
+void arch_early_init(void);
 
 #endif

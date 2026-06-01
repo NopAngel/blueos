@@ -1,4 +1,4 @@
-#include <kernel/hal.h>      
+#include <kernel/hal.h>
 #include <kernel/printk.h>
 #include <kernel/colors.h>
 #include <drivers/pinctrl.h>
@@ -27,21 +27,15 @@ static inline unsigned int gpio_read_reg(unsigned short offset) {
 }
 
 void pinctrl_init() {
-    printk(YELLOW, "[ PINCTRL ] Initializing GPIO Controller (%s)...\n", 
-#ifdef x86
-    "Port I/O"
-#else
-    "MMIO"
-#endif
-    );
+    printk("PINCTRL", "Initializing GPIO Controller...\n", 0);
 
     gpio_write_reg(0x00, 0xFFFFFFFF); // GPIO_USE_SEL
     unsigned int val = gpio_read_reg(0x00);
-    
+
     if (val != 0) {
-        printk(GREEN, "[  OK  ] Pinctrl: GPIO Controller ready at 0x%x\n", GPIO_BASE_ADDR);
+        printk("PINCTRL", "GPIO Controller ready\n", 0);
     } else {
-        printk(RED, "[ ERR  ] Pinctrl: Controller not found.\n");
+        printk("PINCTRL", "Controller not found.\n", 2);
     }
 }
 
@@ -63,5 +57,4 @@ void pinctrl_write(int pin, int state) {
         current &= ~(1 << pin);
     }
     gpio_write_reg(0x0C, current);
-    printk(CYAN, "[ PINCTRL ] Pin %d set to %s\n", pin, state ? "HIGH" : "LOW");
 }

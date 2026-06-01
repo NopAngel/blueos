@@ -16,21 +16,21 @@ void irq_handler(struct registers *r) {
     uint32_t irq = plic_claim();
 
     if (irq == 10) {
-        printk(CYAN, "UART Interrupt: Key pressed (maybe)!\n");
+        printk("\033[36mUART Interrupt: Key pressed (maybe)!\033[0m\n");
     } else {
-        printk(YELLOW, "IRQ External: %d\n", irq);
+        printk("IRQ External: %d\n", irq);
     }
 
     plic_complete(irq);
 }
 
 void exception_handler(struct registers *r) {
-    printk(RED, "\n--- KERNEL PANIC: Exception ---\n");
-    printk(WHITE, "scause: 0x%x\n", r->scause);
-    printk(WHITE, "sepc  : 0x%x\n", r->sepc);
-    printk(WHITE, "stval : 0x%x\n", r->stval);
+    printk("\n--- KERNEL PANIC: Exception ---\n");
+    printk("scause: 0x%x\n", r->scause);
+    printk("sepc  : 0x%x\n", r->sepc);
+    printk("stval : 0x%x\n", r->stval);
 
-    printk(YELLOW, "ra: 0x%x, sp: 0x%x, a0: 0x%x\n", r->ra, r->sp, r->a0);
+    printk("ra: 0x%x, sp: 0x%x, a0: 0x%x\n", r->ra, r->sp, r->a0);
 
     for(;;);
 }

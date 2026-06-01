@@ -31,13 +31,13 @@ static int active_tty_index = 0; /* Index in the array (0 to MAX_TTYS-1) */
 void tty_init(void (*hw_write)(char)) {
     for (int i = 0; i < MAX_TTYS; i++) {
         memset(&v_ttys[i], 0, sizeof(tty_t));
-        
+
         v_ttys[i].id = i + 1;
         v_ttys[i].hw_write = hw_write;
-        
+
         /* Default Linux-like configuration */
         v_ttys[i].conf.c_lflag = ICANON | ECHO | ISIG;
-        
+
         /* Setup default control characters */
         v_ttys[i].conf.c_cc[VINTR]  = CTRL('c');
         v_ttys[i].conf.c_cc[VERASE] = '\b';
@@ -45,7 +45,7 @@ void tty_init(void (*hw_write)(char)) {
         v_ttys[i].conf.c_cc[VEOF]   = CTRL('d');
     }
 
-    printk(CYAN, "[ TTY ] %d Virtual Consoles initialized successfully.\n", MAX_TTYS);
+    printk("[ TTY ] %d Virtual Consoles initialized successfully.\n", MAX_TTYS);
 }
 
 /**
@@ -83,7 +83,7 @@ void tty_input(char c) {
     /* 1. Signal Handling (ISIG) */
     if (tty->conf.c_lflag & ISIG) {
         if (c == tty->conf.c_cc[VINTR]) {
-            printk(RED, "\n^C - Interrupt Signal (SIGINT)\n");
+            printk("\n^C - Interrupt Signal (SIGINT)\n");
             return;
         }
     }
@@ -103,7 +103,7 @@ void tty_input(char c) {
             }
             return;
         }
-        
+
         /* Kill Line (Ctrl+U) */
         if (c == tty->conf.c_cc[VKILL]) {
             while (tty->count > 0 && tty->buffer[(tty->head - 1) % TTY_BUFFER_SIZE] != '\n') {
@@ -138,7 +138,7 @@ int tty_read(char* user_buf, int n) {
 
     while (i < n && tty->count > 0) {
         char c = tty->buffer[tty->tail];
-        
+
         user_buf[i++] = c;
         tty->tail = (tty->tail + 1) % TTY_BUFFER_SIZE;
         tty->count--;
@@ -175,7 +175,7 @@ void tty_switch(int id) {
     for (int i = 0; i < (VIDEO_SIZE / 2); i++) {
         old_tty->screen_buffer[i] = video_mem[i];
     }
-    old_tty->saved_cursor_x = cursor_x; 
+    old_tty->saved_cursor_x = cursor_x;
     old_tty->saved_cursor_y = cursor_y;
 
     active_tty_index = id - 1;
@@ -186,5 +186,5 @@ void tty_switch(int id) {
     cursor_x = new_tty->saved_cursor_x;
     cursor_y = new_tty->saved_cursor_y;
 
-    update_cursor(); 
+    update_cursor();
 }

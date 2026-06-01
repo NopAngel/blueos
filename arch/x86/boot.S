@@ -33,9 +33,11 @@ _start:
     mov esp, stack_top
     and esp, -16
 
-    mov edx, ebx        
 
+    mov edx, ebx
 
+    push ebx
+    push eax
     extern k_main
     call k_main
 

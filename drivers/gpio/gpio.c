@@ -50,7 +50,7 @@ void gpio_set_mode(uint8_t port, uint8_t pin, uint8_t mode) {
     }
 #elif defined(__x86__) || defined(__x86_64__)
     /* x86: Hardware dependent (usually via SuperIO or Chipset) */
-    // Placeholder: printk(WHITE, "GPIO: Setting x86 port 0x%x pin %d to mode %d\n", base, pin, mode);
+    // Placeholder: printk("GPIO: Setting x86 port 0x%x pin %d to mode %d\n", base, pin, mode);
 #endif
 }
 

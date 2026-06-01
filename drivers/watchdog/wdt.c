@@ -9,7 +9,7 @@ void watchdog_init(uint32_t timeout_ms) {
 
     *wdt_cfg = 0x3; 
 
-    printk(YELLOW, "[WDT] Watchdog armed for %d ms\n", timeout_ms);
+    printk("[WDT] Watchdog armed for %d ms\n", timeout_ms);
 }
 
 
@@ -21,5 +21,5 @@ void watchdog_kick() {
 void watchdog_stop() {
     volatile uint32_t *wdt_cfg = (uint32_t *)WDT_CONFIG;
     *wdt_cfg = 0x0;
-    printk(WHITE, "[WDT] Watchdog disabled.\n");
+    printk("[WDT] Watchdog disabled.\n");
 }

@@ -1,5 +1,6 @@
 #include <lib/string.h>
 #include <stdint.h>
+#include <drivers/vt100.h>
 #include <kernel/printk.h>
 #include <kernel/colors.h>
 
@@ -10,24 +11,28 @@ extern void print_prompt();
 /* This function can be called from kmain or after login */
 void init_shell() {
     clear_screen();
-    printk(CYAN, "BlueOS Shell Interface\n");
-    printk(GRAY, "Type 'help' to see available commands.\n\n");
+    printk("BlueOS Shell Interface\n");
+    printk("Type 'help' to see available commands.\n\n");
     print_prompt();
 }
 
-/* The logic for actually 'running' the shell is handled by 
+/* The logic for actually 'running' the shell is handled by
    interrupts in keyboard.c, which calls execute_shell_command().
-   
-   You can keep display_system_palette here if you use it 
+
+   You can keep display_system_palette here if you use it
    for debugging colors.
 */
 void display_system_palette() {
     for (int i = 0; i < 8; i++) {
-        printk(i, "%c%c", 219, 219); 
+        vt100_set_color(i);
+        printk("%c%c", 219, 219);
     }
-    printk(WHITE, "\n  ");
+    vt100_set_color(0x0F);
+    printk("\n  ");
     for (int i = 8; i < 16; i++) {
-        printk(i, "%c%c", 219, 219);
+        vt100_set_color(i);
+        printk("%c%c", 219, 219);
     }
-    printk(WHITE, "\n\n");
+    vt100_set_color(0x0F);
+    printk("\n\n");
 }

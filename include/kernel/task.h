@@ -29,7 +29,9 @@ typedef struct task_struct {
     sig_handler_t signal_handlers[32];
     
     struct trap_frame *tf;  
+    int fds[16]; // Tabla de descriptores de archivo (File Descriptors)
 } task_t;
+
 
 #define MAX_TASKS 32
 

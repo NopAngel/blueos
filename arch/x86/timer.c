@@ -29,7 +29,6 @@ void timer_handler(void) {
 
     timer_check_alarms();
     current_ticks++;
-    outb(0x20, 0x20);
 }
 
 void timer_init(uint32_t frequency_hz) {
@@ -75,7 +74,7 @@ void timer_init(uint32_t frequency_hz) {
     strcpy(msg + 22, freq_str);
     strcpy(msg + 22 + idx, " Hz");
 
-    printk(GREEN, msg);
+    printk("\033[32m%s\033[0m\n", msg);
 }
 
 void timer_set_frequency(uint32_t hz) {
@@ -365,7 +364,7 @@ void timer_get_time_str(char* buffer, uint32_t buffer_size) {
 
 void timer_print_info(void) {
     cursor_y++;
-    printk(CYAN, "=== TIMER INFORMATION ===");
+    printk("\033[36m=== TIMER INFORMATION ===\033[0m\n");
 
     char buffer[50];
 
@@ -390,7 +389,7 @@ void timer_print_info(void) {
     freq_str[idx] = '\0';
     strcpy(buffer + 12, freq_str);
     strcpy(buffer + 12 + idx, " Hz");
-    printk(WHITE, buffer);
+    printk("%s\n", buffer);
 
     strcpy(buffer, "Ticks: ");
     uint64_t ticks = timer_get_ticks();
@@ -412,19 +411,19 @@ void timer_print_info(void) {
     }
     ticks_str[idx] = '\0';
     strcpy(buffer + 7, ticks_str);
-    printk(WHITE, buffer);
+    printk("%s\n", buffer);
 
     strcpy(buffer, "Uptime: ");
     char uptime_str[30];
     timer_get_uptime_str(uptime_str, sizeof(uptime_str));
     strcpy(buffer + 8, uptime_str);
-    printk(GREEN, buffer);
+    printk("\033[32m%s\033[0m\n", buffer);
 
     strcpy(buffer, "Time: ");
     char time_str[15];
     timer_get_time_str(time_str, sizeof(time_str));
     strcpy(buffer + 6, time_str);
-    printk(BLUE, buffer);
+    printk("\033[34m%s\033[0m\n", buffer);
 
     int active_alarms = 0;
     for (int i = 0; i < MAX_ALARMS; i++) {
@@ -442,7 +441,7 @@ void timer_print_info(void) {
         alarms_str[2] = '\0';
     }
     strcpy(buffer + 15, alarms_str);
-    printk(YELLOW, buffer);
+    printk("\033[33m%s\033[0m\n", buffer);
 
     cursor_y++;
 }
@@ -474,5 +473,5 @@ void timer_calibrate(void) {
     strcpy(msg + 22, freq_str);
     strcpy(msg + 22 + idx, " Hz");
 
-    printk(CYAN, msg);
+    printk("\033[36m%s\033[0m\n", msg);
 }

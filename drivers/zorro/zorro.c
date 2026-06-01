@@ -22,11 +22,11 @@ void zorro_sniff(int pid, const char *action, uintptr_t addr) {
 
 
 void zorro_report() {
-    printk(YELLOW, "\n--- [ Zorro Stealth Report ] ---\n");
+    printk("\n--- [ Zorro Stealth Report ] ---\n");
     for(int i = 0; i < log_ptr && i < ZORRO_LOG_SIZE; i++) {
         if (zorro_log[i] >= 32 && zorro_log[i] <= 126) {
-             printk(WHITE, "%c", zorro_log[i]);
+             printk("%c", zorro_log[i]);
         }
     }
-    printk(YELLOW, "\n--- [ End of Trail ] ---\n");
+    printk("\n--- [ End of Trail ] ---\n");
 }

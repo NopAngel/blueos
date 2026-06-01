@@ -26,7 +26,10 @@
 // Program header types
 #define PT_LOAD 1
 
-Elf32_Addr load_elf_from_memory(uint8_t* buffer) {
+extern void jump_to_user(void* address);
+
+int elf_load(void* buffer_ptr) {
+    uint8_t* buffer = (uint8_t*)buffer_ptr;
     Elf32_Ehdr *header = (Elf32_Ehdr *)buffer;
 
     // Check for the ELF magic number
@@ -34,17 +37,17 @@ Elf32_Addr load_elf_from_memory(uint8_t* buffer) {
         header->e_ident[1] != ELFMAG1 ||
         header->e_ident[2] != ELFMAG2 ||
         header->e_ident[3] != ELFMAG3) {
-        printk(RED, "ELF: Invalid magic number!\n");
+        printk("ELF: Invalid magic number!\n");
         return 0;
     }
 
     if (header->e_type != ET_EXEC) {
-        printk(RED, "ELF: Not an executable file!\n");
+        printk("ELF: Not an executable file!\n");
         return 0;
     }
 
     if (header->e_machine != EM_386) {
-        printk(RED, "ELF: Not for x86 architecture!\n");
+        printk("ELF: Not for x86 architecture!\n");
         return 0;
     }
 
@@ -67,5 +70,8 @@ Elf32_Addr load_elf_from_memory(uint8_t* buffer) {
     }
 
     // Return the entry point of the ELF file
-    return header->e_entry;
+    printk("ELF: Jumping to entry point at 0x%x\n", header->e_entry);
+    jump_to_user((void*)header->e_entry);
+    
+    return 0;
 }

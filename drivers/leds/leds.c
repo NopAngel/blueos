@@ -27,7 +27,7 @@ void led_set_state(uint8_t led, uint8_t state) {
 }
 
 void leds_init(void) {
-    printk(WHITE, "BlueOS: Initializing LED Driver (Keyboard i8042)...\n");
+    boot_msg("LED", "Initializing LED Driver (Keyboard i8042)...\n", 0);
     led_set_state(LED_CAPS_LOCK, LED_OFF);
     led_set_state(LED_NUM_LOCK, LED_OFF);
     led_set_state(LED_SCROLL_LOCK, LED_OFF);

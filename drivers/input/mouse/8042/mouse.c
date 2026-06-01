@@ -1,7 +1,6 @@
 #include <kernel/io.h>
 #include <kernel/printk.h>
 
-// Puertos del controlador i8042
 #define PS2_DATA     0x60
 #define PS2_STATUS   0x64
 #define PS2_COMMAND  0x64
@@ -21,7 +20,7 @@ void mouse_wait(uint8_t type) {
 
 void mouse_write(uint8_t data) {
     mouse_wait(1);
-    outb(PS2_COMMAND, 0xD4); // Decirle al controlador que el siguiente byte es para el mouse
+    outb(PS2_COMMAND, 0xD4);
     mouse_wait(1);
     outb(PS2_DATA, data);
 }
@@ -46,12 +45,12 @@ void mouse_init() {
     mouse_wait(1);
     outb(PS2_DATA, status);
 
-    mouse_write(0xF6); 
-    mouse_read();     
-    mouse_write(0xF4); 
-    mouse_read();     
-    
-    printk(CYAN, "[Mouse] Initialized PS/2 Mouse\n");
+    mouse_write(0xF6);
+    mouse_read();
+    mouse_write(0xF4);
+    mouse_read();
+
+    printk("[Mouse] Initialized PS/2 Mouse\n");
 }
 
 void mouse_handler(struct trap_frame *tf) {
@@ -61,7 +60,7 @@ void mouse_handler(struct trap_frame *tf) {
 
     mouse_byte[mouse_cycle++] = inb(PS2_DATA);
 
-    if (mouse_cycle == 3) { 
+    if (mouse_cycle == 3) {
         mouse_cycle = 0;
 
 
@@ -72,8 +71,8 @@ void mouse_handler(struct trap_frame *tf) {
         if (mouse_byte[0] & 0x20) rel_y |= 0xFFFFFF00;
 
         mouse_x += rel_x;
-        mouse_y -= rel_y; 
+        mouse_y -= rel_y;
 
-        printk(YELLOW, "\rMouse: X=%d Y=%d      ", mouse_x, mouse_y);
+        printk("\rMouse: X=%d Y=%d      ", mouse_x, mouse_y);
     }
 }

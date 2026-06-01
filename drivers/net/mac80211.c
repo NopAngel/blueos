@@ -8,6 +8,6 @@ void find_wifi_card() {
     // 0x8086 = Intel
     uint32_t device = pci_find_device(0x8086, 0x4242); 
     if (device != -1) {
-        printk(WHITE, "BlueOS: Tarjeta Intel Wireless detectada!\n");
+        printk("BlueOS: Tarjeta Intel Wireless detectada!\n");
     }
 }

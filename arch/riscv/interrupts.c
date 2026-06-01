@@ -14,13 +14,13 @@ void handle_virtual_device(unsigned char irq) {
     switch(irq) {
         case 10:
             // uart_handler();
-            printk(CYAN, "Interrupt: UART activity detected (IRQ 10)\n");
+            printk("Interrupt: UART activity detected (IRQ 10)\n");
             break;
         case 1:
-            printk(YELLOW, "Interrupt: Virtual Device 1\n");
+            printk("Interrupt: Virtual Device 1\n");
             break;
         default:
-            printk(RED, "Interrupt: Unknown IRQ %d\n", irq);
+            printk("Interrupt: Unknown IRQ %d\n", irq);
             break;
     }
 }

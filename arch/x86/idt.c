@@ -91,5 +91,5 @@ void idt_init(void) {
     idt_set_gate(128, (uint32_t)syscall_isr_wrapper, 0x08, 0xEE);
     __asm__ volatile("lidt %0" : : "m"(idtp));
 
-    printk(LIGHT_MAGENTA, "[  OK  ] IDT: Vectors 0-47 and 128 registered (Code Sel: 0x08)\n");
+    printk("[  OK  ] IDT: Vectors 0-47 and 128 registered (Code Sel: 0x08)\n");
 }

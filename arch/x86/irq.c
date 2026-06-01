@@ -1,27 +1,23 @@
+#include <arch/x86/idt.h>
 #include <kernel/printk.h>
 #include <kernel/panic.h>
 #include <kernel/colors.h>
+#include <kernel/timer.h>
 #include <drivers/pictrl.h>
 
+void irq_handler(struct trap_frame *r) {
 
-struct registers {
-    unsigned int ds;                                     // Pushed manually
-    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax; // Pushed by pusha
-    unsigned int int_no, err_code;                       // Pushed by the macro
-    unsigned int eip, cs, eflags, useresp, ss;           // Pushed by the CPU
-};
+    if (r->interrupt_no == 32) {
+        timer_handler();
+    } else if (r->interrupt_no == 33) {
 
-void irq_handler(struct registers r) {
-
-    if (r.int_no == 33) {
-        printk(CYAN, "key pressed!\n");
     }
 
-    pic_send_eoi(r.int_no - 32);
+    pic_send_eoi(r->interrupt_no - 32);
 }
 
 void exception_handler(struct registers r) {
-    k_panic(__FILE__, __LINE__, "Exception HANDLER");
+    k_panic(0, "Exception HANDLER");
 
     for(;;);
 }

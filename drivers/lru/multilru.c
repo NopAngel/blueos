@@ -14,7 +14,7 @@ void lru_init() {
     active_list.count = 0;
     inactive_list.head = inactive_list.tail = NULL;
     inactive_list.count = 0;
-    printk(YELLOW, "LRU: Multi-Level LRU initialized (Active/Inactive pools)\n");
+    printk("LRU: Multi-Level LRU initialized (Active/Inactive pools)\n");
 }
 void list_add_head(lru_list_t *list, page_t *page) {
     page->next = list->head;
@@ -53,12 +53,12 @@ void demote_active_pages() {
     if (active_list.tail != NULL) {
         page_t *page = active_list.tail;
         list_remove(&active_list, page);
-        
+
         page->status = PAGE_INACTIVE;
         page->referenced = 0;
         list_add_head(&inactive_list, page);
-        
-        printk(YELLOW, "LRU: Demoting page %d to Inactive list (overflow)\n", page->frame_number);
+
+        printk("LRU: Demoting page %d to Inactive list (overflow)\n", page->frame_number);
     }
 }
 
@@ -73,8 +73,8 @@ void lru_add_page(page_t *page) {
     page->referenced = 0;
 
     list_add_head(&inactive_list, page);
-    
-    printk(GRAY, "LRU: Page %d added to Inactive list.\n", page->frame_number);
+
+    printk("LRU: Page %d added to Inactive list.\n", page->frame_number);
 }
 
 void lru_touch_page(page_t *page) {
@@ -84,12 +84,12 @@ void lru_touch_page(page_t *page) {
             page->status = PAGE_ACTIVE;
             page->referenced = 0;
             list_add_head(&active_list, page);
-            printk(GREEN, "LRU: Page %d promoted to Active!\n", page->frame_number);
+            printk("LRU: Page %d promoted to Active!\n", page->frame_number);
         } else {
             page->referenced = 1;
         }
     } else {
-       
+
         list_move_to_head(&active_list, page);
     }
 }
@@ -102,7 +102,7 @@ page_t* lru_evict_page() {
     page_t *victim = inactive_list.tail;
     if (victim) {
         list_remove(&inactive_list, victim);
-        printk(RED, "LRU: Evicting page %d from RAM\n", victim->frame_number);
+        printk("LRU: Evicting page %d from RAM\n", victim->frame_number);
         return victim;
     }
     return NULL; // Kernel Panic: Out of Memory

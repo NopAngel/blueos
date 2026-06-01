@@ -17,13 +17,13 @@ sysctl_entry_t sysctl_table[] = {
 };
 
 void sysctl_list() {
-    printk(WHITE, "\nAvailable kernel parameters:\n");
+    printk("\nAvailable kernel parameters:\n");
     for (int i = 0; sysctl_table[i].name != 0; i++) {
-        printk(CYAN, "  %s = ", sysctl_table[i].name);
+        printk("\033[36m  %s\033[0m = ", sysctl_table[i].name);
         if (sysctl_table[i].type == 0)
-            printk(WHITE, "%d\n", *(int*)sysctl_table[i].value);
+            printk("%d\n", *(int*)sysctl_table[i].value);
         else
-            printk(WHITE, "%s\n", (char*)sysctl_table[i].value);
+            printk("%s\n", (char*)sysctl_table[i].value);
     }
 }
 

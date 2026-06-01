@@ -1,8 +1,8 @@
 #include <stdint.h>
-#include <kernel/sched.h>    // Para que vea a current_task como extern
+#include <kernel/sched.h>
 #include <kernel/process.h>
 #include <kernel/ioctl.h>
-#include <kernel/errno.h>    // Para EINVAL
+#include <kernel/errno.h>
 #include <lib/string.h>
 #include <mm/memory.h>
 

@@ -49,7 +49,7 @@ uint8_t* fat16_read_file(fat16_bpb_t* bpb, const char* filename) {
             if (entries[e].name[0] == 0xE5) continue;
 
             if (memcmp(entries[e].name, fat_name, 11) == 0) {
-                // ¡Encontrado!
+
                 uint32_t file_size = entries[e].file_size;
                 uint16_t current_cluster = entries[e].cluster_low;
 

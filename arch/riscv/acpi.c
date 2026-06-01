@@ -9,12 +9,12 @@
 #define FINISHER_RESET   0x7777
 
 void acpi_init() {
-    printk(GREEN, "System: Initializing RISC-V Power Control (MMIO 0x%x)\n", SYSCON_TEST_ADDR);
-    printk(GREEN, "System: Ready to handle Shutdown/Reboot\n");
+    printk("\033[32mSystem: Initializing RISC-V Power Control (MMIO 0x%x)\033[0m\n", SYSCON_TEST_ADDR);
+    printk("\033[32mSystem: Ready to handle Shutdown/Reboot\033[0m\n");
 }
 
 void sys_shutdown() {
-    printk(RED, "BlueOS: Shutting down...\n");
+    printk("BlueOS: Shutting down...\n");
 
     volatile uint32_t *finisher = (uint32_t *)SYSCON_TEST_ADDR;
 
@@ -26,7 +26,7 @@ void sys_shutdown() {
 }
 
 void sys_reboot() {
-    printk(YELLOW, "\nBlueOS: Rebooting...\n");
+    printk("\nBlueOS: Rebooting...\n");
 
     volatile uint32_t *finisher = (uint32_t *)SYSCON_TEST_ADDR;
 

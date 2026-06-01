@@ -5,10 +5,9 @@
 #define UART_FR 0x18
 
 static int pl011_probe(struct amba_device *dev) {
-    pr_info("AMBA: Found PL011 UART at 0x%p\n", dev->res_start);
+  boot_msg("AMBA", "Found PL011 UART\n", 0);
 
-
-    return 0;
+  return 0;
 }
 
 static struct amba_driver pl011_driver = {

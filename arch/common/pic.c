@@ -47,25 +47,25 @@ void pic_init(uint8_t offset1, uint8_t offset2) {
     outb(PIC1_DATA, 0x0);
     outb(PIC2_DATA, 0x0);
 
-    printk(LIGHT_BLUE, "PIC: i8259A initialized. Offsets: 0x%x, 0x%x\n", offset1, offset2);
+    printk("PIC: i8259A initialized. Offsets: 0x%x, 0x%x\n", offset1, offset2);
 
 #elif defined(__riscv)
     /* RISC-V: Enable External Interrupts in Machine/Supervisor mode */
     unsigned long mie_val;
-    
+
     // MEIE (Machine External Interrupt Enable) is bit 11
     // SEIE (Supervisor External Interrupt Enable) is bit 9
     asm volatile("csrr %0, mie" : "=r"(mie_val));
-    
+
 #if defined(RISCV_SUPERVISOR)
-    mie_val |= (1 << 9); 
+    mie_val |= (1 << 9);
 #else
-    mie_val |= (1 << 11); 
+    mie_val |= (1 << 11);
 #endif
 
     asm volatile("csrw mie, %0" :: "r"(mie_val));
 
-    printk(LIGHT_BLUE, "PLIC: RISC-V External interrupts enabled in MIE\n");
+    printk("PLIC: RISC-V External interrupts enabled in MIE\n");
 #endif
 }
 

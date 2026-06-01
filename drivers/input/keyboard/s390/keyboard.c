@@ -7,25 +7,7 @@
 #include <lib/string.h>
 #include <drivers/tty.h>
 
-extern char current_user[];
-
-/* Circular buffer for get_char() */
-#define KEYBOARD_BUFFER_SIZE 256
-static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
-static volatile int head = 0;
-static volatile int tail = 0;
-
-/* Internal TTY-like state */
-typedef struct {
-    char line_buffer[INPUT_BUFFER_SIZE];
-    int pos;
-    int uppercase_only;
-} kbd_state_t;
-
-static kbd_state_t kbd_tty = { .pos = 0, .uppercase_only = 0 };
-
-/* Forward declarations */
-extern void execute_shell_command(char* input);
+extern void kbd_process_char(char c);
 extern void print_prompt();
 
 /**
@@ -73,23 +55,6 @@ static char decode_code(uint8_t code) {
 }
 
 /**
- * get_char - Public API to read a processed character (Blocking)
- */
-char get_char() {
-    while (head == tail) {
-#if defined(x86) || defined(__x86_64__)
-        asm volatile("hlt");
-#elif defined(__riscv)
-        asm volatile("wfi");
-#endif
-    }
-
-    char c = keyboard_buffer[tail];
-    tail = (tail + 1) % KEYBOARD_BUFFER_SIZE;
-    return c;
-}
-
-/**
  * keyboard_handler - Main IRQ/Polling entry point
  */
 void keyboard_handler() {
@@ -100,11 +65,8 @@ void keyboard_handler() {
     if (raw >= KBD_F1 && raw <= KBD_F7) {
         int target_tty = raw - KBD_F1 + 1;
         tty_switch(target_tty);
-        current_user[31] = '\0';
-        kbd_tty.pos = 0; 
-        printk(CYAN, "\nCurrent TTY: %d. User: %s\n\n", target_tty, current_user);
-        print_prompt();
-        return; 
+        printk("\nCurrent TTY: %d.\n", target_tty);
+        return;
     }
 #endif
 
@@ -113,40 +75,7 @@ void keyboard_handler() {
     /* 2. Decode scancode to ASCII */
     char c = decode_code(raw);
     if (c == 0) return;
-    /* 3. Add to circular buffer for generic get_char() calls */
-    int next_head = (head + 1) % KEYBOARD_BUFFER_SIZE;
-    if (next_head != tail) {
-        keyboard_buffer[head] = c;
-        head = next_head;
-    }
 
-    /* 4. Line Discipline & Shell Interaction */
-    if (c == '\n') {
-        arch_put_char('\n', WHITE);
-        kbd_tty.line_buffer[kbd_tty.pos] = '\0';
-
-        if (kbd_tty.pos > 0) {
-            execute_shell_command(kbd_tty.line_buffer);
-        } else {
-            print_prompt();
-        }
-        kbd_tty.pos = 0;
-    } 
-    else if (c == '\b' || raw == 127) {
-        if (kbd_tty.pos > 0) {
-            kbd_tty.pos--;
-            /* Visual backspace: Move back, overwrite with space, move back again */
-            arch_put_char('\b', WHITE);
-            arch_put_char(' ', WHITE);
-            arch_put_char('\b', WHITE);
-        }
-    } 
-    else if (kbd_tty.pos < INPUT_BUFFER_SIZE - 1) {
-        if (kbd_tty.uppercase_only && c >= 'a' && c <= 'z') {
-            c -= 32;
-        }
-
-        kbd_tty.line_buffer[kbd_tty.pos++] = c;
-        arch_put_char(c, WHITE);
-    }
+    /* 4. Process character via common logic */
+    kbd_process_char(c);
 }

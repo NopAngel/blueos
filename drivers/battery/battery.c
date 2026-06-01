@@ -16,11 +16,11 @@ void ec_wait(uint8_t status_bit) {
 }
 
 uint8_t ec_read(uint8_t addr) {
-    ec_wait(0x02); 
+    ec_wait(0x02);
     outb(EC_SC, EC_RD_CMD);
     ec_wait(0x02);
     outb(EC_DATA, addr);
-    ec_wait(0x01); 
+    ec_wait(0x01);
     return inb(EC_DATA);
 }
 
@@ -34,15 +34,15 @@ void battery_update() {
     if (state & 0x01) status = "Discharging";
     if (state & 0x02) status = "Charging";
 
-    printk(GREEN, "\r[Battery] %d%% | Status: %s | Volts: %dmV    ", 
+    printk("\r[Battery] %d%% | Status: %s | Volts: %dmV    ",
            capacity, status, voltage);
 }
 
 void battery_init() {
     uint8_t check = inb(EC_SC);
     if (check == 0xFF) {
-        printk(RED, "[Battery] No EC found (Virtual Machine?)\n");
+        printk("[Battery] No EC found (Virtual Machine?)\n");
         return;
     }
-    printk(GREEN, "[  OK  ] Battery driver initialized.\n");
+    printk("[  OK  ] Battery driver initialized.\n");
 }

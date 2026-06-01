@@ -9,7 +9,7 @@
 typedef struct {
     int id;
     char hostname[MAX_NS_NAME];
-    uint32_t mount_root; 
+    uint32_t mount_root;
 } namespace_t;
 
 static namespace_t kernel_ns = {0, "blueos-kernel", 0};
@@ -17,9 +17,9 @@ static namespace_t user_ns   = {1, "blueos-user", 0};
 
 
 struct tss_entry_struct {
-    uint32_t prev_tss;   
-    uint32_t esp0;       
-    uint32_t ss0;        
+    uint32_t prev_tss;
+    uint32_t esp0;
+    uint32_t ss0;
     uint32_t esp1, ss1, esp2, ss2, cr3, eip, eflags;
     uint32_t eax, ecx, edx, ebx, esp, ebp, esi, edi;
     uint32_t es, cs, ss, ds, fs, gs, ldt;
@@ -28,44 +28,30 @@ struct tss_entry_struct {
 
 static struct tss_entry_struct tss_entry;
 
-
 void init_tss(uint16_t ss0, uint32_t esp0) {
-    mm_memset(&tss_entry, 0, sizeof(tss_entry));
+    extern void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran);
+
+    memset(&tss_entry, 0, sizeof(tss_entry));
     tss_entry.ss0 = ss0;
     tss_entry.esp0 = esp0;
     tss_entry.iomap_base = sizeof(tss_entry);
+
+    uint32_t base = (uint32_t)&tss_entry;
+    gdt_set_gate(5, base, sizeof(tss_entry) - 1, 0x89, 0x00);
+
+    __asm__ volatile("ltr %%ax" : : "a" (0x28));
 }
 
 
 void jump_to_user(void* address) {
-    printk(YELLOW, "Namespace: Switching to [%s]\n", user_ns.hostname);
-    printk(CYAN, "Userspace: Jumping to Ring 3...\n");
-
-
-    __asm__z volatile(
-        "cli;"
-        "mov $0x23, %ax;"   
-        "mov %ax, %ds;"
-        "mov %ax, %es;"
-        "mov %ax, %fs;"
-        "mov %ax, %gs;"
-        
-        "mov %esp, %eax;"
-        "pushl $0x23;"     
-        "pushl %eax;"          
-        "pushf;"         
-        "popl %eax;"
-        "orl $0x200, %eax;"    
-        "pushl %eax;"
-        "pushl $0x1B;"        
-        "pushl %1;"          
-        "iret;"
-        : : "r" (address), "m" (address)
-    );
+    extern void asm_jump_to_user(void* address);
+    printk("Namespace: Switching to [%s]\n", user_ns.hostname);
+    printk("Userspace: Jumping to Ring 3 via Assembly...\n");
+    asm_jump_to_user(address);
 }
 
 void print_current_namespace() {
-    printk(CYAN, "\n[NS: %s] ", user_ns.hostname);
+    printk("\n[NS: %s] ", user_ns.hostname);
 }
 
 

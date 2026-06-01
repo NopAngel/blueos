@@ -4,10 +4,10 @@
 
 void ptp_init() {
     volatile uint32_t *ctl = (uint32_t *)PTP_TS_CTL;
-    
-    *ctl |= 0x01; 
-    
-    printk(CYAN, "[PTP] Precision Time Protocol Clock initialized.\n");
+
+    *ctl |= 0x01;
+
+    printk("[PTP] Precision Time Protocol Clock initialized.\n");
 }
 
 void ptp_get_time(struct blueos_timespec *ts) {
@@ -20,8 +20,8 @@ void ptp_get_time(struct blueos_timespec *ts) {
 
 void ptp_adj_freq(int32_t ppb) {
     volatile uint32_t *addend = (uint32_t *)PTP_TS_ADDEND;
-    
-    *addend += (ppb / 10); 
-    
-    // printk(WHITE, "[PTP] Frequency adjusted by %d ppb\n", ppb);
+
+    *addend += (ppb / 10);
+
+    // printk("[PTP] Frequency adjusted by %d ppb\n", ppb);
 }

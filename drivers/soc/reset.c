@@ -2,8 +2,8 @@
 #include <arch/x86/io.h>
 
 void sys_reset__soc() {
-    printk(RED, "[RESET] Initiating reboot sequence...\n");
-    printk(WHITE, "Attempting 8042 Pulse...\n");
+    printk("[RESET] Initiating reboot sequence...\n");
+    printk("Attempting 8042 Pulse...\n");
     uint8_t temp;
 
     do {
@@ -13,11 +13,11 @@ void sys_reset__soc() {
     outb(0x64, 0xFE); 
 
 
-    printk(WHITE, "Attempting PCI System Reset (0xCF9)...\n");
+    printk("Attempting PCI System Reset (0xCF9)...\n");
     outb(0xCF9, 0x06); // 0x04 | 0x02
 
 
-    printk(RED, "Forcing Triple Fault...\n");
+    printk("Forcing Triple Fault...\n");
     
     struct {
         uint16_t limit;

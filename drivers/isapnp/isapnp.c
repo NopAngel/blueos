@@ -9,7 +9,7 @@
 
 void isapnp_send_init_key() {
     uint8_t key = 0x6A;
-    
+
     outb(ISAPNP_ADDR, 0x00);
     outb(ISAPNP_ADDR, 0x00);
 
@@ -21,30 +21,30 @@ void isapnp_send_init_key() {
 }
 void isapnp_isolate() {
     isapnp_send_init_key();
-    
-    outb(ISAPNP_ADDR, 0x02); 
-    outb(ISAPNP_WRITE, 0x01); 
+
+    outb(ISAPNP_ADDR, 0x02);
+    outb(ISAPNP_WRITE, 0x01);
 
     outb(ISAPNP_ADDR, 0x03); // reg WAKE[0]
-    outb(ISAPNP_WRITE, ISAPNP_READ >> 2); 
+    outb(ISAPNP_WRITE, ISAPNP_READ >> 2);
 
-    printk(GREEN, "ISA PnP: Initiating card isolation...\n");
+    printk("ISA PnP: Initiating card isolation...\n");
 
-    outb(ISAPNP_ADDR, 0x06); 
-    outb(ISAPNP_WRITE, 0x01); 
+    outb(ISAPNP_ADDR, 0x06);
+    outb(ISAPNP_WRITE, 0x01);
 }
 
 void isapnp_init() {
-    printk(GREEN, "BlueOS: Loading ISA PnP Enumerator...\n");
-    
+    printk("BlueOS: Loading ISA PnP Enumerator...\n");
+
     isapnp_isolate();
 
     outb(ISAPNP_ADDR, 0x00);
     uint8_t vendor1 = inb(ISAPNP_READ);
-    
+
     if (vendor1 != 0xFF) {
-        printk(GREEN, "ISA PnP: Card detected on the bus.\n");
+        printk("ISA PnP: Card detected on the bus.\n");
     } else {
-        printk(RED,"ISA PnP: No legacy devices were found.\n");
+        printk("ISA PnP: No legacy devices were found.\n");
     }
 }

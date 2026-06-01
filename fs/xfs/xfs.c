@@ -14,7 +14,7 @@ void xfs_init() {
         groups[i].free_blocks = 1024;
         groups[i].inode_count = 0;
     }
-    printk(GREEN, "[  OK  ] BlueXFS: %d Allocation Groups initialized.\n", AG_COUNT);
+    printk("[  OK  ] BlueXFS: %d Allocation Groups initialized.\n", AG_COUNT);
 }
 
 int xfs_pick_ag() {
@@ -31,16 +31,16 @@ void xfs_create(const char* name) {
     int ag_id = xfs_pick_ag();
     xfs_ag_t *ag = &groups[ag_id];
 
-    printk(CYAN, "[ XFS ] Creating '%s' in AG %d\n", name, ag_id);
-    
+    printk("[ XFS ] Creating '%s' in AG %d\n", name, ag_id);
+
     ag->inode_count++;
     ag->free_blocks--;
 }
 
 void xfs_ls(void) {
-    printk(WHITE, "XFS Allocation Group Status:\n");
+    printk("XFS Allocation Group Status:\n");
     for(int i = 0; i < AG_COUNT; i++) {
-        printk(CYAN, " AG %d: %d inodes, %d free blocks\n", 
+        printk(" AG %d: %d inodes, %d free blocks\n",
                groups[i].ag_id, groups[i].inode_count, groups[i].free_blocks);
     }
 }

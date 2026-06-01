@@ -24,7 +24,7 @@ ifeq ($(ARCH),x86)
     GDB     = gdb
 
     GCC_INC = $(shell $(CC) -print-file-name=include)
-    CFLAGS  = -m32 -ffreestanding -fno-builtin -std=gnu99 -nostdlib \
+    CFLAGS  = -m32 -march=i386 -mno-sse -mno-sse2 -mno-mmx -ffreestanding -fno-builtin -std=gnu99 -nostdlib \
               -fno-stack-protector -nostdinc -fno-pic -I. -Iinclude -I$(GCC_INC) -O2 \
               -Dx86 -D__x86__
     ASFLAGS = -f elf32
@@ -32,6 +32,7 @@ ifeq ($(ARCH),x86)
 
     KERNEL_BIN = blueos.elf
     KERNEL_ISO = blueos.iso
+    USER_ELF   = hello.elf
     RUST_TARGET = i686-unknown-linux-gnu
     RUST_LIB = rust/target/$(RUST_TARGET)/release/librust.a
 
@@ -39,24 +40,24 @@ ifeq ($(ARCH),x86)
     obj-y := arch/x86/boot.o kernel/printk.o init/all.o arch/x86/panic.o kernel/task.o usr/lib/string.o \
              arch/x86/interrupts.o arch/x86/interrupt_entry.o arch/x86/profile.o usr/auth.o \
              arch/x86/switch.o arch/x86/bg.o drivers/lru/multilru.o \
-             fs/help.o drivers/tty/tty.o drivers/input/keyboard/8042/keyboard.o arch/x86/syscall.o \
-             drivers/scsi/scsi_core.o arch/common/pic.o drivers/scsi/scsi_lsi.o \
-             drivers/pci/pci.o drivers/pinctrl/pinctrl.o arch/x86/idt.o \
-             arch/x86/irq.o kernel/sysctl.o fs/vboxfs/vboxfs.o drivers/power/power.o arch/x86/keyboard_io.o \
+             fs/help.o drivers/tty/tty.o drivers/input/keyboard/8042/keyboard.o drivers/input/keyboard/kbd_common.o arch/x86/syscall.o \
+             drivers/scsi/scsi_core.o arch/common/pic.o drivers/scsi/scsi_lsi.o drivers/video/ansi_tty.o fs/tmpfs/tmpfs.o \
+             drivers/pci/pci.o drivers/pinctrl/pinctrl.o arch/x86/idt.o kernel/ping.o net/stack.o \
+             arch/x86/irq.o kernel/sysctl.o fs/vboxfs/vboxfs.o arch/x86/keyboard_io.o \
              fs/9p/9p.o kernel/vmcore_info.o drivers/leds/leds.o drivers/vhost/vhost_net.o \
              arch/x86/apic.o arch/x86/kvm.o kernel/hlec.o arch/x86/timer.o kernel/hpet.o arch/x86/shell.o \
              drivers/rtc/rtc.o drivers/battery/battery.o arch/common/memory.o arch/x86/acpi.o \
-             init/kernel.o arch/x86/intel.o arch/x86/amd.o arch/x86/interrupts-a.o \
+             init/kernel.o arch/x86/intel.o arch/x86/amd.o arch/x86/interrupts-a.o drivers/net/virtio_net.o \
              drivers/isapnp/isapnp.o arch/x86/isr.o drivers/usb/usb.o drivers/dma/hdc_dma.o crypto/sha256.o drivers/bcma/bcma.o \
-             kernel/module.o usr/bluefetch.o kernel/ksyms.o fs/vfs/vfs.o \
-             arch/x86/gdt.o arch/x86/gdt-a.o arch/x86/virt.o \
+             kernel/module.o usr/bluefetch.o kernel/ksyms.o fs/vfs/vfs.o usr/qsh.o \
+             arch/x86/gdt.o arch/x86/gdt-a.o arch/x86/virt.o drivers/disk/disk.o \
              fs/ramfs/fs.o sound/sdw/s.o lib/network.o drivers/video/vt220.o drivers/video/vt100.o \
-             drivers/ata/ata.o init/hyper.o arch/x86/cmdline.o drivers/amba/amba_pl011.o \
-             drivers/virtio/virtio_9p.o fs/ext2/ext2.o usr/commands.o  \
+             drivers/ata/ata.o init/hyper.o arch/x86/cmdline.o drivers/amba/amba_pl011.o drivers/video/virtio.o \
+             drivers/virtio/virtio_9p.o usr/commands.o drivers/video/serial.o kernel/time.o arch/x86/vmm.o \
              drivers/connector/connector.o drivers/i2c/i2c.o drivers/thermal/lm75.o drivers/soc/soc_intel.o \
-             drivers/pnp/pnp.o drivers/core/live_config.o arch/x86/pm.o kernel/mm/malloc.o \
-             arch/x86/elf.o \
-             arch/common/hal.o drivers/gpio/gpio.o arch/x86/arch.o kernel/sched.o init/version.o usr/lib/syscall_wrapper.o drivers/input/joystick/ps3/ps3_ds3.o drivers/input/mouse/8042/mouse.o
+             drivers/pnp/pnp.o drivers/core/live_config.o arch/x86/pm.o kernel/mm/malloc.o drivers/cdrom/cdrom.o drivers/hyperv/hypervisor.o \
+             arch/x86/elf.o kernel/userspace.o arch/x86/userspace_a.o arch/x86/loader.o kernel/mm/pmm.o \
+             arch/common/hal.o drivers/gpio/gpio.o fs/ext2/ext2.o arch/x86/arch.o kernel/sched.o init/version.o usr/lib/syscall_wrapper.o drivers/input/joystick/ps3/ps3_ds3.o drivers/input/mouse/8042/mouse.o
 
 else ifeq ($(ARCH),riscv)
     # RISC-V Specific
@@ -108,8 +109,10 @@ CFLAGS += $(CONF_FLAGS)
 
 .PHONY: all clean run iso version_h prepare
 
-# Hacemos que la generación de headers ocurra de forma secuencial estricta antes de los objetos
 all: prepare version_h
+ifeq ($(ARCH),x86)
+	$(Q)$(MAKE) $(USER_ELF)
+endif
 	$(Q)$(MAKE) $(KERNEL_BIN)
 
 include/config.h: .config
@@ -126,12 +129,17 @@ prepare:
 
 version_h:
 	@echo "  UPD       include/version.h"
-	$(Q)sed -i 's/#define UTS_VERSION.*/#define UTS_VERSION    "#1 SMP PREEMPT '"$$(date +'%Y-%m-%d %H:%M:%S')"'/' include/version.h 2>/dev/null || true
+	$(Q)sed -i 's/#define UTS_VERSION.*/#define UTS_VERSION    "#1 SMP PREEMPT '"$$(date +'%Y-%m-%d %H:%M:%S')"'"/' include/version.h 2>/dev/null || true
 
 $(KERNEL_BIN): $(obj-y)
 	@echo "  LD        $@"
 	$(Q)$(LD) $(LDFLAGS) -o $@ $(obj-y) --whole-archive --no-whole-archive
 	@echo "  DONE      BlueOS ($(ARCH)) is ready."
+
+$(USER_ELF): bin/hello_elf.c
+	@echo "  CC_USER   $<"
+	$(Q)$(CC) -m32 -fno-stack-protector -fno-pie -ffreestanding -nostdlib -static -Ttext 0x1000000 $< -o $@
+
 
 # --- Rules for C and Assembly ---
 %.o: %.c include/generated/utsrelease.h
@@ -172,7 +180,7 @@ else
 endif
 
 # RUN (with QEMU)
-run: all
+run:
 ifeq ($(ARCH),x86)
 	$(Q)$(QEMU) -kernel $(KERNEL_BIN) -m 256M
 else
@@ -182,7 +190,7 @@ endif
 # Clean
 clean:
 	@echo "  CLEAN      Objects and binaries"
-	$(Q)rm -f $(KERNEL_BIN) $(KERNEL_ISO)
+	$(Q)rm -f $(KERNEL_BIN) $(KERNEL_ISO) $(USER_ELF)
 	$(Q)rm -rf build include/generated
 	$(Q)find . -name "*.o" -type f -delete
 	@echo "  DONE       Clean completed."

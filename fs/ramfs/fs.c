@@ -71,7 +71,7 @@ int mkdir(const char *dirname) {
     for (unsigned int i = 0; i < directory_count; i++) {
         if (directory_table[i].parent_dir == current_directory &&
             strcmp(directory_table[i].name, dirname) == 0) {
-            printk(RED, "\nERR: Directory exists.\n");
+            printk("\nERR: Directory exists.\n");
             return -1;
         }
     }
@@ -81,7 +81,7 @@ int mkdir(const char *dirname) {
     directory_table[directory_count].parent_dir = current_directory;
     directory_count++;
 
-    printk(GREEN, "\nDir '%s' created.\n", dirname);
+    printk("\nDir '%s' created.\n", dirname);
     return 0;
 }
 
@@ -115,13 +115,13 @@ int touch(const char *filename, const char *content) {
  * list_items() - List content of the current directory (ls).
  */
 void list_items() {
-    printk(WHITE, "\n");
-    printk(CYAN, "  .  \n  .. ");
+    printk("\n");
+    printk("  .  \n  .. ");
     unsigned int count = 0;
     for (unsigned int i = 0; i < directory_count; i++) {
         if (directory_table[i].parent_dir == current_directory) {
             if (strlen(directory_table[i].name) > 0) {
-                printk(CYAN, "\n  %s/", directory_table[i].name);
+                printk("\n  %s/", directory_table[i].name);
             }
         }
     }
@@ -130,24 +130,24 @@ void list_items() {
 
     for (unsigned int i = 0; i < file_count; i++) {
         if (file_table[i].parent_dir == current_directory) {
-            printk(WHITE, "\n  %s", file_table[i].name);
+            printk("\n  %s", file_table[i].name);
 
             int len = strlen(file_table[i].name);
             int spaces = 20 - len;
             if (spaces < 1) spaces = 1;
 
             for (int s = 0; s < spaces; s++) {
-                printk(WHITE, " ");
+                printk(" ");
             }
 
             if (file_table[i].size < 1024) {
-                printk(YELLOW, "%d B", file_table[i].size);
+                printk("%d B", file_table[i].size);
             } else {
-                printk(YELLOW, "%d KB", file_table[i].size / 1024);
+                printk("%d KB", file_table[i].size / 1024);
             }
         }
     }
-    printk(WHITE, "\n");
+    printk("\n");
 }
 
 /**
@@ -172,7 +172,7 @@ int cd(const char *dirname) {
         }
     }
 
-    printk(RED, "\nERR: Not found: %s\n", dirname);
+    printk("\nERR: Not found: %s\n", dirname);
     return -1;
 }
 
@@ -181,22 +181,22 @@ int cd(const char *dirname) {
  */
 void pwd() {
     if (current_directory == 0) {
-        printk(BLUE, "\n/\n");
+        printk("\n/\n");
         return;
     }
     /* Simple pwd for table-based FS */
-    printk(BLUE, "\n/%s\n", directory_table[current_directory].name);
+    printk("\n/%s\n", directory_table[current_directory].name);
 }
 
 void cat (const char *filename) {
     for (unsigned int i = 0; i < file_count; i++) {
         if (file_table[i].parent_dir == current_directory &&
             strcmp(file_table[i].name, filename) == 0) {
-            printk(WHITE, "\n%s\n", file_table[i].content);
+            printk("\n%s\n", file_table[i].content);
             return;
         }
     }
-    printk(RED, "\nERR: Not found: %s\n", filename);
+    printk("\nERR: Not found: %s\n", filename);
 }
 
 void fs_rm(const char *name) {
@@ -212,13 +212,13 @@ void fs_rm(const char *name) {
 
             file_count--;
             found = 1;
-            printk(GREEN, "\nFile '%s' deleted successfully.\n", name);
+            printk("\nFile '%s' deleted successfully.\n", name);
             break;
         }
     }
 
     if (!found) {
-        printk(RED, "\nfs_rm: file '%s' not found.\n", name);
+        printk("\nfs_rm: file '%s' not found.\n", name);
     }
 }
 
@@ -227,7 +227,7 @@ void fs_rmdir(const char *name) {
 
     for (unsigned int i = 0; i < directory_count; i++) {
         if (i == 0 && strcmp(name, "/") == 0) {
-            printk(RED, "\nfs_rmdir: cannot remove root directory.\n");
+            printk("\nfs_rmdir: cannot remove root directory.\n");
             return;
         }
 
@@ -237,7 +237,7 @@ void fs_rmdir(const char *name) {
 
             for (unsigned int f = 0; f < file_count; f++) {
                 if (file_table[f].parent_dir == i) {
-                    printk(RED, "\nfs_rmdir: directory not empty.\n");
+                    printk("\nfs_rmdir: directory not empty.\n");
                     return;
                 }
             }
@@ -248,13 +248,13 @@ void fs_rmdir(const char *name) {
 
             directory_count--;
             found = 1;
-            printk(GREEN, "\nDirectory '%s' removed.\n", name);
+            printk("\nDirectory '%s' removed.\n", name);
             break;
         }
     }
 
     if (!found) {
-        printk(RED, "\nfs_rmdir: directory '%s' not found.\n", name);
+        printk("\nfs_rmdir: directory '%s' not found.\n", name);
     }
 }
 

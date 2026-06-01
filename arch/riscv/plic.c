@@ -29,8 +29,8 @@ uint32_t plic_claim(void) {
 }
 
 void plic_init(void) {
-    printk(GREEN, "PLIC: Initializing Platform-Level Interrupt Controller at %p...\n", PLIC_BASE);
+    printk("\033[32mPLIC: Initializing Platform-Level Interrupt Controller at %p...\033[0m\n", PLIC_BASE);
     plic_write(PLIC_THRESHOLD, 0);
 
-    printk(GREEN, "PLIC: Controller ready. Priority and Threshold set.\n");
+    printk("\033[32mPLIC: Controller ready. Priority and Threshold set.\033[0m\n");
 }

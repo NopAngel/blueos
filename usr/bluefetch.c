@@ -21,17 +21,15 @@ extern char current_user[32];
 extern unsigned int total_memory_kb;
 extern uint64_t used_memory_kb;
 void __logo_art_ascii() {
-    int r[] = {LIGHT_RED, YELLOW, GREEN, CYAN, LIGHT_BLUE, LIGHT_MAGENTA, WHITE};
-
     extern int tty_current();
-    printk(r[0], "                   __        .-. \n");
-    printk(r[1], "               .-\"` .`'.    /\\\\\\| \n");
-    printk(r[2], "       _(\\-/)\" ,  .   ,\\  /\\\\\\\\/ ");           printk(CYAN, " -----------------------\n");
-    printk(r[3], "      {(#b^d#)} .   ./,  |/\\\\\\\\/   ");            printk(CYAN, "%s@users\n", current_user);
-    printk(r[4], "      `-.(Y).-`  ,  |  , |\\.-`     ");               printk(WHITE, " OS:     "); printk(CYAN, "%s %s\n", BLUEOS_NAME, UTS_RELEASE);
-    printk(r[5], "           /~/,_/~~~\\,__.-`        ");               printk(WHITE, " Kernel: "); printk(CYAN, "%s\n", UTS_RELEASE);
-    printk(r[6], "          ////~    // ~\\\\          ");              printk(WHITE, " Arch:   "); printk(CYAN, "%s\n", BLUEOS_ARCH);
-    printk(r[0], "        ==`==`   ==`   ==`         ");                printk(WHITE, " TTY:    "); printk(CYAN, "%s\n", tty_current());         
+    printk("\033[91m                   __        .-. \n");
+    printk("\033[33m               .-\"` .`'.    /\\\\\\| \n");
+    printk("\033[32m       _(\\-/)\" ,  .   ,\\  /\\\\\\\\/ \033[36m -----------------------\n");
+    printk("\033[36m      {(#b^d#)} .   ./,  |/\\\\\\\\/    %s@users\n", current_user);
+    printk("\033[34m      `-.(Y).-`  ,  |  , |\\.-`      \033[37m OS:     \033[36m %s %s\n", BLUEOS_NAME, UTS_RELEASE);
+    printk("\033[35m           /~/,_/~~~\\,__.-`         \033[37m Kernel: \033[36m %s\n", UTS_RELEASE);
+    printk("\033[37m          ////~    // ~\\\\           \033[37m Arch:   \033[36m %s\n", BLUEOS_ARCH);
+    printk("\033[91m        ==`==`   ==`   ==`          \033[37m TTY:    \033[36m %d\n\033[0m", tty_current());         
 }
 
 

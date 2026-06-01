@@ -1,19 +1,30 @@
-#ifndef NET_H
-#define NET_H
+#ifndef _KERNEL_NET_H
+#define _KERNEL_NET_H
 
 #include <stdint.h>
 
-#define MAX_PACKET_SIZE 1514  // Ethernet (MTU 1500 + Header)
+typedef struct {
+    uint8_t ver_ihl;
+    uint8_t tos;
+    uint16_t total_len;
+    uint16_t id;
+    uint16_t flags_frag;
+    uint8_t ttl;
+    uint8_t proto;
+    uint16_t checksum;
+    uint32_t src_ip;
+    uint32_t dst_ip;
+} __attribute__((packed)) ipv4_packet_t;
 
-struct net_packet {
-    uint8_t  data[MAX_PACKET_SIZE];
-    uint32_t len;
-    uint32_t flags;
-    struct net_packet *next; 
-};
+typedef struct {
+    uint8_t type;
+    uint8_t code;
+    uint16_t checksum;
+    uint16_t id;
+    uint16_t seq;
+    char payload[32];
+} __attribute__((packed)) icmp_packet_t;
 
-int net_transmit(struct net_packet *pkt);
-struct net_packet *net_alloc_packet();
-void net_free_packet(struct net_packet *pkt);
+uint16_t calculate_checksum(void* addr, int len);
 
 #endif

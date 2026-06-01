@@ -1,12 +1,12 @@
 #include <stdint.h>
-#include <stddef.h> 
-#include <lib/string.h>  
+#include <stddef.h>
+#include <lib/string.h>
 #include <kernel/printk.h>
 #include <kernel/colors.h>
 
 
-int32_t g_thermal_limit = 80;    
-int g_debug_enabled = 0;        
+int32_t g_thermal_limit = 80;
+int g_debug_enabled = 0;
 int g_current_color = 0x0F;
 typedef enum { CONF_INT, CONF_BOOL } conf_type_t;
 typedef struct {
@@ -34,7 +34,7 @@ int kernel_atoi(const char* s) {
 void live_config_apply(char* line) {
     char *equal_sign = strchr(line, '=');
     if (!equal_sign) {
-        printk(RED, "[JIT] ERROR: Incorrect format. United States var=value\n");
+        printk("[JIT] ERROR: Incorrect format. United States var=value\n");
         return;
     }
 
@@ -50,10 +50,10 @@ void live_config_apply(char* line) {
             if (live_vars[i].type == CONF_INT || live_vars[i].type == CONF_BOOL) {
                 int val = kernel_atoi(value);
                 *((int*)live_vars[i].ptr) = val;
-                printk(GREEN, "[JIT] %s update in %d\n", key, val);
+                printk("[JIT] %s update in %d\n", key, val);
             }
             return;
         }
     }
-    printk(RED, "[JIT] Variable not found: %s\n", key);
+    printk("[JIT] Variable not found: %s\n", key);
 }

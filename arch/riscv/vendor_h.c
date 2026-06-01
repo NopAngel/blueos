@@ -18,16 +18,16 @@ int init_riscv_hypervisor() {
     uintptr_t misa = read_csr(CSR_MISA);
 
     if (vendor == 0) {
-        printk(YELLOW, "CPU: Non-commercial or Open Source Vendor ID.\n");
+        printk("CPU: Non-commercial or Open Source Vendor ID.\n");
     } else {
-        printk(CYAN, "CPU: Vendor ID: 0x%lx\n", vendor);
+        printk("CPU: Vendor ID: 0x%lx\n", vendor);
     }
 
     if (!(misa & (1 << 7))) {
-        printk(RED, "RISC-V: This CPU does not support Hypervisor Extension (H).\n");
+        printk("RISC-V: This CPU does not support Hypervisor Extension (H).\n");
         return 0;
     }
 
-    printk(GREEN, "RISC-V: Virtualization support (H-Extension) detected and ready.\n");
+    printk("RISC-V: Virtualization support (H-Extension) detected and ready.\n");
     return 1;
 }

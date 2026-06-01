@@ -82,7 +82,7 @@ void send_arp_reply(uint8_t *target_mac, uint32_t target_ip) {
 
     outl(io_base + 0x20, (uint32_t)packet);
     outl(io_base + 0x10, 64);
-    printk(BLUE, "[ ARP ] Sent Reply to Gateway\n");
+    printk("[ ARP ] Sent Reply to Gateway\n");
 }
 
 void send_tcp_ack(uint32_t dest_ip, uint16_t dest_port, uint16_t src_port) {
@@ -153,7 +153,7 @@ void send_http_get(uint32_t dest_ip, uint16_t dest_port, uint16_t src_port) {
 
     outl(io_base + 0x20, (uint32_t)packet);
     outl(io_base + 0x10, 54 + http_len);
-    printk(CYAN, "[ HTTP ] GET Request Sent!\n");
+    printk("[ HTTP ] GET Request Sent!\n");
 }
 
 /**
@@ -179,14 +179,14 @@ void rtl8139_handler() {
                 struct arp_packet *arp = (struct arp_packet *)(data + 14);
                 if (htons(arp->opcode) == 2) { // Reply
                     for(int i=0; i<6; i++) gateway_mac[i] = arp->src_mac[i];
-                    printk(GREEN, "[ ARP ] Gateway MAC resolved!\n");
+                    printk("[ ARP ] Gateway MAC resolved!\n");
                 }
             }
             else if (eth_type == 0x0800) { // IPv4
                 struct ip_header *ip = (struct ip_header *)(data + 14);
 
                 if (ip->proto == 1) { // ICMP (Ping)
-                    printk(GREEN, "[ NET ] PONG received!\n");
+                    printk("[ NET ] PONG received!\n");
                 }
                 else if (ip->proto == 6) { // TCP (Curl)
                     struct tcp_header *tcp = (struct tcp_header *)(data + 34);
@@ -204,12 +204,12 @@ void rtl8139_handler() {
                         int h_len = packet_len - 54 - 4; // -4
 
                         if (h_len > 0) {
-                            printk(WHITE, "\n--- BLUEOS WEB CONTENT ---\n");
+                            printk("\n--- BLUEOS WEB CONTENT ---\n");
                             for(int i=0; i < h_len; i++) {
-                                if(html[i] >= 32 && html[i] <= 126) printk(WHITE, "%c", html[i]);
-                                else if(html[i] == '\n') printk(WHITE, "\n");
+                                if(html[i] >= 32 && html[i] <= 126) printk("%c", html[i]);
+                                else if(html[i] == '\n') printk("\n");
                             }
-                            printk(WHITE, "\n--------------------------\n");
+                            printk("\n--------------------------\n");
                         }
                     }
                 }
@@ -249,7 +249,7 @@ void rtl8139_init(uint8_t bus, uint8_t slot) {
     gateway_mac[4] = 0x35;
     gateway_mac[5] = 0x02;
 
-printk(YELLOW, "[ NET ] Gateway MAC forzada a 52:54:00:12:35:02\n");
+printk("[ NET ] Gateway MAC forzada a 52:54:00:12:35:02\n");
 }
 
 void send_arp_request(uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4) {
@@ -280,7 +280,7 @@ void send_arp_request(uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4) {
 
 void mini_curl(uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4) {
     if (gateway_mac[0] == 0 && gateway_mac[1] == 0) {
-        printk(RED, "[ CURL ] Error: No MAC. Ejecuta 'arp 10.0.2.2' primero.\n");
+        printk("[ CURL ] Error: No MAC. Ejecuta 'arp 10.0.2.2' primero.\n");
         return;
     }
     uint8_t packet[74];
@@ -313,7 +313,7 @@ void mini_curl(uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4) {
 
     outl(io_base + 0x20, (uint32_t)packet);
     outl(io_base + 0x10, 74);
-    printk(CYAN, "[ CURL ] SYN Sent to %d.%d.%d.%d\n", ip1, ip2, ip3, ip4);
+    printk("[ CURL ] SYN Sent to %d.%d.%d.%d\n", ip1, ip2, ip3, ip4);
 }
 
 void send_ping(uint8_t ip1, uint8_t ip2, uint8_t ip3, uint8_t ip4) {

@@ -16,7 +16,7 @@ void profile_init(unsigned int start_addr, unsigned int end_addr) {
         prof_buffer[i] = 0;
     }
 
-    printk(GREEN, "\nPROFILER: Initialized for range %x - %x\n", start_addr, end_addr);
+    printk("PROFILER", "Initialized for range.\n", 0);
 }
 
 
@@ -32,11 +32,11 @@ void profile_tick(unsigned int pc) {
 }
 
 void profile_display() {
-    printk(YELLOW, "\n--- KERNEL PROFILE STATS ---\n");
+    printk("\n--- KERNEL PROFILE STATS ---\n");
     for (unsigned int i = 0; i < prof_len; i++) {
         if (prof_buffer[i] > 0) {
             unsigned int addr = prof_start + (i << PROF_SHIFT);
-            printk(WHITE, "Addr %x: %d hits\n", addr, prof_buffer[i]);
+            printk("Addr %x: %d hits\n", addr, prof_buffer[i]);
         }
     }
 }

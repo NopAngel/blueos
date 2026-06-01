@@ -20,7 +20,7 @@ void sbi_system_reset(uint32_t type, uint32_t reason) {
                   : "r" (a6), "r" (a7)
                   : "memory");
 #elif defined(x86) || defined(__x86__)
-    printk(RED, "Reset no implementado en x86 aún...\n");
+    printk("Reset no implementado en x86 aún...\n");
     asm volatile("hlt");
 #endif
 }

@@ -16,8 +16,8 @@ struct registers {
 };
 
 struct trap_frame {
+    uint32_t gs, fs, es, ds;                         // Pushed manually after pushad
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // Pushed by pushad
-    uint32_t gs, fs, es, ds;                         // Pushed manually
     uint32_t interrupt_no, error_code;               // Pushed by ISR base
     uint32_t eip, cs, eflags, useresp, ss;           // Pushed by CPU
 };

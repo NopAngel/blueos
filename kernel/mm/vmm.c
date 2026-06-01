@@ -25,7 +25,7 @@ void vmm_init() {
 
     map_page(kernel_root_table, 0x10000000, 0x10000000, PTE_V | PTE_R | PTE_W);
 
-    printk(CYAN, "[VMM] Kernel and UART mapped 1:1. Ready to switch!\n");
+    printk("[VMM] Kernel and UART mapped 1:1. Ready to switch!\n");
 }
 void map_page(page_table_t *root, vaddr_t vaddr, paddr_t paddr, uint32_t flags) {
     uint32_t vpn1 = (vaddr >> 22) & 0x3FF;

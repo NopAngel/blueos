@@ -14,25 +14,22 @@ static void halt_system() {
 void k_panic(const char *file, int line, const char *reason, ...) {
     __asm__ volatile("csrc sstatus, %0" : : "r"(1 << 1));
 
-    printk(RED, "\n  ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
-    printk(RED, "  ::                !!! BLUEOS KERNEL PANIC !!!           ::\n");
-    printk(RED, "  ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n");
-
-    printk(WHITE, "  REASON:  ");
+    printk("\nDUMP (reason: %s)\n{", reason);
+    printk("  REASON:  ");
     
     va_list args;
     va_start(args, reason);
-    vprintk(WHITE, reason, args); 
+    vprintk(reason, args); 
     va_end(args);
 
-    printk(WHITE, "\n");
+    printk("\n");
 
     if (file) {
-        printk(YELLOW, "  SOURCE:  %s\n", file);
-        printk(YELLOW, "  LINE:    %d\n", line);
+        printk("src  :  %s\n", file);
+        printk("line :  %d\n", line);
     }
 
-    printk(CYAN, "\n  CPU REGISTERS (RISC-V):\n");
+    printk("\n  CPU REGISTERS (RISC-V):\n");
     
     uintptr_t ra, sp, gp, tp, a0, a1, t0, t1, s0;
     __asm__ volatile("mv %0, ra" : "=r"(ra));
@@ -45,28 +42,25 @@ void k_panic(const char *file, int line, const char *reason, ...) {
     __asm__ volatile("mv %0, t1" : "=r"(t1));
     __asm__ volatile("mv %0, s0" : "=r"(s0)); 
 
-    printk(WHITE, "  RA: 0x%p  SP: 0x%p  GP: 0x%p\n", ra, sp, gp);
-    printk(WHITE, "  TP: 0x%p  A0: 0x%p  A1: 0x%p\n", tp, a0, a1);
-    printk(WHITE, "  T0: 0x%p  T1: 0x%p  FP: 0x%p\n", t0, t1, s0);
+    printk("  RA: 0x%p  SP: 0x%p  GP: 0x%p\n", ra, sp, gp);
+    printk("  TP: 0x%p  A0: 0x%p  A1: 0x%p\n", tp, a0, a1);
+    printk("  T0: 0x%p  T1: 0x%p  FP: 0x%p\n", t0, t1, s0);
 
-    printk(CYAN, "\n  STACK BACKTRACE:\n");
+    printk("\n  STACK BACKTRACE:\n");
 
     uintptr_t *fp = (uintptr_t*)s0;
     for (int i = 0; i < 6 && fp != 0; i++) {
         uintptr_t return_addr = fp[-1];
         if (return_addr == 0) break;
         
-        printk(WHITE, "    [%d] at 0x%p\n", i, return_addr);
+        printk("    [%d] at 0x%p\n", i, return_addr);
      
         uintptr_t *next_fp = (uintptr_t*)fp[-2];
         
         if (next_fp <= fp || (uintptr_t)next_fp > 0x90000000) break; 
         fp = next_fp;
     }
-
-    printk(RED, "\n  ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
-    printk(RED, "  ::   SYSTEM HALTED. PLEASE RESTART THE EMULATOR.        ::\n");
-    printk(RED, "  ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+    printk(" }");
 
     halt_system();
 }

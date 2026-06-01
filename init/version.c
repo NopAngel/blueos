@@ -22,7 +22,7 @@
 /* * The banner that will be printed at boot time.
  * Using your printk format with color support.
  */
-const char blueos_banner[] = 
+const char blueos_banner[] =
     "%s version %s (" BLUEOS_COMPILE_BY "@" UTS_VERSION ") "
     "(" BLUEOS_COMPILER ") %s\n";
 
@@ -31,12 +31,12 @@ const char blueos_banner[] =
  * This is usually one of the first things called in k_main.
  */
 void display_banner(void) {
-    printk(CYAN, "--------------------------------------------------\n");
-    printk(WHITE, blueos_banner, "BlueOS", BLUEOS_VERSION, "SMP PREEMPT");
-    printk(CYAN, "--------------------------------------------------\n");
+    printk("--------------------------------------------------\n");
+    printk(blueos_banner, "BlueOS", BLUEOS_VERSION, "SMP PREEMPT");
+    printk("--------------------------------------------------\n");
 }
 
-/* * Weak definitions to allow the build system to inject 
+/* * Weak definitions to allow the build system to inject
  * specific versioning at the last step if needed.
  */
 const char blueos_release[] __attribute__((weak)) = BLUEOS_VERSION;

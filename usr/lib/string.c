@@ -226,15 +226,15 @@ void kgets(char* buffer, int limit) {
 
         if (c == '\n' || c == '\r') {
             buffer[i] = '\0';
-            printk(WHITE, "\n");
+            printk("\n");
             break;
         } else if (c == '\b' && i > 0) {
             i--;
-            printk(WHITE, "\b \b");
+            printk("\b \b");
         } else if (c >= 32 && c <= 126) {
             buffer[i++] = c;
             char str[2] = {c, '\0'};
-            printk(WHITE, str);
+            printk(str);
         }
     }
 }

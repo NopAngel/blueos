@@ -1,34 +1,35 @@
 /* fs/vfs_9p.c */
 
-#include <stdint.h>
 #include <fs/9p.h>
-#include <kernel/printk.h>
 #include <kernel/colors.h>
+#include <kernel/printk.h>
+#include <stdint.h>
 
 int v9p_session_init(struct v9p_session *v9ses) {
-    if (!v9ses) return -1;
+  if (!v9ses)
+    return -1;
 
-    struct p9_header *h = (struct p9_header *)v9ses->out_buf;
-    h->type = P9_TVERSION;
-    h->tag = 0xFFFF;
-    
-    uint32_t *p_msize = (uint32_t *)(v9ses->out_buf + sizeof(struct p9_header));
-    *p_msize = P9_MAX_BUF;
+  struct p9_header *h = (struct p9_header *)v9ses->out_buf;
+  h->type = P9_TVERSION;
+  h->tag = 0xFFFF;
 
-    uint16_t *s_len = (uint16_t *)(v9ses->out_buf + sizeof(struct p9_header) + 4);
-    *s_len = 6; 
-    
-    char *s_ptr = (char *)(v9ses->out_buf + sizeof(struct p9_header) + 6);
-    mm_memcpy(s_ptr, "9P2000", 6);
+  uint32_t *p_msize = (uint32_t *)(v9ses->out_buf + sizeof(struct p9_header));
+  *p_msize = P9_MAX_BUF;
 
-    h->size = sizeof(struct p9_header) + 4 + 2 + 6;
+  uint16_t *s_len = (uint16_t *)(v9ses->out_buf + sizeof(struct p9_header) + 4);
+  *s_len = 6;
 
-    pr_info("9P: Requesting session (msize=%d, ver=9P2000)\n", P9_MAX_BUF);
-    
-    return 0;
+  char *s_ptr = (char *)(v9ses->out_buf + sizeof(struct p9_header) + 6);
+  mm_memcpy(s_ptr, "9P2000", 6);
+
+  h->size = sizeof(struct p9_header) + 4 + 2 + 6;
+
+  boot_msg("9P", "Requesting session (ver=9P2000)\n", 0);
+
+  return 0;
 }
 
-char* v9p_driver_read(const char *path) {
-    static char *msg = "9P: File content from Host Shared Folder (Stub)";
-    return msg;
+char *v9p_driver_read(const char *path) {
+  static char *msg = "9P: File content from Host Shared Folder (Stub)";
+  return msg;
 }

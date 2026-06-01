@@ -16,13 +16,13 @@ struct gdt_ptr {
     uint32_t base;
 } __attribute__((packed));
 
-struct gdt_entry gdt[5];
+struct gdt_entry gdt[6];
 struct gdt_ptr gdtp;
 
 extern void gdt_flush(uint32_t);
 
 void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran) {
-    gdt[num].base_low    = (base & 0xFFFF);
+    gdt[num].base_low    = (uint16_t)(base & 0xFFFF);
     gdt[num].base_middle = (base >> 16) & 0xFF;
     gdt[num].base_high   = (base >> 24) & 0xFF;
 
@@ -34,7 +34,7 @@ void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_
 }
 
 void gdt_init() {
-    gdtp.limit = (sizeof(struct gdt_entry) * 5) - 1;
+    gdtp.limit = (sizeof(struct gdt_entry) * 6) - 1;
     gdtp.base  = (uint32_t)&gdt;
 
     // 1. Null descriptor
@@ -48,6 +48,9 @@ void gdt_init() {
     // 5. User mode data: Access 0xF2
     gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
+    // 6. TSS Placeholder: Se inicializa en 0, kernel/userspace.c lo llenará
+    gdt_set_gate(5, 0, 0, 0, 0);
+
     gdt_flush((uint32_t)&gdtp);
-    printk(LIGHT_BLUE, "[  OK  ] GDT: System segments initialized.\n");
+    printk("[  OK  ] GDT: System segments initialized.\n");
 }
