@@ -24,7 +24,7 @@ void blueos_aes_encrypt_buffer(uint8_t *data, uint32_t len, aes_ctx_t *ctx) {
 
 
 void crypto_init_test() {
-    printk("[CRYPTO] Initializing AES-RISCV Hardware Glue...\n");
+    boot_msg("CRYPTO", "Initializing AES-RISCV Hardware Glue...\n", 0);
 
     aes_ctx_t my_ctx;
     my_ctx.rounds = 10; // AES-128
@@ -33,5 +33,5 @@ void crypto_init_test() {
 
     blueos_aes_encrypt_buffer(test_data, 16, &my_ctx);
 
-    printk("[CRYPTO] Test block encrypted successfully!\n");
+    boot_msg("CRYPTO", "Test block encrypted successfully!\n", 0);
 }

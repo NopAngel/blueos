@@ -18,12 +18,12 @@ int request_firmware(const struct firmware **fw, const char *name) {
 int fw_load_to_device(uintptr_t dev_addr, const struct firmware *fw) {
     volatile uint32_t *dest = (uint32_t *)dev_addr;
 
-    printk("[FW] Loading %d bytes into device at 0x%p\n", fw->size, dev_addr);
+    boot_msg("FW", "Loading...", 0);
 
     for (size_t i = 0; i < fw->size / 4; i++) {
         dest[0] = ((uint32_t*)fw->data)[i];
     }
 
-    printk("FW: Firmware %s loaded successfully!\n", fw->name);
+    boot_msg("FW", "Firmware %s loaded successfully!\n", 0);
     return 0;
 }

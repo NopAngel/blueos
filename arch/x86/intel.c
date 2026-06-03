@@ -23,14 +23,14 @@ int init_intel_vtx() {
 
     asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(0));
     if (ebx != 0x756e6547 || edx != 0x49656e69 || ecx != 0x6c65746e) {
-        printk("CPU: No Intel processor detected. Skipping VMX.\n");
+        boot_msg("INTEL", "No Intel processor detected. Skipping VMX.\n", 2);
         return 0;
     }
 
 
     asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(1));
     if (!(ecx & (1 << 5))) {
-        printk("Intel: This processor does not support VMX technology.\n");
+        boot_msg("INTEL", "This processor does not support VMX technology.\n", 2);
         return 0;
     }
 
@@ -41,7 +41,7 @@ int init_intel_vtx() {
     asm volatile("rdmsr" : "=a"(msr_low), "=d"(msr_high) : "c"(IA32_FEATURE_CONTROL_MSR));
 
     if ((msr_low & 1) && !(msr_low & (1 << 2))) {
-        printk("Intel: VMX is blocked by the BIOS (Disabled).\n");
+        boot_msg("INTEL", "VMX is blocked by the BIOS (Disabled).\n", 2);
         return 0;
     }
 
@@ -51,7 +51,7 @@ int init_intel_vtx() {
     cr4 |= (1 << 13);
     asm volatile("mov %0, %%cr4" : : "r"(cr4));
 
-    printk("Intel: Virtualization (VMX) successfully enabled.\n");
+    boot_msg("INTEL", "Virtualization (VMX) successfully enabled.\n", 0);
     return 1;
 }
 
@@ -83,10 +83,10 @@ int setup_vmcs() {
     );
 
     if (error) {
-        printk("Intel: Error loading VMCS (VMPTRLD failure).\n");
+        boot_msg("INTEL", "Error loading VMCS (VMPTRLD failure).\n", 2);
         return -1;
     }
 
-    printk("Intel: VMCS loaded and ready to configure interrupts.\n");
+    boot_msg("INTEL", "VMCS loaded and ready to configure interrupts.\n", 0);
     return 0;
 }

@@ -5,6 +5,13 @@
 
 -include .config
 
+SHELL := /bin/sh
+MAKEFLAGS += --no-print-directory
+
+BUILD_DIR ?= build
+GEN_DIR ?= include/generated
+DEPFLAGS ?= -MMD -MP
+
 # --- Basic Configuration ---
 ARCH ?= x86
 V ?= 0
@@ -105,7 +112,9 @@ endif
 
 # --- Global Logic ---
 CONF_FLAGS += $(patsubst CONFIG_%, -DCONFIG_%, $(filter CONFIG_%, $(.VARIABLES)))
-CFLAGS += $(CONF_FLAGS)
+CFLAGS += $(DEPFLAGS) $(CONF_FLAGS)
+
+-include $(obj-y:.o=.d)
 
 .PHONY: all clean run iso version_h prepare
 
@@ -193,6 +202,7 @@ clean:
 	$(Q)rm -f $(KERNEL_BIN) $(KERNEL_ISO) $(USER_ELF)
 	$(Q)rm -rf build include/generated
 	$(Q)find . -name "*.o" -type f -delete
+	$(Q)find . -name "*.d" -type f -delete
 	@echo "  DONE       Clean completed."
 
 menuconfig:

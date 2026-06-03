@@ -1,0 +1,1 @@
+obj_y += stack.o

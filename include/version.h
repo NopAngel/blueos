@@ -34,7 +34,7 @@
 #define COMPILER_INFO   "gcc " __VERSION__
 #define UTS_RELEASE     "2.2.1-blueos"
 
-#define UTS_VERSION    "#1 SMP PREEMPT 2026-06-01 19:48:36"
+#define UTS_VERSION    "#1 SMP PREEMPT 2026-06-02 20:31:41"
 #define UTS_MACHINE     BLUEOS_ARCH
 
 /* --- Helpful Macros --- */

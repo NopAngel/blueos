@@ -1261,19 +1261,6 @@ int cmd_pwait(char *args) {
   return 0;
 }
 
-int cmd_timeout(char *args) {
-  char *sec_str = args;
-  char *cmd = strchr(args, ' ');
-  if (!cmd) {
-    printk("Usage: timeout <sec> <cmd>\n");
-    return 1;
-  }
-  *cmd = '\0';
-  cmd++;
-
-  execute_shell_command(cmd);
-  return 0;
-}
 
 int cmd_dd(char *args) {
   if (strlen(args) == 0) {
@@ -1508,7 +1495,7 @@ void list_matches(char *prefix) {
 /* --- Commands Dispatch Table --- */
 
 shell_command_t commands_table[] = {
-    {"main", "Divine gratitude", cmd_main},
+    {"main", "THANKS YOU GOD FOR EVERTHING!", cmd_main},
     {"help", "Show this help menu", cmd_help},
     {"echo", "Show a message", cmd_echo},
     {"version", "Show system version", cmd_version},
@@ -1543,7 +1530,6 @@ shell_command_t commands_table[] = {
     {"printf",
      "Print formatted text (supports \\n, \\t, %u for user, %t for tty)",
      cmd_printf},
-    {"timeout", "Run a command with a time limit", cmd_timeout},
     {"stty", "Change and print terminal line settings", cmd_stty},
     {"sync", "Flush file system buffers", cmd_sync},
     {"pwait", "Wait for process termination", cmd_pwait},
@@ -1578,7 +1564,7 @@ void print_prompt() {
     printk("%s", users[current_user_index].cwd);
     printk("$ ");
   } else if (!any_active) {
-    printk("none@blueos:/$ ");
+    printk("anon@blueos:/$ ");
   } else {
     printk("blueos login: ");
   }
@@ -1665,7 +1651,7 @@ void execute_shell_command(char *input) {
         clear_screen();
         printk("Welcome to BlueOS, %s!\n", current_user);
         printk(
-            " Copyright (c) 2025,2025                GPL-3.0\n @NopAngel\nFor "
+            " Copyright (c) 2025,2025             GPL-3.0\n @NopAngel\nFor "
             "commands, use 'help', it basically explains how to use them.\n");
 
       } else {
@@ -1676,7 +1662,6 @@ void execute_shell_command(char *input) {
       printk("Please type 'login' to continue.\n");
     }
 
-    print_prompt();
     return;
   }
 

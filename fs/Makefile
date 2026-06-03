@@ -1,0 +1,1 @@
+obj-y += help.o tmpfs/tmpfs.o vbox/vboxfs.o vfs/vfs.o ramfs/fs.o ext2/ext2.o

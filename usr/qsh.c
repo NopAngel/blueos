@@ -15,17 +15,6 @@
 #define INPUT_BUFFER_SIZE 256
 #endif
 
-/* Local implementation of strrchr since it might be missing from lib/string.h
- */
-static char *strrchr(const char *s, int c) {
-  char *last = (char *)0;
-  do {
-    if (*s == (char)c) {
-      last = (char *)s;
-    }
-  } while (*s++);
-  return last;
-}
 
 #define qsh_HISTORY_SIZE 32
 #define qsh_LINE_MAX 256
@@ -37,10 +26,6 @@ static int qsh_history_index = -1;
 /* Global scancode helper for arrow keys */
 extern uint8_t arch_get_scancode();
 
-/*
- * Ported from MirBSD mqsh (main.c/sh.h)
- * Enhanced with AurixOS style history and logic
- */
 
 typedef enum {
   SFILE,   /* Reading from a file */
@@ -424,10 +409,8 @@ int qsh_shell(Source *s) {
 
 int cmd_qsh(char *args) {
   if (strlen(args) == 0) {
-    printk(qsh_CLR_INFO "BlueOS KornShell (qsh) " qsh_CLR_RESET
+    printk(qsh_CLR_INFO "BlueOS QSH (qsh) " qsh_CLR_RESET
                         "mode kernel (direct-exec)\n");
-    printk("AurixOS-style history enabled. Type " qsh_CLR_ARROW
-           "'exit'" qsh_CLR_RESET " to leave.\n\n");
 
     Source stdin_source = {
         .type = SSTDIN, .file = "stdin", .line = 0, .next = source_stack};

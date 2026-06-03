@@ -238,7 +238,7 @@ void vfs_init(void) {
     vfs_root->ops = &root_ops;
 
     vfs_current = vfs_root;
-    printk("VFS: Successfully initialized root filesystem.\n");
+    boot_msg("VFS", "Successfully initialized root filesystem.\n", 0);
 }
 
 vfs_node_t* vfs_get_root(void) {
@@ -312,14 +312,14 @@ int vfs_mount(const char* dev, const char* target) {
     for (int i = 0; i < (int)(sizeof(system_dirs) / sizeof(system_dirs[0])); i++) {
         vfs_node_t* check = vfs_lookup(system_dirs[i]);
         if (!check) {
-            printk("VFS: System directory %s not found. Creating...\n", system_dirs[i]);
+            boot_msg("VFS", "System directory not found. Creating...\n", 1);
             if (vfs_mkdir(system_dirs[i]) != 0) {
-                printk("VFS: Failed to create %s\n", system_dirs[i]);
+                boot_msg("VFS", "Failed to create\n", 2);
             }
         }
     }
 
-    printk("VFS: Mounted device %s on %s\n", dev, target);
+    boot_msg("VFS", "Mounted device", 0);
     return 0;
 }
 

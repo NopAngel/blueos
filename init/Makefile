@@ -1,0 +1,1 @@
+obj-y += all.o hyper.o kernel.o version.o

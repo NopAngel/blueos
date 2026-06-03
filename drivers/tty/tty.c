@@ -8,7 +8,12 @@
 #include <drivers/keyboard.h>
 #include <kernel/printk.h>
 #include <kernel/colors.h>
+#include <fs/vfs.h>
 #include <lib/string.h>
+#include <mm/memory.h>
+
+extern int current_user_index;
+extern char current_user[];
 
 extern int cursor_x;
 extern int cursor_y;
@@ -44,8 +49,15 @@ void tty_init(void (*hw_write)(char)) {
         v_ttys[i].conf.c_cc[VKILL]  = CTRL('u');
         v_ttys[i].conf.c_cc[VEOF]   = CTRL('d');
     }
+    vfs_touch("/dev/tty1", 0); // Create device nodes for TTYs
+    vfs_touch("/dev/tty2", 0);
+    vfs_touch("/dev/tty3", 0);
+    vfs_touch("/dev/tty4", 0);
+    vfs_touch("/dev/tty5", 0);
+    vfs_touch("/dev/tty6", 0);
+    vfs_touch("/dev/tty7", 0);
 
-    printk("[ TTY ] %d Virtual Consoles initialized successfully.\n", MAX_TTYS);
+    boot_msg("TTY", "inited....\n", 0);
 }
 
 /**
@@ -185,6 +197,7 @@ void tty_switch(int id) {
     }
     cursor_x = new_tty->saved_cursor_x;
     cursor_y = new_tty->saved_cursor_y;
-
+    current_user_index = -1;
+    mm_memset(current_user, 0, 32);
     update_cursor();
 }

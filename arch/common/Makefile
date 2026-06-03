@@ -1,0 +1,1 @@
+obj-y += hal.o memory.o pic.o

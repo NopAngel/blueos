@@ -10,6 +10,7 @@
 #include <drivers/hypervisor.h>
 #include <drivers/keyboard.h>
 #include <drivers/leds.h>
+#include <drivers/power.h>
 #include <drivers/pci.h>
 #include <drivers/pinctrl.h>
 #include <drivers/tmpfs.h>
@@ -22,6 +23,7 @@
 #include <kernel/arch.h>
 #include <kernel/panic.h>
 #include <kernel/printk.h>
+#include <arch/x86/timer.h>
 #include <mm/memory.h>
 #include <multiboot.h>
 #include <profile.h>
@@ -60,7 +62,6 @@ static bool _has_installed_ext2(void) {
 
 void _mount_() {
   boot_msg("MOUNT", "started...", 0);
-  vfs_init();
   fs_init();
   boot_msg("FS", "VFS and RootFS ready", 0);
   tmp_init();
@@ -68,7 +69,7 @@ void _mount_() {
   boot_msg("PARTITION", "started...", 0);
   bool installed = _has_installed_ext2();
 
-  const char *minimal_dirs[] = {"/kernel", "/tmp"};
+  const char *minimal_dirs[] = {"/kernel", "/tmp", "/etc", "/dev"};
 
   const char *system_dirs[] = {
       "/etc",    "/conf", "/kernel", "/BOOT", "/usr",  "/tmp", "/mnt",   "/sys",
@@ -84,6 +85,14 @@ void _mount_() {
     if (!check) {
       vfs_mkdir(dirs[i]);
     }
+  }
+
+  if (vfs_chdir("/etc") == 0) {
+    vfs_touch("/etc/hostname", "blueos");
+    vfs_touch("/etc/readme", readme_lol);
+    vfs_touch("/etc/version", UTS_RELEASE);
+    boot_msg("VFS", "System files created in /etc", 0);
+    vfs_chdir("/");
   }
 
   if (vfs_chdir("/kernel") == 0) {
@@ -111,7 +120,32 @@ void _mount_() {
 
   vfs_touch("kernel/VERSION", UTS_RELEASE);
   vfs_touch("tmp/log.txlog", "LOG GENERATED!");
+
 }
+
+void boot__detect() {
+  printk("\n      \033[34mBLUE    OS    \033[0m \n");
+  printk("=================================\n\n");
+  
+  printk("1.   Boot in \033[32mLive Mode\033[0m\n");
+  printk("2.   Reboot\n");
+  printk("3.   Shutdown\n\n");
+
+  printk("=================================\n");
+  char c = raw_get_char();
+  if (c == '1') {
+    printk("\nBooting in Live Mode...\n");
+  } else if (c == '2') {
+    sys_reboot();
+  } else if (c == '3') {
+    sys_shutdown();
+  } else {
+    boot_msg("USER", "Invalid option. Booting in Live Mode by default...\n", 1);
+  }
+
+
+}
+
 
 /**
  * init_all - Main kernel entry sequence
@@ -121,8 +155,11 @@ void init_all(void *arch_data) {
   mm_init(arch_data);
   uint32_t total_mb = mm_get_total() / (1024 * 1024);
   arch_early_init();
+  vfs_init();
 
   vt100_init();
+  tty_init(tty_putchar_wrapper);
+  boot_msg("TTY", "Virtual console ready", 0);
   boot_msg("VT100", "Terminal driver initialized", 0);
 
   uint64_t real_mem = mm.total_memory;
@@ -131,6 +168,7 @@ void init_all(void *arch_data) {
   uint32_t real_mb = (uint32_t)(real_mem / (1024 * 1024));
   uint32_t avail_mb = (uint32_t)(avail_mem / (1024 * 1024));
   boot_msg("PMM", "Physical Memory Manager active", 0);
+  boot__detect();
   printk("<6> MEM: %u MB RAM detected | %u MB free for processes\n", real_mb,
          avail_mb);
   if (arch_is_guest()) {
@@ -167,8 +205,7 @@ void init_all(void *arch_data) {
   // Initialize the VT100 terminal driver by default
   init_tss(0x10, 0x90000);
 
-  tty_init(tty_putchar_wrapper);
-  boot_msg("TTY", "Virtual console ready", 0);
+  
 
   arch_enable_interrupts();
   boot_msg("IRQ", "Interrupts enabled", 0);
@@ -203,6 +240,10 @@ void init_all(void *arch_data) {
     boot_msg("STORAGE", "Disk inventory ready", 0);
   }
 
+
+  _mount_();
+
+
   for (int i = 0; i < disk_count; i++) {
     printk("  [%d] %s\n", i, system_disks[i].name);
   }
@@ -234,7 +275,6 @@ void init_all(void *arch_data) {
 
   // add_user("root", "123");
 
-  _mount_();
 
   if (mbi->flags & (1 << 3)) { // MULTIBOOT_INFO_MODS
     multiboot_module_t *mod = (multiboot_module_t *)mbi->mods_addr;

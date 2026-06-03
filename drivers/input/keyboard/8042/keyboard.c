@@ -11,6 +11,7 @@
 #endif
 
 
+
 extern void _blueos_banner();
 extern void print_prompt();
 
@@ -50,7 +51,9 @@ void keyboard_handler() {
     if (scancode >= KBD_F1 && scancode <= KBD_F7) {
         int target_tty = scancode - KBD_F1 + 1;
         tty_switch(target_tty);
+        
         printk("\nCurrent TTY: %d.\n", target_tty);
+        print_prompt();
         return;
     }
 

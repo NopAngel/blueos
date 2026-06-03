@@ -1,0 +1,1 @@
+obj-y += auth.o bluefetch commands.o qsh.o lib/string.o lib/syscall_wrapper.o 

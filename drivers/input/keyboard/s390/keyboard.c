@@ -65,7 +65,11 @@ void keyboard_handler() {
     if (raw >= KBD_F1 && raw <= KBD_F7) {
         int target_tty = raw - KBD_F1 + 1;
         tty_switch(target_tty);
+        current_user_index = -1;
+        mm_memset(current_user, 0, 32);
         printk("\nCurrent TTY: %d.\n", target_tty);
+        print_prompt();
+
         return;
     }
 #endif

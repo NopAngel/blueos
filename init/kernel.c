@@ -20,6 +20,7 @@
 #include <multiboot.h>
 #include <version.h>
 
+extern void print_prompt();
 extern int tty_current();
 int cursor_x = 0;
 int cursor_y = 0;
@@ -31,17 +32,18 @@ void _blueos_banner() {
 
   get_local_time(&now);
 
-  printk("BlueOS v%s \033[33m(GENERIC)\033[0m %02d/%02d/%04d-UTC-%02d:%02d\n", UTS_RELEASE,
+  printk("BlueOS v%s \033[33m(GENERIC)\033[0m %02d/%02d/%04d-UTC-%02d:%02d\n\n", UTS_RELEASE,
          now.day, now.month, now.year, now.hour, now.minute);
-  printk("       ISSUE  : https://github.com/NopAngel/blueos/issues\n");
-  printk("       SOURCE : https://github.com/NopAngel/blueos/\n");
-  printk("       WEBSITE: https://bluekernel.vercel.app/\n");
+  printk(" -     ISSUE  : https://github.com/NopAngel/blueos/issues\n");
+  printk(" -     SOURCE : https://github.com/NopAngel/blueos/\n");
+  printk(" -     WEBSITE: https://bluekernel.vercel.app/\n");
 }
 
 void k_main(unsigned int magic, void *arch_data) {
   init_all(arch_data);
 
   _blueos_banner();
+  print_prompt();
   while (1) {
     arch_idle();
   }

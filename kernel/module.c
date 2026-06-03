@@ -15,23 +15,22 @@ int module_count = 0;
 int sys_insmod(module_t *mod) {
     if (module_count >= MAX_MODULES) return -1;
 
-    printk("\033[36m[KMOD] Loading module: %s...\033[0m\n", mod->name);
-    
+    boot_msg("KMOD", "Loading module...\n", 0);
     if (mod->init) {
         if (mod->init() == 0) {
             loaded_modules[module_count++] = mod;
-            printk("\033[32m\n[KMOD] Module %s loaded successfully.\033[0m\n", mod->name);
+            boot_msg("KMOD", "Module loaded successfully\n", 0);
             return 0;
         }
     }
     
-    printk("[KMOD] Failed to initialize %s.\n", mod->name);
+    boot_msg("KMOD", "Failed to initialize.\n", 2);
     return -1;
 }
 
 void sys_lsmod() {
-    printk("\nModule                  Size  Used by\n");
+    boot_msg("KMOD", "Loaded Modules:\n", 0);
     for (int i = 0; i < module_count; i++) {
-        printk("%-24s 4096  0\n", loaded_modules[i]->name);
+        printk("KMOD   %s\n", 0, loaded_modules[i]->name);
     }
 }
