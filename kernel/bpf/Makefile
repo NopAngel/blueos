@@ -1,0 +1,1 @@
+obj-y += kernel/bpf/jit_rv64.o

@@ -4,11 +4,15 @@
 #include <kernel/ports.h>
 #include <kernel/colors.h>
 #include <kernel/commands.h>
+#include <mm/memory.h>
 #include <lib/string.h>
 #include <drivers/tty.h>
 
 extern void kbd_process_char(char c);
 extern void print_prompt();
+extern int current_user_index;
+extern char current_user[];
+
 
 /**
  * arch_read_raw - Platform-specific hardware abstraction

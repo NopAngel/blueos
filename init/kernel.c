@@ -29,35 +29,13 @@ int cursor_y = 0;
 extern void init_all(void *arch_data);
 static void blueos_banner(void);
 
-void test_bluefs() {
-    printk("--- Probando BlueFS sobre Disco Real ---\n");
-
-    // 1. Usamos la API del FS, no variables internas
-    struct btrfs_disk_inode* my_inode = get_inode(1);
-    my_inode->block_ptrs[0] = 10; 
-
-    // 2. Escribimos
-    const char* data = "BlueFS sobre ATA real!";
-    btrfs_write_file(1, data, 22);
-
-    // 3. Para verificar, lee usando el sistema, no mirando la memoria
-    // Si tienes una función btrfs_read_file(), úsala. 
-    // Si no, block_get(10) te traerá el dato desde el disco real.
-    uint8_t* sector = block_get(10);
-    printk("Datos leídos del disco: %s\n", sector);
-}
-
 void
 k_main(unsigned int magic, void *arch_data)
 {
-	/* Inicialización de hardware y subsistemas */
 	init_all(arch_data);
 
-	/* Banner de inicio estilo BSD */
 	blueos_banner();
 	print_prompt();
- // test_bluefs();
-	/* Bucle principal: idle del sistema */
 	for (;;) {
 		arch_idle();
 	}

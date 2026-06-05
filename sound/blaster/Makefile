@@ -1,0 +1,1 @@
+obj-y += sound/blaster/blaster.o

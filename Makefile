@@ -38,12 +38,20 @@ else ifeq ($(ARCH),riscv)
     KERNEL_BIN = blueos.elf
 endif
 
-SUBDIRS := arch/$(ARCH) arch/common kernel kernel/mm drivers/leds drivers/vhost drivers/rtc drivers/battery drivers/net drivers/isapnp \
-           drivers/video drivers/bcma drivers/ata drivers/disk drivers/amba drivers/connector drivers/i2c drivers/thermal drivers/soc \
-           drivers/pnp drivers/hyperv drivers/core drivers/cdrom drivers/tty drivers/gpio drivers/usb drivers/input/joystick/ps3 drivers/input/mouse/8042 \
-           drivers/input/keyboard/8042 drivers/input/keyboard drivers/scsi drivers/pinctrl drivers/pci lib crypto usr init net \
-           fs/ext2 fs/btrfs fs/ramfs fs/tmpfs fs/vfs
-obj-y :=
+
+SUBDIRS_NEED := arch/common kernel kernel/mm drivers/ata drivers/disk drivers/amba \
+                 drivers/connector drivers/i2c drivers/thermal drivers/soc drivers/usb \
+                 drivers/pci fs/vfs fs/ramfs fs/ext2 init drivers/tty
+
+SUBDIRS      := arch/$(ARCH) $(SUBDIRS_NEED) drivers/leds \
+                 drivers/vhost drivers/rtc drivers/battery drivers/net \
+                 drivers/isapnp drivers/video drivers/bcma \
+                 drivers/pnp drivers/hyperv drivers/core \
+                 drivers/cdrom drivers/gpio drivers/input/joystick/ps3 \
+                 drivers/input/mouse/8042 drivers/input/keyboard/s390 \
+                 drivers/input/keyboard drivers/scsi drivers/pinctrl \
+                 lib crypto usr net fs/btrfs fs/tmpfs
+obj-y        :=
 
 EXISTING_MAKEFILES := $(wildcard $(patsubst %,%/Makefile,$(SUBDIRS)))
 include $(EXISTING_MAKEFILES)

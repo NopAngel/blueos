@@ -146,7 +146,6 @@ void init_all(void *arch_data) {
   uint32_t real_mb = (uint32_t)(real_mem / (1024 * 1024));
   uint32_t avail_mb = (uint32_t)(avail_mem / (1024 * 1024));
   boot_msg("PMM", "Physical Memory Manager active", 0);
-  boot__detect();
   printk("<6> MEM: %u MB RAM detected | %u MB free for processes\n", real_mb,
          avail_mb);
   if (arch_is_guest()) {
