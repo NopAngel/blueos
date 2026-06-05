@@ -1,0 +1,1 @@
+obj-y += drivers/input/mouse/8042/mouse.o

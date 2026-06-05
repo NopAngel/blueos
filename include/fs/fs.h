@@ -30,17 +30,18 @@ typedef struct {
 } FileEntry;
 
 
-void create_new_file(const char *filename, const char *content);
-int touch(const char *filename, const char *content);
-int mkdir(const char *dirname);
-void list_items();
-void pwd();
-int cd(const char *dirname);
-void cat (const char *filename);
-void fs_rm(const char *name);
-void fs_rmdir(const char *name);
-void fs_grep(const char *keyword, const char *filename);
-int find_file(const char* name);
-void fs_init();
+void ramfsinit_clean();
+void ramfsinit();
+int ramfs_mkdir(const char *dirname);
+int ramfs_touch(const char *filename, const char *content);
+void ramfslist_items();
+int ramfs_cd(const char *dirname);
+void ramfs_pwd();
+void ramfs_cat (const char *filename);
+void ramfs_rm(const char *name);
+void ramfsrmdir(const char *name);
+int ramfs_find_file(const char* name);
+void ramfsread_at(const char* filename, uint32_t offset, uint32_t size, char* buffer);
+
 
 #endif

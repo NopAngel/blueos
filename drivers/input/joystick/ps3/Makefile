@@ -1,0 +1,1 @@
+obj-y += drivers/input/joystick/ps3/ps3_ds3.o

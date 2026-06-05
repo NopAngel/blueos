@@ -18,6 +18,7 @@ typedef enum {
 
 struct vfs_node;
 
+
 struct vfs_dirent;
 
 typedef struct {
@@ -33,26 +34,28 @@ typedef struct {
 } vfs_ops_t;
 
 
-
-// vnode/inode
 typedef struct vfs_node {
     char name[VFS_NAME_MAX];
     uint32_t inode;
     uint32_t size;
+    uint32_t type;
     uint32_t flags;
-    vfs_type_t type;
-    vfs_ops_t* ops;
-    void* private_data;
-    struct vfs_node* ptr;
-    struct vfs_node* next;
     struct vfs_node* parent;
+    struct vfs_node* next;
+    vfs_ops_t* ops;
+    void* ptr;
 } vfs_node_t;
-
 struct vfs_dirent {
     char name[VFS_NAME_MAX];
     uint32_t inode;
     uint32_t type;
 };
+
+typedef struct vfs_mount {
+    char mountpoint[16];  
+    vfs_ops_t* ops;        
+    struct vfs_mount* next;
+} vfs_mount_t;
 
 void vfs_init(void);
 vfs_node_t* vfs_get_root(void);
@@ -68,5 +71,7 @@ void vfs_get_cwd(char* buffer, uint32_t size);
 vfs_node_t* vfs_get_current(void);
 int vfs_chdir(const char* path);
 int vfs_readdir(vfs_node_t* node, uint32_t index, struct vfs_dirent* dirent);
+int vfs_rm(const char* path);
+vfs_node_t* vfs_findfile(const char* path);
 
 #endif

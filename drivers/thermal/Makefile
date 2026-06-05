@@ -1,0 +1,1 @@
+obj-y += drivers/thermal/lm75.o

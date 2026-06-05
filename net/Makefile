@@ -1,1 +1,1 @@
-obj_y += stack.o
+obj-y += net/stack.o

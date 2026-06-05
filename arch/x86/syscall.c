@@ -4,6 +4,7 @@
 #include <drivers/vt100.h>
 #include <drivers/keyboard.h>
 #include <fs/fs.h>
+#include <fs/vfs.h>
 #include <kernel/task.h>
 
 typedef unsigned int   uint32_t;
@@ -15,7 +16,6 @@ extern void clear_screen(void);
 
 /* Externs de teclado y FS */
 extern char get_char();
-extern int find_file(const char* name);
 extern task_t* current_task;
 
 /* Esta estructura debe coincidir con el pusha de tu interrupt_entry */
@@ -54,7 +54,7 @@ void syscall_handler(registers_t regs) {
 
         case SYS_OPEN: // SYS_OPEN (POSIX)
             // ebx: path
-            regs.eax = find_file((const char*)regs.ebx);
+            regs.eax = (uint32_t)vfs_findfile((const char*)regs.ebx);
             break;
 
         case SYS_PRINTK:

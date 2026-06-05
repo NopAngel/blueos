@@ -402,3 +402,14 @@ int vfs_unlink(const char* path) {
 
     return parent->ops->unlink(parent, name);
 }
+
+int vfs_rm(const char* path) {
+    if (!path || strcmp(path, "/") == 0) return -1; 
+    return vfs_unlink(path);
+}
+
+vfs_node_t* vfs_findfile(const char* path) {
+    vfs_node_t* node = vfs_lookup(path);
+    if (node && node->type == VFS_TYPE_FILE) return node;
+    return NULL;
+}

@@ -1,0 +1,1 @@
+obj-y += fs/ext2/ext2.o

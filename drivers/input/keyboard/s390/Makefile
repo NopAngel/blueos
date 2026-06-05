@@ -1,0 +1,1 @@
+obj-y += drivers/input/keyboard/s390/keyboard.o

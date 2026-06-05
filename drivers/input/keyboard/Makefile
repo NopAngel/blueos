@@ -1,0 +1,1 @@
+obj-y += drivers/input/keyboard/kbd_common.o

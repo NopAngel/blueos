@@ -1,0 +1,1 @@
+obj-y += drivers/net/virtio_net.o

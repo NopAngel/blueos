@@ -1,1 +1,7 @@
-obj-y += auth.o bluefetch commands.o qsh.o lib/string.o lib/syscall_wrapper.o 
+# usr/Makefile
+# SOLO archivos .o
+obj-y += usr/auth.o \
+         usr/commands.o \
+         usr/qsh.o \
+         usr/lib/string.o \
+         usr/lib/syscall_wrapper.o

@@ -1,1 +1,3 @@
-obj-y += all.o hyper.o kernel.o version.o
+obj-y += init/all.o \
+         init/hyper.o \
+         init/kernel.o 

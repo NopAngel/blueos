@@ -1,0 +1,1 @@
+obj-y += drivers/amba/amba_pl011.o

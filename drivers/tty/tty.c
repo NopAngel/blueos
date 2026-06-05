@@ -49,13 +49,6 @@ void tty_init(void (*hw_write)(char)) {
         v_ttys[i].conf.c_cc[VKILL]  = CTRL('u');
         v_ttys[i].conf.c_cc[VEOF]   = CTRL('d');
     }
-    vfs_touch("/dev/tty1", 0); // Create device nodes for TTYs
-    vfs_touch("/dev/tty2", 0);
-    vfs_touch("/dev/tty3", 0);
-    vfs_touch("/dev/tty4", 0);
-    vfs_touch("/dev/tty5", 0);
-    vfs_touch("/dev/tty6", 0);
-    vfs_touch("/dev/tty7", 0);
 
     boot_msg("TTY", "inited....\n", 0);
 }

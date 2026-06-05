@@ -1,0 +1,1 @@
+obj-y += drivers/vhost/vhost_net.o

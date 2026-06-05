@@ -7,6 +7,7 @@
 #include <drivers/power.h>
 #include <fs/ext2.h>
 #include <fs/fs.h>
+#include <fs/btrfs.h>
 #include <fs/vfs.h>
 #include <kernel/colors.h>
 #include <kernel/commands.h>
@@ -279,36 +280,33 @@ void parse_ip(char *str, uint8_t *ip_out) {
 }
 
 int copy_file(char *source, char *dest) {
-  int src_idx = find_file(source);
-  if (src_idx == -1) {
-    printk("ERR: Source file '%s' does not exist.\n", source);
-    return -1;
-  }
+    vfs_node_t* src_node = vfs_findfile(source);
+    if (!src_node) return -1;
 
-  char *content = file_table[src_idx].content;
-  uint32_t size = file_table[src_idx].size;
+    // El contenido está guardado en el puntero del nodo
+    char *content = (char*)src_node->ptr;
 
-  if (find_file(dest) != -1) {
-    printk("WARN: Destiny already exists. Overwriting...\n");
-  }
-
-  touch(dest, content);
-  return 0;
+    // Creamos el destino
+    if (vfs_touch(dest, content) != 0) return -1;
+    
+    return 0;
 }
 
 int move_file(char *source, char *dest) {
-  int src_idx = find_file(source);
-  if (src_idx == -1) {
+  vfs_node_t* src_node = vfs_findfile(source);
+
+  if (src_node == NULL) {
     printk("ERR: The source '%s' does not exist.\n", source);
     return -1;
   }
-  if (find_file(dest) != -1) {
+  if (vfs_findfile(dest) != NULL) {
     printk("ERR: The destination '%s' already exists.\n", dest);
     return -1;
   }
 
-  strncpy(file_table[src_idx].name, dest, 31);
-  file_table[src_idx].name[31] = '\0';
+  // Corregido: Renombramos directamente en el nodo, sin tocar file_table
+  strncpy(src_node->name, dest, VFS_NAME_MAX - 1);
+  src_node->name[VFS_NAME_MAX - 1] = '\0';
 
   return 0;
 }
@@ -385,7 +383,7 @@ void list_items_wildcard(const char *pattern) {
 
 void fs_rm_wildcard(const char *pattern) {
   if (strchr(pattern, '*') == NULL) {
-    fs_rm(pattern);
+    vfs_rm(pattern);
     return;
   }
 
@@ -576,28 +574,48 @@ extern uint32_t pci_read_config(uint8_t bus, uint8_t slot, uint8_t func,
 #endif
 
 int cmd_cat(char *args) {
-  if (strlen(args) == 0) {
-    printk("\nUse: cat <file>\n");
-    return 1;
-  }
-
-  /* Intento leer desde VFS primero */
-  vfs_node_t *node = vfs_lookup(args);
-  if (node && node->type == VFS_TYPE_FILE) {
-    char buf[2048]; // Buffer temporal
-    int bytes = vfs_read(node, buf, sizeof(buf) - 1, 0);
-    if (bytes >= 0) {
-      buf[bytes] = '\0';
-      printk("\n%s\n", buf);
-      return 0;
+    if (strlen(args) == 0) {
+        printk("Usage: cat <filename>\n");
+        return 1;
     }
-  }
 
-  printk("\nERR: Could not read file '%s' from VFS.\n", args);
-  return 1;
-}
+    // 1. Buscar el archivo
+    vfs_node_t *node = vfs_findfile(args);
+    if (!node) {
+        printk("cat: %s: No such file or directory\n", args);
+        return 1;
+    }
+
+    // 2. Preparar buffer (usamos el tamaño del archivo)
+    uint32_t size = node->size;
+    if (size == 0) {
+        printk("(archivo vacio)\n");
+        return 0;
+    }
+
+    char *buffer = (char*)kmalloc(size + 1); // +1 para el terminador nulo
+    mm_memset(buffer, 0, size + 1);
+
+    // 3. Leer el contenido
+    int bytes_read = vfs_read(node, buffer, size, 0);
+    
+    if (bytes_read > 0) {
+        printk("%s\n", buffer);
+    } else {
+        printk("cat: error al leer el archivo\n");
+    }
+
+    // 4. Liberar memoria
+    kfree(buffer);
+    
+    return 0;
+} 
 
 int cmd_main(char *args) { printk("\nTHANKS GOD FOR ALL!!\n"); }
+
+int cmd_flush(char *args) {
+  btrfs_flush_cache();
+}
 
 int cmd_mv(char *args) {
   if (strlen(args) == 0) {
@@ -704,8 +722,8 @@ int cmd_losetup(char *args) {
     j++;
   }
   file_name[j] = '\0';
-  int file_idx = find_file(file_name);
-  if (file_idx == -1) {
+  vfs_node_t* file_node = vfs_findfile(file_name);
+  if (file_node == NULL) {
     printk("Error: File '%s' not found.\n", file_name);
     return 1;
   }
@@ -790,6 +808,7 @@ int cmd_ls(char *args) {
   }
   return 0;
 }
+
 
 int cmd_cd(char *args) {
   if (strlen(args) == 0) {
@@ -885,37 +904,13 @@ int cmd_env(char *args) {
 }
 
 int cmd_mkdir(char *args) {
-  bool p_flag = false;
-  char *path = args;
-
-  if (strncmp(args, "-p ", 3) == 0) {
-    p_flag = true;
-    path = args + 3;
-  }
-
-  if (strlen(path) == 0) {
-    printk("\nUsage: mkdir [-p] <name>\n");
-    return 1;
-  }
-
-  if (p_flag) {
-    if (vfs_mkdir_recursive(path) != 0) {
-      printk("mkdir: cannot create directory '%s'\n", path);
-      return 1;
-    }
-  } else {
-    if (vfs_mkdir(path) != 0) {
-      printk("mkdir: cannot create directory '%s'\n", path);
-      return 1;
-    }
-  }
-  return 0;
+    // Si tu función vfs_mkdir solo acepta el nombre, llámala así:
+    return vfs_mkdir(args); 
 }
 
 int cmd_chmod(char *args) {
   if (strlen(args) == 0) {
-    printk("Use");
-    printk("Example: chmod 777 lmfao.txt\n");
+    printk("Use: chmod <mode> <filename>\nExample: chmod 777 lmfao.txt\n");
     return 1;
   }
 
@@ -932,17 +927,19 @@ int cmd_chmod(char *args) {
   while (*file_name == ' ')
     file_name++;
 
-  int idx = find_file(file_name);
-  if (idx == -1) {
+  // 1. Buscamos el nodo
+  vfs_node_t* node = vfs_findfile(file_name);
+  if (node == NULL) {
     printk("ERR: The file '%s' does not exist.\n", file_name);
     return 1;
   }
 
   int new_mode = simple_strtol(mode_str, NULL, 8);
 
-  file_table[idx].permissions = new_mode;
-  printk("Permissions for '%s' updated to %s\n", file_name, mode_str);
-
+  // Usamos 'flags' en lugar de 'permissions'
+  node->flags = (uint32_t)new_mode; 
+  
+  printk("Permissions for '%s' updated to %o\n", file_name, new_mode);
   return 0;
 }
 
@@ -988,7 +985,7 @@ int cmd_usr(char *args) {
 
 int cmd_touch(char *args) {
   if (strlen(args) > 0) {
-    touch(args, "");
+    vfs_touch(args, "");
     printk("\nFile '%s' created.\n", args);
   } else
     printk("\nUsage: touch <name>\n");
@@ -1212,10 +1209,6 @@ int cmd_echo(char *args) {
   return 0;
 }
 
-int cmd_sync(char *args) {
-  printk("Syncing cached buffers to disk... Done.\n");
-  return 0;
-}
 
 int cmd_nproc(char *args) {
   printk("1\n");
@@ -1531,7 +1524,6 @@ shell_command_t commands_table[] = {
      "Print formatted text (supports \\n, \\t, %u for user, %t for tty)",
      cmd_printf},
     {"stty", "Change and print terminal line settings", cmd_stty},
-    {"sync", "Flush file system buffers", cmd_sync},
     {"pwait", "Wait for process termination", cmd_pwait},
     {"nproc", "Print the number of processing units available", cmd_nproc},
     {"expr", "Evaluate expressions", cmd_expr},

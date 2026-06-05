@@ -1,0 +1,1 @@
+obj-y += fs/tmpfs/tmpfs.o

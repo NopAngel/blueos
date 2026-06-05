@@ -6,6 +6,7 @@
 
 #include <auth.h>
 #include <drivers/cdrom.h>
+#include <sys.h>
 #include <drivers/disk.h>
 #include <drivers/hypervisor.h>
 #include <drivers/keyboard.h>
@@ -62,7 +63,7 @@ static bool _has_installed_ext2(void) {
 
 void _mount_() {
   boot_msg("MOUNT", "started...", 0);
-  fs_init();
+  ramfsinit();
   boot_msg("FS", "VFS and RootFS ready", 0);
   tmp_init();
 
@@ -120,29 +121,6 @@ void _mount_() {
 
   vfs_touch("kernel/VERSION", UTS_RELEASE);
   vfs_touch("tmp/log.txlog", "LOG GENERATED!");
-
-}
-
-void boot__detect() {
-  printk("\n      \033[34mBLUE    OS    \033[0m \n");
-  printk("=================================\n\n");
-  
-  printk("1.   Boot in \033[32mLive Mode\033[0m\n");
-  printk("2.   Reboot\n");
-  printk("3.   Shutdown\n\n");
-
-  printk("=================================\n");
-  char c = raw_get_char();
-  if (c == '1') {
-    printk("\nBooting in Live Mode...\n");
-  } else if (c == '2') {
-    sys_reboot();
-  } else if (c == '3') {
-    sys_shutdown();
-  } else {
-    boot_msg("USER", "Invalid option. Booting in Live Mode by default...\n", 1);
-  }
-
 
 }
 
@@ -230,6 +208,9 @@ void init_all(void *arch_data) {
   boot_msg("LEDS", "LED subsystem ready", 0);
   profile_init(0x100000, 0x200000);
   boot_msg("PROFILE", "Profiler active", 0);
+
+  sysinit_run();
+  boot_msg("SYS", "All components initialized", 0);
 
 
   printk("\nAvailable disks:\n");

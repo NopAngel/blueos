@@ -48,7 +48,10 @@ void ata_read_sector(uint32_t lba, uint8_t* buffer) {
 
 void ata_write_sector(uint32_t lba, uint8_t* buffer) {
     ata_wait_bsy();
-
+    if (ata_wait_bsy() != 0) {
+        printk("ERROR CRÍTICO: ATA ocupado, no se pudo escribir el sector %d\n", lba);
+        return;
+    }
     outb(ATA_PRIMARY_DRIVE_SEL, 0xE0 | ((lba >> 24) & 0x0F));
     outb(ATA_PRIMARY_SECCOUNT, 1);
     outb(ATA_PRIMARY_LBA_LOW,  (uint8_t)lba);

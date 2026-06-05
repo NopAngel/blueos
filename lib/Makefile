@@ -1,1 +1,1 @@
-obj-y += network.o
+obj-y += lib/network.o

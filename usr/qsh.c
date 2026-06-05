@@ -35,11 +35,11 @@ typedef enum {
 
 typedef struct Source {
   SourceType type;
-  char *str;           /* Pointer to string or current line buffer */
-  int line;            /* Current line number */
-  const char *file;    /* Filename if type is SFILE */
-  int fd;              /* Index in file_table */
-  struct Source *next; /* Source stack */
+  char *str;
+  int line;
+  const char *file;
+  vfs_node_t *node;    
+  struct Source *next;
 } Source;
 
 typedef struct env {
@@ -55,7 +55,6 @@ static int exstat = 0; /* Exit status of last command */
 
 extern void expand_variables(char *input, char *output);
 extern int execute_single_with_return(char *input);
-extern int find_file(const char *name);
 extern char raw_get_char();
 extern FileEntry file_table[];
 extern unsigned int total_memory_kb;
@@ -256,8 +255,7 @@ int qsh_shell(Source *s) {
   bool condition_met = false;
 
   if (s->type == SFILE) {
-    content = file_table[s->fd].content;
-    // En modo script no necesitamos prompt interactivo
+    content = (char*)s->node->ptr;;
   }
 
   while (1) {
@@ -422,14 +420,19 @@ int cmd_qsh(char *args) {
     source_stack = stdin_source.next;
     return res;
   }
-  int idx = find_file(args);
-  if (idx == -1) {
+  vfs_node_t* node = vfs_findfile(args);
+  if (node == NULL) { // Comparamos contra NULL
     printk("qsh: %s: No such file\n", args);
     return 1;
   }
 
   Source script_source = {
-      .type = SFILE, .file = args, .fd = idx, .line = 0, .next = source_stack};
+      .type = SFILE, 
+      .file = args, 
+      .node = node,
+      .line = 0, 
+      .next = source_stack
+  };
   source_stack = &script_source;
   qsh_env_t kernel_env = {.type = 1, .oenv = e, .source = &script_source};
   e = &kernel_env;

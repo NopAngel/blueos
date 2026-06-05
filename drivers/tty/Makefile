@@ -1,0 +1,1 @@
+obj-y += drivers/tty/tty.o

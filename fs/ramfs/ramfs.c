@@ -16,12 +16,12 @@
 #include <fs/fs.h>
 #include <fs/vfs.h>
 
-#define VFS_MAX_ENTRIES 200
+#define VFS_MAX_CONTENT 200
 
 unsigned int directory_count = 0;
 unsigned int file_count = 0;
-extern char data_blocks[VFS_MAX_ENTRIES][VFS_MAX_CONTENT];
-bool fs_needs_sync = false;
+extern char data_blocks[VFS_MAX_CONTENT][VFS_MAX_CONTENT];
+bool ramfsneeds_sync = false;
 unsigned int current_directory = 0;
 
 
@@ -36,7 +36,7 @@ FileEntry file_table[MAX_FILES];
 
 
 
-void fs_init_clean() {
+void ramfsinit_clean() {
 
     strcpy(directory_table[0].name, "/");
     directory_table[0].parent_dir = 0;
@@ -48,10 +48,10 @@ void fs_init_clean() {
 
 
 /**
- * fs_init() - Initialize the root filesystem.
+ * ramfsinit() - Initialize the root filesystem.
  * * Must be called during kernel boot.
  */
-void fs_init() {
+void ramfsinit() {
     /* Create the Root (/) directory at index 0 */
 
     strcpy(directory_table[0].name, "/");
@@ -64,7 +64,7 @@ void fs_init() {
  * mkdir() - Create a new directory within the current scope.
  * @dirname: Name of the new directory.
  */
-int mkdir(const char *dirname) {
+int ramfs_mkdir(const char *dirname) {
     if (directory_count >= MAX_DIRECTORIES) return -1;
 
     /* Check if directory already exists in the current level */
@@ -88,7 +88,7 @@ int mkdir(const char *dirname) {
 /**
  * touch() - Create or update a file in the current directory.
  */
-int touch(const char *filename, const char *content) {
+int ramfs_touch(const char *filename, const char *content) {
     /* Search in current directory only */
     for (unsigned int i = 0; i < file_count; i++) {
         if (file_table[i].parent_dir == current_directory &&
@@ -107,14 +107,14 @@ int touch(const char *filename, const char *content) {
         file_count++;
         return 0;
     }
-    fs_needs_sync = true;
+    ramfsneeds_sync = true;
     return -1;
 }
 
 /**
  * list_items() - List content of the current directory (ls).
  */
-void list_items() {
+void ramfs_list_items() {
     printk("\n");
     printk("  .  \n  .. ");
     unsigned int count = 0;
@@ -153,7 +153,7 @@ void list_items() {
 /**
  * cd() - Change current directory index.
  */
-int cd(const char *dirname) {
+int ramfs_cd(const char *dirname) {
     if (strcmp(dirname, "/") == 0) {
         current_directory = 0;
         return 0;
@@ -179,7 +179,7 @@ int cd(const char *dirname) {
 /**
  * pwd() - Print Working Directory using recursive path resolution.
  */
-void pwd() {
+void ramfs_pwd() {
     if (current_directory == 0) {
         printk("\n/\n");
         return;
@@ -188,7 +188,7 @@ void pwd() {
     printk("\n/%s\n", directory_table[current_directory].name);
 }
 
-void cat (const char *filename) {
+void ramfs_cat (const char *filename) {
     for (unsigned int i = 0; i < file_count; i++) {
         if (file_table[i].parent_dir == current_directory &&
             strcmp(file_table[i].name, filename) == 0) {
@@ -199,7 +199,7 @@ void cat (const char *filename) {
     printk("\nERR: Not found: %s\n", filename);
 }
 
-void fs_rm(const char *name) {
+void ramfs_rm(const char *name) {
     int found = 0;
 
     for (unsigned int i = 0; i < file_count; i++) {
@@ -218,16 +218,16 @@ void fs_rm(const char *name) {
     }
 
     if (!found) {
-        printk("\nfs_rm: file '%s' not found.\n", name);
+        printk("\nramfsrm: file '%s' not found.\n", name);
     }
 }
 
-void fs_rmdir(const char *name) {
+void ramfsrmdir(const char *name) {
     int found = 0;
 
     for (unsigned int i = 0; i < directory_count; i++) {
         if (i == 0 && strcmp(name, "/") == 0) {
-            printk("\nfs_rmdir: cannot remove root directory.\n");
+            printk("\nramfsrmdir: cannot remove root directory.\n");
             return;
         }
 
@@ -237,7 +237,7 @@ void fs_rmdir(const char *name) {
 
             for (unsigned int f = 0; f < file_count; f++) {
                 if (file_table[f].parent_dir == i) {
-                    printk("\nfs_rmdir: directory not empty.\n");
+                    printk("\nramfsrmdir: directory not empty.\n");
                     return;
                 }
             }
@@ -254,14 +254,14 @@ void fs_rmdir(const char *name) {
     }
 
     if (!found) {
-        printk("\nfs_rmdir: directory '%s' not found.\n", name);
+        printk("\nramfsrmdir: directory '%s' not found.\n", name);
     }
 }
 
 
 
 
-int find_file(const char* name) {
+int ramfs_find_file(const char* name) {
     for (unsigned int i = 0; i < file_count; i++) {
         if (strcmp(file_table[i].name, name) == 0) {
             return (int)i;
@@ -270,8 +270,8 @@ int find_file(const char* name) {
     return -1;
 }
 
-void fs_read_at(const char* filename, uint32_t offset, uint32_t size, char* buffer) {
-    int idx = find_file(filename);
+void ramfsread_at(const char* filename, uint32_t offset, uint32_t size, char* buffer) {
+    int idx = ramfs_find_file(filename);
     if (idx != -1) {
         memcpy(buffer, file_table[idx].content + offset, size);
     }

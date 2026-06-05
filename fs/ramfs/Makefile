@@ -1,0 +1,1 @@
+obj-y += fs/ramfs/ramfs.o

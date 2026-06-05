@@ -1,1 +1,3 @@
-obj-y += hal.o memory.o pic.o
+obj-y += arch/common/hal.o \
+ 		 arch/common/memory.o \
+		 arch/common/pic.o

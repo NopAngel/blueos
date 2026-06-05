@@ -1,1 +1,1 @@
-obj-y += sha256.o
+obj-y += crypto/sha256.o

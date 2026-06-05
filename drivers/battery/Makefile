@@ -1,0 +1,1 @@
+obj-y += drivers/battery/battery.o

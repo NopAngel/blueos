@@ -1,0 +1,1 @@
+obj-y += drivers/gpio/gpio.o

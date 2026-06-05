@@ -1,0 +1,1 @@
+obj-y += drivers/core/live_config.o

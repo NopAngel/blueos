@@ -1,4 +1,29 @@
-obj-y += irq.o keyboard_io.o apic.o kvm.o timer.o shell.o intel.o acpi.o \
-		 amd.o interrupts-a.o gdt.o gdt-a.o virt.o cmdline.o vmm.o elf.o \
-		 userspace_a.o loader.o arch.o syscall.o boot.o panic.o interrupts.o \
-		 interrupt_entry.o profile.o switch.o bg.o syscall.o idt.o
+obj-y += arch/x86/irq.o \
+         arch/x86/keyboard_io.o \
+         arch/x86/apic.o \
+         arch/x86/kvm.o \
+         arch/x86/timer.o \
+         arch/x86/shell.o \
+         arch/x86/intel.o \
+         arch/x86/acpi.o \
+         arch/x86/amd.o \
+         arch/x86/interrupts-a.o \
+         arch/x86/gdt.o \
+         arch/x86/gdt-a.o \
+         arch/x86/virt.o \
+         arch/x86/cmdline.o \
+         arch/x86/vmm.o \
+         arch/x86/elf.o \
+         arch/x86/userspace_a.o \
+         arch/x86/loader.o \
+         arch/x86/arch.o \
+         arch/x86/syscall.o \
+         arch/x86/boot.o \
+         arch/x86/panic.o \
+         arch/x86/interrupts.o \
+         arch/x86/interrupt_entry.o \
+         arch/x86/profile.o \
+         arch/x86/switch.o \
+         arch/x86/bg.o \
+		 arch/x86/isr.o \
+         arch/x86/idt.o

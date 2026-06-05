@@ -1,0 +1,1 @@
+obj-y += drivers/input/keyboard/8042/keyboard.o

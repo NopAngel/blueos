@@ -1,0 +1,1 @@
+obj-y += drivers/soc/soc_intel.o
