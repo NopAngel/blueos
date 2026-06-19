@@ -163,13 +163,12 @@ doc:
 
 clean:
 	@echo -e "  CLEAN     $(BUILD_DIR)"
-	$(Q)rm -rf $(BUILD_DIR) blueos.iso
+	$(Q)rm -rf $(BUILD_DIR) blueos.iso initrd.tar
 	@echo "  CLEAN     $(GEN_DIR)"
 	$(Q)rm -rf $(GEN_DIR)
 
 help:
-	@echo -e "Sistema de Construcción Universal de BlueOS (B U M)"
-	@echo -e "Uso: make [meta] [Opciones]"
+	@echo -e "Use: make [meta] [options]"
 	@echo -e ""
 	@echo -e " OPTIONS: "
 	@echo -e "  all          - Compiles the entire kernel (Default)"
@@ -189,40 +188,33 @@ help:
 
 APPS := touch echo ls cd main cat reboot
 
-# FIXED: Los binarios finales van a initrd/bin/
 USER_APPS_BIN := $(patsubst %, initrd/bin/%, $(APPS))
 
-# FIXED: Forzamos a que los .o de usuario se guarden en build/user/ para evitar choques
 USER_OBJS     := $(patsubst %, build/user/%.o, $(APPS)) build/user/libuser.o
 
-# Flags de compilación limpios y estrictos para el espacio de usuario
 CFLAGS_USER = -m32 -march=i386 -ffreestanding -fno-builtin -nostdlib \
               -fno-stack-protector -nostdinc -fno-pic -fno-pie \
               -fno-asynchronous-unwind-tables -Iinclude
 
-# Regla principal para empaquetar el Ramdisk (agrega dependencias reales)
 initrd.tar: $(USER_APPS_BIN)
 	@echo "  TAR       Empaquetando initrd..."
 	@mkdir -p initrd/bin initrd/etc
 	@echo "README.TXT" > initrd/README.TXT
 	@echo "Welcome to BlueOS! @Copyright 2026 GPL-3.0" > initrd/etc/motd
-	@rm -f initrd.tar  # <--- Agrega esto
+	@rm -f initrd.tar  
 	@cd initrd && tar --format=ustar -cvf ../initrd.tar bin etc README.TXT
 
-# FIXED: Regla explícita para enlazar cada binario de usuario sin ambigüedades
 initrd/bin/%: build/user/%.o build/user/libuser.o
 	@echo "  LD        $@"
 	@mkdir -p initrd/bin        
 	$(Q)$(LD) -m elf_i386 -T sbin/user.ld build/user/$*.o build/user/libuser.o -o build/user/$*.elf
 	$(Q)$(OBJCOPY) -O binary build/user/$*.elf $@
 
-# FIXED: Regla dedicada para compilar la librería de usuario en su zona aislada
 build/user/libuser.o: sbin/libuser.c
 	@mkdir -p build/user
 	@echo "  CC (USR)  $<"
 	$(Q)$(CC) $(CFLAGS_USER) -c $< -o $@
 
-# FIXED: Regla dedicada para compilar los fuentes de sbin/ hacia build/user/
 build/user/%.o: sbin/%.c
 	@mkdir -p build/user
 	@echo "  CC (USR)  $<"
