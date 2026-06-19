@@ -1,0 +1,1 @@
+obj-y += drivers/xen/xen.o

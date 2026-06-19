@@ -8,7 +8,6 @@
 void serial_init(void);
 static int is_transmit_empty(void);
 void serial_putc(char c);
-void serial_puts(const char* str);
-
+void serial_puts(const char *str);
 
 #endif

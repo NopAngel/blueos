@@ -5,9 +5,9 @@
 #include <drivers/i2c.h>
 #include <drivers/keyboard.h>
 #include <drivers/power.h>
+#include <fs/btrfs.h>
 #include <fs/ext2.h>
 #include <fs/fs.h>
-#include <fs/btrfs.h>
 #include <fs/vfs.h>
 #include <kernel/colors.h>
 #include <kernel/commands.h>
@@ -43,6 +43,7 @@ typedef struct {
 loop_device_t loop_devices[4];
 
 /* Global and External Dependencies */
+extern void sys_exec(const char *path, int argc, char **argv);
 extern void execute_shell_command(char *input);
 extern int vmm_map_page(uintptr_t vaddr, uintptr_t paddr, uint32_t flags);
 extern uint32_t system_ticks;
@@ -195,6 +196,14 @@ char raw_get_char() {
   }
 }
 
+void trim_trailing_space(char *str) {
+    int len = strlen(str);
+    while (len > 0 && str[len - 1] == ' ') {
+        str[len - 1] = '\0';
+        len--;
+    }
+}
+
 int has_permission(uint32_t file_mode, char mask) {
 
   if (file_mode == 0)
@@ -280,20 +289,22 @@ void parse_ip(char *str, uint8_t *ip_out) {
 }
 
 int copy_file(char *source, char *dest) {
-    vfs_node_t* src_node = vfs_findfile(source);
-    if (!src_node) return -1;
+  vfs_node_t *src_node = vfs_findfile(source);
+  if (!src_node)
+    return -1;
 
-    // El contenido está guardado en el puntero del nodo
-    char *content = (char*)src_node->ptr;
+  // El contenido está guardado en el puntero del nodo
+  char *content = (char *)src_node->ptr;
 
-    // Creamos el destino
-    if (vfs_touch(dest, content) != 0) return -1;
-    
-    return 0;
+  // Creamos el destino
+  if (vfs_touch(dest, content) != 0)
+    return -1;
+
+  return 0;
 }
 
 int move_file(char *source, char *dest) {
-  vfs_node_t* src_node = vfs_findfile(source);
+  vfs_node_t *src_node = vfs_findfile(source);
 
   if (src_node == NULL) {
     printk("ERR: The source '%s' does not exist.\n", source);
@@ -544,6 +555,53 @@ int cmd_kbd(char *args) {
   return 0;
 }
 
+
+
+
+int shell_try_execute_binary(const char *cmd_name, char *args) {
+    char buffer[256];
+    int i = 0, j = 0;
+
+    // 1. Copiamos manualmente el comando al buffer
+    while (cmd_name[i] != '\0' && i < 250) {
+        buffer[i] = cmd_name[i];
+        i++;
+    }
+    
+    // 2. Agregamos un espacio
+    buffer[i++] = ' ';
+
+    // 3. Copiamos manualmente los argumentos al buffer
+    while (args[j] != '\0' && i < 255) {
+        buffer[i++] = args[j++];
+    }
+    buffer[i] = '\0'; // Aseguramos el terminador de string
+
+    // Ahora 'buffer' tiene "comando argumentos" listo para strtok
+    char *argv[16];
+    int argc = 0;
+
+    char *token = strtok(buffer, " ");
+    if (!token) return -1;
+    
+    char binary_path[64];
+
+    strcpy(binary_path, "/bin/"); 
+    strcat(binary_path, token);
+
+    argv[argc++] = token;
+
+    while ((token = strtok(NULL, " ")) != NULL) {
+        if (argc < 15) {
+            argv[argc++] = token;
+        }
+    }
+    argv[argc] = NULL;
+
+   // sys_exec(binary_path, argc, argv); exec
+    return 0;
+}
+
 int cmd_help(char *args) {
   printk("\nBlueOS Available Commands:\n");
   for (int i = 0; commands_table[i].name != 0; i++) {
@@ -573,49 +631,9 @@ extern uint32_t pci_read_config(uint8_t bus, uint8_t slot, uint8_t func,
                                 uint8_t offset);
 #endif
 
-int cmd_cat(char *args) {
-    if (strlen(args) == 0) {
-        printk("Usage: cat <filename>\n");
-        return 1;
-    }
 
-    // 1. Buscar el archivo
-    vfs_node_t *node = vfs_findfile(args);
-    if (!node) {
-        printk("cat: %s: No such file or directory\n", args);
-        return 1;
-    }
 
-    // 2. Preparar buffer (usamos el tamaño del archivo)
-    uint32_t size = node->size;
-    if (size == 0) {
-        printk("(archivo vacio)\n");
-        return 0;
-    }
-
-    char *buffer = (char*)kmalloc(size + 1); // +1 para el terminador nulo
-    mm_memset(buffer, 0, size + 1);
-
-    // 3. Leer el contenido
-    int bytes_read = vfs_read(node, buffer, size, 0);
-    
-    if (bytes_read > 0) {
-        printk("%s\n", buffer);
-    } else {
-        printk("cat: error al leer el archivo\n");
-    }
-
-    // 4. Liberar memoria
-    kfree(buffer);
-    
-    return 0;
-} 
-
-int cmd_main(char *args) { printk("\nTHANKS GOD FOR ALL!!\n"); }
-
-int cmd_flush(char *args) {
-  btrfs_flush_cache();
-}
+int cmd_flush(char *args) { btrfs_flush_cache(); }
 
 int cmd_mv(char *args) {
   if (strlen(args) == 0) {
@@ -722,7 +740,7 @@ int cmd_losetup(char *args) {
     j++;
   }
   file_name[j] = '\0';
-  vfs_node_t* file_node = vfs_findfile(file_name);
+  vfs_node_t *file_node = vfs_findfile(file_name);
   if (file_node == NULL) {
     printk("Error: File '%s' not found.\n", file_name);
     return 1;
@@ -787,40 +805,6 @@ int cmd_whoami(char *args) {
 
 static int vfs_mkdir_recursive(const char *path);
 
-int cmd_ls(char *args) {
-  vfs_node_t *node = (strlen(args) > 0) ? vfs_lookup(args) : vfs_get_current();
-  if (!node) {
-    if (strlen(args) > 0)
-      printk("ls: %s: No such file or directory\n", args);
-    return 1;
-  }
-
-  if (node->type == VFS_TYPE_DIR) {
-    struct vfs_dirent dirent;
-    int idx = 0;
-    while (vfs_readdir(node, idx, &dirent) == 0) {
-      printk("%s  ", dirent.name);
-      idx++;
-    }
-    printk("\n");
-  } else {
-    printk("%s\n", node->name);
-  }
-  return 0;
-}
-
-
-int cmd_cd(char *args) {
-  if (strlen(args) == 0) {
-    return vfs_chdir("/") == 0 ? 0 : 1;
-  }
-
-  if (vfs_chdir(args) != 0) {
-    printk("cd: %s: No such directory\n", args);
-    return 1;
-  }
-  return 0;
-}
 
 int cmd_pwd(char *args) {
   char cwd[256] = {0};
@@ -869,7 +853,7 @@ static int vfs_mkdir_recursive(const char *path) {
     }
 
     if (!vfs_lookup(current_path)) {
-      if (vfs_mkdir(current_path) != 0) {
+      if (vfs_mkdir(current_path, 0755) != 0) {
         return -1;
       }
     }
@@ -903,45 +887,7 @@ int cmd_env(char *args) {
   }
 }
 
-int cmd_mkdir(char *args) {
-    // Si tu función vfs_mkdir solo acepta el nombre, llámala así:
-    return vfs_mkdir(args); 
-}
 
-int cmd_chmod(char *args) {
-  if (strlen(args) == 0) {
-    printk("Use: chmod <mode> <filename>\nExample: chmod 777 lmfao.txt\n");
-    return 1;
-  }
-
-  char *mode_str = args;
-  char *file_name = strchr(args, ' ');
-
-  if (!file_name) {
-    printk("ERR: The file name is missing.\n");
-    return 1;
-  }
-
-  *file_name = '\0';
-  file_name++;
-  while (*file_name == ' ')
-    file_name++;
-
-  // 1. Buscamos el nodo
-  vfs_node_t* node = vfs_findfile(file_name);
-  if (node == NULL) {
-    printk("ERR: The file '%s' does not exist.\n", file_name);
-    return 1;
-  }
-
-  int new_mode = simple_strtol(mode_str, NULL, 8);
-
-  // Usamos 'flags' en lugar de 'permissions'
-  node->flags = (uint32_t)new_mode; 
-  
-  printk("Permissions for '%s' updated to %o\n", file_name, new_mode);
-  return 0;
-}
 
 int cmd_usr(char *args) {
   if (strlen(args) == 0) {
@@ -983,13 +929,6 @@ int cmd_usr(char *args) {
   }
 }
 
-int cmd_touch(char *args) {
-  if (strlen(args) > 0) {
-    vfs_touch(args, "");
-    printk("\nFile '%s' created.\n", args);
-  } else
-    printk("\nUsage: touch <name>\n");
-}
 
 int cmd_rm(char *args) {
   bool recursive = false;
@@ -1200,15 +1139,6 @@ int cmd_printf(char *args) {
   return 0;
 }
 
-int cmd_echo(char *args) {
-  if (strlen(args) == 0) {
-    printk("\n");
-    return 0;
-  }
-  printk("%s\n", args);
-  return 0;
-}
-
 
 int cmd_nproc(char *args) {
   printk("1\n");
@@ -1253,7 +1183,6 @@ int cmd_pwait(char *args) {
   timer_sleep(500);
   return 0;
 }
-
 
 int cmd_dd(char *args) {
   if (strlen(args) == 0) {
@@ -1424,6 +1353,59 @@ int cmd_tree(char *args) {
   return 0;
 }
 
+int cmd_mkdir(char *args) {
+  if (args == "") {
+  } else {
+      vfs_mkdir(args, 0755);
+  }
+  return 0;
+}
+
+int cmd_touch(char *args) {
+  if (strlen(args) > 0) {
+    vfs_touch(args, "");
+    printk("\nFile '%s' created.\n", args);
+  } else
+    printk("\nUsage: touch <name>\n");
+}
+
+
+int cmd_ls(char *args) {
+  printk(".\n..\n");
+  vfs_node_t *node = (strlen(args) > 0) ? vfs_lookup(args) : vfs_get_current();
+  if (!node) {
+    if (strlen(args) > 0)
+      printk("ls: %s: No such file or directory\n", args);
+    return 1;
+  }
+
+  if (node->type == VFS_TYPE_DIR) {
+    struct vfs_dirent dirent;
+    int idx = 0;
+    while (vfs_readdir(node, idx, &dirent) == 0) {
+      printk("%s  ", dirent.name);
+      idx++;
+    }
+    printk("\n");
+  } else {
+    printk("%s\n", node->name);
+  }
+  return 0;
+}
+
+
+int cmd_cd(char *args) {
+  if (strlen(args) == 0) {
+    return vfs_chdir("/") == 0 ? 0 : 1;
+  }
+
+  if (vfs_chdir(args) != 0) {
+    printk("cd: %s: no such directory\n", args);
+    return 1;
+  }
+  return 0;
+}
+
 int cmd_ed(char *args) {
   if (strlen(args) == 0) {
     printk("ed: Filename required\n");
@@ -1470,6 +1452,7 @@ int cmd_ed(char *args) {
 
 /* --- Autocomplete Logic --- */
 
+
 void list_matches(char *prefix) {
   int len = strlen(prefix);
   printk("\nPossible commands:\n");
@@ -1485,22 +1468,22 @@ void list_matches(char *prefix) {
   printk("\n");
 }
 
+
+
 /* --- Commands Dispatch Table --- */
 
 shell_command_t commands_table[] = {
-    {"main", "THANKS YOU GOD FOR EVERTHING!", cmd_main},
     {"help", "Show this help menu", cmd_help},
-    {"echo", "Show a message", cmd_echo},
     {"version", "Show system version", cmd_version},
+    {"mkdir", "Create a dir", cmd_mkdir},
     {"clear", "Clear the screen", cmd_clear},
     {"whoami", "Show current user", cmd_whoami},
+    {"touch", "Create empty file", cmd_touch},
     {"ls", "List files", cmd_ls},
     {"cd", "Change directory", cmd_cd},
     {"pwd", "Print working directory", cmd_pwd},
-    {"mkdir", "Create directory", cmd_mkdir},
-    {"touch", "Create empty file", cmd_touch},
     {"usr", "User management (add <name> <pass>)", cmd_usr},
-    {"cat", "Read file content", cmd_cat},
+
     {"mdev", "Device node manager (mdev -s)", cmd_mdev},
     {"rm", "Delete file", cmd_rm},
     {"uptime", "Shows the current date", cmd_uptime},
@@ -1517,8 +1500,6 @@ shell_command_t commands_table[] = {
     {"bc", "Basic Calculator", cmd_bc},
     {"cp", "Copy files or directories", cmd_cp},
     {"mv", "Move or rename files/directories", cmd_mv},
-    {"chmod", "It allows you to set permissions for directories/files",
-     cmd_chmod},
     {"qsh", "QSH, Bash alternative", cmd_qsh},
     {"printf",
      "Print formatted text (supports \\n, \\t, %u for user, %t for tty)",
@@ -1562,16 +1543,28 @@ void print_prompt() {
   }
 }
 
+
 int execute_single_with_return(char *input) {
   char expanded[INPUT_BUFFER_SIZE];
   expand_variables(input, expanded);
 
   char *args = get_args(expanded);
+  
+  /* 1. Primero buscamos en los comandos internos del Kernel */
   for (int i = 0; commands_table[i].name != 0; i++) {
     if (strcmp(expanded, commands_table[i].name) == 0) {
-      return commands_table[i].function(args); // return 0 or 1
+      return commands_table[i].function(args); 
     }
   }
+
+  /* 2. FALLBACK: Si no es interno, ¡es un binario externo de usuario! */
+  /* Intentamos buscar y ejecutar el binario en /bin/ (ej: /bin/main) */
+  int bin_status = shell_try_execute_binary(expanded, args);
+  
+  if (bin_status == 0) {
+      return 0; // El binario se ejecutó y retornó con éxito
+  }
+
   printk("Unknown command: %s\n", expanded);
   return 1;
 }

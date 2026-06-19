@@ -1,7 +1,6 @@
 #include <kernel/printk.h>
 #include <kernel/sched.h>
 
-
 task_t *current_task = 0;
 
 static task_t *ready_queue[MAX_TASKS];

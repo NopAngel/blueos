@@ -5,6 +5,6 @@
 
 void ansi_tty_init();
 void ansi_tty_putc(char c);
-void ansi_tty_puts(const char* s);
+void ansi_tty_puts(const char *s);
 
 #endif

@@ -1,6 +1,6 @@
 
-#include <lib/string.h>
 #include <kernel/printk.h>
+#include <lib/string.h>
 /*
 static event_node_t event_table[MAX_EVENTS];
 static int event_count = 0;
@@ -12,7 +12,7 @@ void eventfs_init() {
 
 int eventfs_register(char* name, uint32_t (*callback)()) {
     if (event_count >= MAX_EVENTS) return -1;
-    
+
     strcpy(event_table[event_count].name, name);
     event_table[event_count].read_callback = callback;
     event_count++;

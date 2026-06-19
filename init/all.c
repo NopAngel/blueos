@@ -4,33 +4,40 @@
  * Professional & Multi-arch version.
  */
 
+#include <arch/x86/timer.h>
 #include <auth.h>
 #include <drivers/cdrom.h>
-#include <sys.h>
 #include <drivers/disk.h>
 #include <drivers/hypervisor.h>
 #include <drivers/keyboard.h>
 #include <drivers/leds.h>
-#include <drivers/power.h>
 #include <drivers/pci.h>
 #include <drivers/pinctrl.h>
+#include <drivers/power.h>
 #include <drivers/tmpfs.h>
 #include <drivers/tty.h>
+#include <drivers/usb_core.h>
 #include <drivers/vt100.h>
 #include <fs/ext2.h>
 #include <fs/fs.h>
+#include <fs/initramfs.h>
 #include <fs/vfs.h>
+#include <fs/xfs.h>
 #include <kernel/arch.h> // Universal arch functions
 #include <kernel/arch.h>
 #include <kernel/panic.h>
 #include <kernel/printk.h>
-#include <arch/x86/timer.h>
 #include <mm/memory.h>
 #include <multiboot.h>
 #include <profile.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys.h>
 #include <version.h>
+
+extern vfs_ops_t xfs_ops;
+
+extern struct vfs_node *g_root_node;
 
 extern void scsi_init();
 extern void isapnp_init();
@@ -61,80 +68,17 @@ static bool _has_installed_ext2(void) {
   return sb->s_magic == EXT2_MAGIC;
 }
 
-void _mount_() {
-  boot_msg("MOUNT", "started...", 0);
-  ramfsinit();
-  boot_msg("FS", "VFS and RootFS ready", 0);
-  tmp_init();
-
-  boot_msg("PARTITION", "started...", 0);
-  bool installed = _has_installed_ext2();
-
-  const char *minimal_dirs[] = {"/kernel", "/tmp", "/etc", "/dev"};
-
-  const char *system_dirs[] = {
-      "/etc",    "/conf", "/kernel", "/BOOT", "/usr",  "/tmp", "/mnt",   "/sys",
-      "/rescue", "/bin",  "/boot",   "/dev",  "/home", "/lib", "/media", "/opt",
-      "/proc",   "/run",  "/sbin",   "/srv",  "/var",  "/root"};
-
-  const char **dirs = installed ? system_dirs : minimal_dirs;
-  int dir_count = installed ? sizeof(system_dirs) / sizeof(system_dirs[0])
-                            : sizeof(minimal_dirs) / sizeof(minimal_dirs[0]);
-
-  for (int i = 0; i < dir_count; i++) {
-    vfs_node_t *check = vfs_lookup(dirs[i]);
-    if (!check) {
-      vfs_mkdir(dirs[i]);
-    }
-  }
-
-  if (vfs_chdir("/etc") == 0) {
-    vfs_touch("/etc/hostname", "blueos");
-    vfs_touch("/etc/readme", readme_lol);
-    vfs_touch("/etc/version", UTS_RELEASE);
-    boot_msg("VFS", "System files created in /etc", 0);
-    vfs_chdir("/");
-  }
-
-  if (vfs_chdir("/kernel") == 0) {
-    uint32_t kernel_size = (uint32_t)(&_kernel_end - &_kernel_start);
-    if (vfs_create_binary("bluekss", &_kernel_start, kernel_size) == 0) {
-      boot_msg("VFS", "Kernel binary stored at /kernel/bluekss", 0);
-    } else {
-      boot_msg("VFS", "Failed to store kernel binary", 2);
-    }
-    vfs_chdir("/");
-  }
-
-  if (!installed) {
-    boot_msg("VFS", "Minimal live filesystem ready", 0);
-  } else {
-    ext2_set_base_lba(2048);
-    if (ext2_init()) {
-      printk("<6> EXT2: init OK, about to load root filesystem\n");
-      ext2_load_vfs_root();
-      boot_msg("VFS", "Installed filesystem loaded into VFS", 0);
-    } else {
-      boot_msg("VFS", "Installed filesystem invalid", 2);
-    }
-  }
-
-  vfs_touch("kernel/VERSION", UTS_RELEASE);
-  vfs_touch("tmp/log.txlog", "LOG GENERATED!");
-
-}
-
 
 /**
  * init_all - Main kernel entry sequence
  */
-void init_all(void *arch_data) {
+void init_all(unsigned int magic, void *arch_data) {
   printk("\n\n\n");
   mm_init(arch_data);
   uint32_t total_mb = mm_get_total() / (1024 * 1024);
   arch_early_init();
   vfs_init();
-
+  xfs_init();   
   vt100_init();
   tty_init(tty_putchar_wrapper);
   boot_msg("TTY", "Virtual console ready", 0);
@@ -175,14 +119,20 @@ void init_all(void *arch_data) {
     printk("<4> WARN: The boot device could not be determined\n");
   }
 
+
+  if (g_root_node) {
+      g_root_node->ops = &xfs_ops;
+  }
+  if (magic == MULTIBOOT_BOOTLOADER_MAGIC && (mbi->flags & MULTIBOOT_INFO_MODS)) {
+      multiboot_module_t *mod = (multiboot_module_t *)mbi->mods_addr;
+      initramfs_parse(mod->mod_start, mod->mod_end);
+  }
   current_user_index = -1;
   arch_early_init();
   boot_msg("CPU", "Architecture descriptors ready", 0);
 
   // Initialize the VT100 terminal driver by default
   init_tss(0x10, 0x90000);
-
-  
 
   arch_enable_interrupts();
   boot_msg("IRQ", "Interrupts enabled", 0);
@@ -193,8 +143,7 @@ void init_all(void *arch_data) {
   boot_msg("ISAPNP", "ISA Plug and Play subsystem loaded", 0);
   bcma_scan_bus();
   boot_msg("BCMA", "BCMA bus scanned", 0);
-  usbscan_init();
-  boot_msg("USB", "USB subsystem scan started", 0);
+  usb_core_init();
   scsi_init();
   boot_msg("SCSI", "SCSI subsystem initialized", 0);
   pci_scan_bus();
@@ -211,6 +160,8 @@ void init_all(void *arch_data) {
   sysinit_run();
   boot_msg("SYS", "All components initialized", 0);
 
+  
+
 
   printk("\nAvailable disks:\n");
   if (disk_count == 0) {
@@ -221,18 +172,15 @@ void init_all(void *arch_data) {
   }
 
 
-  _mount_();
 
 
   for (int i = 0; i < disk_count; i++) {
     printk("  [%d] %s\n", i, system_disks[i].name);
   }
 
-
   printk("Booting...\n");
- 
-  uint8_t dummy_buffer[512];
 
+  uint8_t dummy_buffer[512];
 
   printk("Done.\n\n");
 
@@ -254,7 +202,6 @@ void init_all(void *arch_data) {
   printk("\n");
 
   // add_user("root", "123");
-
 
   if (mbi->flags & (1 << 3)) { // MULTIBOOT_INFO_MODS
     multiboot_module_t *mod = (multiboot_module_t *)mbi->mods_addr;

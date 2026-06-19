@@ -2,9 +2,9 @@
 #define PINCTRL_H
 
 #ifdef x86
-    #define GPIO_BASE_ADDR 0x0500
+#define GPIO_BASE_ADDR 0x0500
 #elif defined(RISCV)
-    #define GPIO_BASE_ADDR 0x10002000 
+#define GPIO_BASE_ADDR 0x10002000
 #endif
 
 void pinctrl_init();

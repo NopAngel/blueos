@@ -1,13 +1,13 @@
 #ifndef FIRMWARE_H
 #define FIRMWARE_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct firmware {
-    size_t size;           
-    const uint8_t *data;   
-    char name[32];         
+  size_t size;
+  const uint8_t *data;
+  char name[32];
 };
 
 int request_firmware(const struct firmware **fw, const char *name);

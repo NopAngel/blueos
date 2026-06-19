@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 typedef enum {
-    SYS_POWER_ON,
-    SYS_POWER_SLEEP,
-    SYS_POWER_REBOOT,
-    SYS_POWER_OFF
+  SYS_POWER_ON,
+  SYS_POWER_SLEEP,
+  SYS_POWER_REBOOT,
+  SYS_POWER_OFF
 } power_state_t;
 
 void sys_reboot(void);

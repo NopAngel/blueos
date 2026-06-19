@@ -25,7 +25,6 @@ char kernel_log_buffer[LOG_BUFFER_SIZE];
 uint32_t log_ptr = 0;
 static int at_line_start = 1;
 
-/* Integración con GUI */
 int g_gui_enabled = 0;
 
 extern void update_cursor();

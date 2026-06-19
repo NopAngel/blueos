@@ -1,92 +1,89 @@
 // arch/x86/intel.c
-#include <stdint.h>
-#include <kernel/printk.h>
 #include <kernel/colors.h>
+#include <kernel/printk.h>
+#include <stdint.h>
 
 #define IA32_FEATURE_CONTROL_MSR 0x3A
 
-
 static inline uint64_t read_msr(uint32_t msr) {
-    uint32_t low, high;
-    asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(msr));
-    return ((uint64_t)high << 32) | low;
+  uint32_t low, high;
+  asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(msr));
+  return ((uint64_t)high << 32) | low;
 }
 
 static inline void write_msr(uint32_t msr, uint64_t val) {
-    uint32_t low = (uint32_t)val;
-    uint32_t high = (uint32_t)(val >> 32);
-    asm volatile("wrmsr" : : "a"(low), "d"(high), "c"(msr));
+  uint32_t low = (uint32_t)val;
+  uint32_t high = (uint32_t)(val >> 32);
+  asm volatile("wrmsr" : : "a"(low), "d"(high), "c"(msr));
 }
 
 int init_intel_vtx() {
-    uint32_t eax, ebx, ecx, edx;
+  uint32_t eax, ebx, ecx, edx;
 
-    asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(0));
-    if (ebx != 0x756e6547 || edx != 0x49656e69 || ecx != 0x6c65746e) {
-        boot_msg("INTEL", "No Intel processor detected. Skipping VMX.\n", 2);
-        return 0;
-    }
+  asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(0));
+  if (ebx != 0x756e6547 || edx != 0x49656e69 || ecx != 0x6c65746e) {
+    boot_msg("INTEL", "No Intel processor detected. Skipping VMX.\n", 2);
+    return 0;
+  }
 
+  asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(1));
+  if (!(ecx & (1 << 5))) {
+    boot_msg("INTEL", "This processor does not support VMX technology.\n", 2);
+    return 0;
+  }
 
-    asm volatile("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(1));
-    if (!(ecx & (1 << 5))) {
-        boot_msg("INTEL", "This processor does not support VMX technology.\n", 2);
-        return 0;
-    }
+  uint64_t feature_control = read_msr(IA32_FEATURE_CONTROL_MSR);
 
-    uint64_t feature_control = read_msr(IA32_FEATURE_CONTROL_MSR);
+  uint32_t msr_low, msr_high;
+  asm volatile("rdmsr"
+               : "=a"(msr_low), "=d"(msr_high)
+               : "c"(IA32_FEATURE_CONTROL_MSR));
 
+  if ((msr_low & 1) && !(msr_low & (1 << 2))) {
+    boot_msg("INTEL", "VMX is blocked by the BIOS (Disabled).\n", 2);
+    return 0;
+  }
 
-    uint32_t msr_low, msr_high;
-    asm volatile("rdmsr" : "=a"(msr_low), "=d"(msr_high) : "c"(IA32_FEATURE_CONTROL_MSR));
+  uint32_t cr4;
+  asm volatile("mov %%cr4, %0" : "=r"(cr4));
+  cr4 |= (1 << 13);
+  asm volatile("mov %0, %%cr4" : : "r"(cr4));
 
-    if ((msr_low & 1) && !(msr_low & (1 << 2))) {
-        boot_msg("INTEL", "VMX is blocked by the BIOS (Disabled).\n", 2);
-        return 0;
-    }
-
-
-    uint32_t cr4;
-    asm volatile("mov %%cr4, %0" : "=r"(cr4));
-    cr4 |= (1 << 13);
-    asm volatile("mov %0, %%cr4" : : "r"(cr4));
-
-    boot_msg("INTEL", "Virtualization (VMX) successfully enabled.\n", 0);
-    return 1;
+  boot_msg("INTEL", "Virtualization (VMX) successfully enabled.\n", 0);
+  return 1;
 }
 
-void* _allocate_vmx_region() {
-    return 0; //
+void *_allocate_vmx_region() {
+  return 0; //
 }
 
-void _init_vmcs(uint32_t* vmcs_ptr, uint32_t vmx_basic_low) {
+void _init_vmcs(uint32_t *vmcs_ptr, uint32_t vmx_basic_low) {
 
-    *vmcs_ptr = vmx_basic_low;
-
+  *vmcs_ptr = vmx_basic_low;
 }
 
 int setup_vmcs() {
-    void* vmcs_ptr = _allocate_vmx_region();
+  void *vmcs_ptr = _allocate_vmx_region();
 
-    uint32_t vmx_basic_low, vmx_basic_high;
-    asm volatile("rdmsr" : "=a"(vmx_basic_low), "=d"(vmx_basic_high) : "c"(0x480));
+  uint32_t vmx_basic_low, vmx_basic_high;
+  asm volatile("rdmsr"
+               : "=a"(vmx_basic_low), "=d"(vmx_basic_high)
+               : "c"(0x480));
 
-    _init_vmcs(vmcs_ptr, vmx_basic_low);
+  _init_vmcs(vmcs_ptr, vmx_basic_low);
 
-    uint8_t error;
-    asm volatile (
-        "vmptrld %[region];"
-        "setna %[err]"
-        : [err] "=rm" (error)
-        : [region] "m" (vmcs_ptr)
-        : "cc", "memory"
-    );
+  uint8_t error;
+  asm volatile("vmptrld %[region];"
+               "setna %[err]"
+               : [err] "=rm"(error)
+               : [region] "m"(vmcs_ptr)
+               : "cc", "memory");
 
-    if (error) {
-        boot_msg("INTEL", "Error loading VMCS (VMPTRLD failure).\n", 2);
-        return -1;
-    }
+  if (error) {
+    boot_msg("INTEL", "Error loading VMCS (VMPTRLD failure).\n", 2);
+    return -1;
+  }
 
-    boot_msg("INTEL", "VMCS loaded and ready to configure interrupts.\n", 0);
-    return 0;
+  boot_msg("INTEL", "VMCS loaded and ready to configure interrupts.\n", 0);
+  return 0;
 }

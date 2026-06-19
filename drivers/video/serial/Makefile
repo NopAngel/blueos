@@ -1,0 +1,1 @@
+obj-y += drivers/video/serial/serial.o

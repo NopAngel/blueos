@@ -1,88 +1,220 @@
 #include <kernel/printk.h>
-#include <kernel/colors.h>
 #include <kernel/syscall.h>
-#include <drivers/vt100.h>
-#include <drivers/keyboard.h>
-#include <fs/fs.h>
+#include <kernel/errno.h>
+#include <kernel/malloc.h>
+#include <mm/memory.h>
+#include <stddef.h>
+#include <lib/string.h>
 #include <fs/vfs.h>
-#include <kernel/task.h>
 
-typedef unsigned int   uint32_t;
-typedef unsigned short uint16_t;
-typedef unsigned char  uint8_t;
+struct trap_frame {
+    uint32_t gs, fs, es, ds;      
+    uint32_t edi, esi, ebp, esp_dummy, ebx, edx, ecx, eax; 
+    uint32_t error_code, interrupt_no; 
+    uint32_t eip, cs, eflags, useresp, ss; 
+};
 
-// This is defined in kernel/printk.c, but we should probably move it to a proper header.
-extern void clear_screen(void);
+/* Variables de estado del entorno del sistema */
+char current_path[256] = "/";
 
-/* Externs de teclado y FS */
-extern char get_char();
-extern task_t* current_task;
+/* Símbolos externos del Kernel */
+extern void return_to_shell(void);
+extern void *kmalloc(uint32_t size);
+extern void kfree(void *ptr);
+extern void sys_reboot();
+/**
+ * copy_from_user - Copia strings desde el espacio de usuario al kernel de forma segura
+ */
+static int copy_from_user(char *dest, const char *src, int max) {
+    if (!src || !dest) return -1;
+    int i = 0;
+    // Ojo: En un futuro con paginación real, aquí validarías las tablas de páginas
+    while (src[i] != '\0' && i < max - 1) {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+    return i;
+}
 
-/* Esta estructura debe coincidir con el pusha de tu interrupt_entry */
-typedef struct {
-    uint32_t ds, es, fs, gs;
-    uint32_t edi, esi, ebp, esp_at_pusha, ebx, edx, ecx, eax;
-    uint32_t int_no, err_code;
-    uint32_t eip, cs, eflags, useresp, ss;
-} registers_t;
+/**
+ * syscall_handler - Punto de entrada único para las llamadas al sistema de BlueOS
+ */
+void syscall_handler(struct trap_frame *regs) {
+    // Por defecto, asumimos éxito (0) a menos que una syscall diga lo contrario
+    int32_t syscall_return = 0; 
 
-void syscall_handler(registers_t regs) {
-    // asm volatile("sti");
+    switch (regs->eax) {
+        
+        case SYS_WRITE: { /* Caso 1: Imprimir en pantalla */
+            char *user_msg = (char *)regs->ebx;
+            if (user_msg == NULL) {
+                syscall_return = -EINVAL;
+                break;
+            }
+            
+            // Copiamos a un buffer temporal para no leer memoria cruda de userspace
+            char k_msg[512];
+            copy_from_user(k_msg, user_msg, sizeof(k_msg));
+            printk("%s", k_msg);
+            syscall_return = 0;
+            break;
+        }
 
-    switch (regs.eax) {
-        case SYS_READ: // SYS_READ (POSIX)
-            // ebx: fd, ecx: buf, edx: count
-            if (current_task->fds[regs.ebx] == 0) { // Check if FD maps to stdin
-                if (regs.ecx == 0) return;
-                char* b = (char*)regs.ecx;
-                for(uint32_t i = 0; i < regs.edx; i++) {
-                    b[i] = get_char();
-                    if (b[i] == '\n') break;
+        case 2: { /* Caso 2: SYS_EXIT / Regresar a la Shell */
+            return_to_shell(); 
+            break;
+        }
+
+        case 5: { /* Caso 5: SYS_TOUCH / Crear Archivo Vacío */
+            char path_buf[256];
+            if (copy_from_user(path_buf, (char *)regs->ebx, sizeof(path_buf)) < 0) {
+                syscall_return = -EFAULT;
+                break;
+            }
+
+            // vfs_touch devuelve 0 en éxito, o negativo en error
+            syscall_return = vfs_touch(path_buf, "");
+            break;
+        }
+
+        case 6: { /* Caso 6: SYS_LS / Listar Directorio */
+            char user_path_buf[256];
+            char full_path[256];
+
+            if (copy_from_user(user_path_buf, (char *)regs->ebx, sizeof(user_path_buf)) < 0) {
+                syscall_return = -EFAULT;
+                break;
+            }
+
+            // Resolver ruta relativa o absoluta
+            if (user_path_buf[0] == '/') {
+                strcpy(full_path, user_path_buf);
+            } else {
+                sprintf(full_path, "%s%s%s", 
+                        current_path, 
+                        (strcmp(current_path, "/") == 0 ? "" : "/"), 
+                        user_path_buf);
+            }
+            
+            vfs_node_t *node = vfs_lookup(full_path);
+            if (!node) {
+                syscall_return = -ENOENT; // No such file or directory
+                break;
+            }
+
+            if (node->type != VFS_TYPE_DIR) {
+                syscall_return = -ENOTDIR; // Not a directory
+                break;
+            }
+
+            struct vfs_dirent dirent;
+            int idx = 0;
+            while (vfs_readdir(node, idx, &dirent) == 0) {
+                printk("%s  ", dirent.name);
+                idx++;  
+            }
+            printk("\n");
+            syscall_return = 0;
+            break;
+        }
+
+        case 7: { /* Caso 7: SYS_CHDIR / Cambiar de directorio interno (Shell Built-in) */
+            char user_path_buf[256];
+            char absolute_target[256];
+
+            if (copy_from_user(user_path_buf, (char *)regs->ebx, sizeof(user_path_buf)) < 0) {
+                syscall_return = -EFAULT;
+                break;
+            }
+
+            // Construir la ruta destino absoluta
+            if (user_path_buf[0] != '/') {
+                sprintf(absolute_target, "%s%s%s", 
+                        strcmp(current_path, "/") == 0 ? "" : current_path, 
+                        "/", user_path_buf);
+            } else {
+                strcpy(absolute_target, user_path_buf);
+            }
+
+            // Intentar el cambio en el VFS corporativo de BlueOS
+            if (vfs_chdir(absolute_target) == 0) {
+                strcpy(current_path, absolute_target);
+                syscall_return = 0;
+            } else {
+                syscall_return = -ENOENT;
+            }
+            break;
+        }
+
+        case 8: { 
+            char file_path_buf[256];
+            if (copy_from_user(file_path_buf, (char *)regs->ebx, sizeof(file_path_buf)) < 0) {
+                syscall_return = -EFAULT;
+                break;
+            }
+
+            vfs_node_t *node = vfs_lookup(file_path_buf); 
+            if (!node) {
+                printk("cat: %s: No such file\n", file_path_buf);
+                syscall_return = -ENOENT;
+                break;
+            }
+
+            if (node->type != VFS_TYPE_FILE) {
+                printk("cat: %s: Is a directory\n", file_path_buf);
+                syscall_return = -EISDIR;
+                break;
+            }
+
+            uint32_t size = node->size;
+            if (size == 0) {
+                printk("\n");
+                syscall_return = 0;
+                break;
+            }
+
+            char *buffer = (char *)kmalloc(size); 
+            if (!buffer) {
+                syscall_return = -ENOMEM;
+                break;
+            }
+
+            int bytes_read = vfs_read(node, buffer, size, 0);
+            if (bytes_read > 0) {
+                // FIXED: Imprimimos byte por byte para que los nulos (0x00) no detengan la impresión
+                // ni se filtren textos de otras partes de la RAM.
+                for(int i = 0; i < bytes_read; i++) {
+                    char c = buffer[i];
+                    // Si es texto imprimible o salto de línea
+                    if (c == '\n' || c == '\t' || (c >= 32 && c <= 126)) {
+                        char tmp[2] = {c, '\0'};
+                        printk(tmp);
+                    } else {
+                        // Si es código de máquina x86, pintamos un punto para no romper la consola
+                        printk("."); 
+                    }
                 }
+                printk("\n");
+                syscall_return = 0;
+            } else {
+                printk("cat: error reading file\n");
+                syscall_return = -EIO;
             }
-            break;
 
-        case SYS_WRITE: // SYS_WRITE (POSIX)
-            // ebx: fd, ecx: buf, edx: count
-            if (current_task->fds[regs.ebx] == 1 || current_task->fds[regs.ebx] == 2) {
-                char* b = (char*)regs.ecx;
-                for(uint32_t i = 0; i < regs.edx; i++) {
-                    vt100_putc(b[i]);
-                }
-            }
+            kfree(buffer); 
             break;
-
-        case SYS_OPEN: // SYS_OPEN (POSIX)
-            // ebx: path
-            regs.eax = (uint32_t)vfs_findfile((const char*)regs.ebx);
-            break;
-
-        case SYS_PRINTK:
-            // Handles printing a string to the console.
-            // ebx: string pointer
-            if (regs.ebx != 0) {
-                printk((const char*)regs.ebx);
-            }
-            break;
-
-        case SYS_CLEAR:
-            // Clears the screen.
-            clear_screen();
-            break;
-
-        case SYS_EXIT:
-            // For now, just print an exit message.
-            // In the future, this will terminate the current process.
-            printk("\033[33mUserspace program exited with code %d. Halting system.\n\033[0m", regs.ebx);
-
-            asm volatile("cli");
-            for(;;) { asm volatile("hlt"); }
-            break;
+        }
+        case 9: {
+            sys_reboot();
+        }
 
         default:
-            printk("\033[31mUnknown Syscall: %d\033[0m\n", regs.eax);
+            printk("[SYSCALL] Unknown execution hook requested: %d\n", regs->eax);
+            syscall_return = -ENOSYS; // Function not implemented
             break;
     }
 
-    // asm volatile("cli");
+    // Retornamos el resultado final directo a la estructura de registros del proceso
+    regs->eax = syscall_return;
 }

@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+import sys
+
+MODULE_NAME = "BLOAT_OMETER"
+
+def parse_symbols(filename):
+    syms = {}
+    with open(filename, 'r') as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) >= 3:
+                # Format: address type name [size]
+                name = parts[2]
+                size = int(parts[3]) if len(parts) > 3 else 4
+                syms[name] = size
+    return syms
+
+if len(sys.argv) < 3:
+    print(f"Usage: {sys.argv[0]} vmlinux.old vmlinux.new")
+    sys.exit(1)
+
+old_syms = parse_symbols(sys.argv[1])
+new_syms = parse_symbols(sys.argv[2])
+
+print(f"<6>[  {MODULE_NAME}  ] Comparing binary memory footprints...")
+print(f"{'Function Name':<30} {'Old Size':<10} {'New Size':<10} {'Delta':<10}")
+print("-" * 65)
+
+total_delta = 0
+for name, new_size in new_syms.items():
+    old_size = old_syms.get(name, 0)
+    delta = new_size - old_size
+    if delta != 0:
+        print(f"{name:<30} {old_size:<10} {new_size:<10} {delta:+10}")
+        total_delta += delta
+
+print("-" * 65)
+print(f"Total change impact: {total_delta:+d} bytes allocated in kernel space.")

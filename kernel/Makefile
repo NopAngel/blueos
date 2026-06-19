@@ -10,4 +10,6 @@ obj-y += kernel/userspace.o \
          kernel/hpet.o \
          kernel/hlec.o \
          kernel/sys.o \
-         kernel/bluefetch.o
+         kernel/bluefetch.o \
+         kernel/exec.o \
+         kernel/run_user.o

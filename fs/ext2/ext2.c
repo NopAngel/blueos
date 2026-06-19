@@ -45,8 +45,7 @@ bool ext2_init() {
 
   if (sb->s_inodes_count == 0 || sb->s_blocks_count == 0 ||
       sb->s_blocks_per_group == 0 || sb->s_inodes_per_group == 0) {
-    boot_msg("EXT2",
-             "Invalid ext2 geometry\n", 2);
+    boot_msg("EXT2", "Invalid ext2 geometry\n", 2);
     kfree(sb);
     sb = NULL;
     return false;
@@ -243,8 +242,7 @@ static void ext2_import_vfs_directory(const char *path, uint32_t inode_no) {
 
   for (int i = 0; i < 12 && dir_inode.i_block[i]; i++) {
     if (dir_inode.i_block[i] >= sb->s_blocks_count) {
-      boot_msg("EXT2", "Invalid block number for inode\n",
-               2);
+      boot_msg("EXT2", "Invalid block number for inode\n", 2);
       break;
     }
     ext2_read_block(dir_inode.i_block[i], block);
@@ -255,13 +253,11 @@ static void ext2_import_vfs_directory(const char *path, uint32_t inode_no) {
       if (entry->inode == 0)
         break;
       if (entry->rec_len < 8 || entry->rec_len > BLOCK_SIZE - offset) {
-        boot_msg("EXT2", "Bad dir entry rec_len",
-                 2);
+        boot_msg("EXT2", "Bad dir entry rec_len", 2);
         break;
       }
       if (entry->name_len > 255 || entry->name_len > entry->rec_len - 8) {
-        boot_msg("EXT2", "Bad dir entry name_len\n",
-                 2);
+        boot_msg("EXT2", "Bad dir entry name_len\n", 2);
         break;
       }
 
@@ -271,8 +267,7 @@ static void ext2_import_vfs_directory(const char *path, uint32_t inode_no) {
 
       if (strcmp(name, ".") != 0 && strcmp(name, "..") != 0) {
         if (entry->inode == 0 || entry->inode > sb->s_inodes_count) {
-          boot_msg("EXT2", "Invalid child inode\n",
-                   2);
+          boot_msg("EXT2", "Invalid child inode\n", 2);
           break;
         }
 
@@ -292,7 +287,7 @@ static void ext2_import_vfs_directory(const char *path, uint32_t inode_no) {
         }
 
         if (entry->file_type == 2) {
-          vfs_mkdir(child_path);
+          vfs_mkdir(child_path, 0755);
           ext2_import_vfs_directory(child_path, entry->inode);
         } else if (entry->file_type == 1) {
           ext2_inode_t file_inode = ext2_get_inode(entry->inode);
@@ -326,19 +321,19 @@ void ext2_load_vfs_root(void) {
   }
 
   printk("<6> EXT2: ready to load root inode\n");
-  vfs_mkdir("/etc");
-  vfs_mkdir("/usr");
-  vfs_mkdir("/bin");
-  vfs_mkdir("/home");
-  vfs_mkdir("/tmp");
-  vfs_mkdir("/kernel");
+  vfs_mkdir("/etc", 0755);
+  vfs_mkdir("/usr", 0755);
+  vfs_mkdir("/bin", 0755);
+  vfs_mkdir("/home", 0755);
+  vfs_mkdir("/tmp", 0755);
+  vfs_mkdir("/kernel", 0755);
 
   ext2_inode_t root_inode = ext2_get_inode(2);
   printk("<6> EXT2: root inode size=%u blocks=%u first_block=%u\n",
          root_inode.i_size, root_inode.i_blocks, root_inode.i_block[0]);
   if (root_inode.i_size == 0 || root_inode.i_blocks == 0 ||
       root_inode.i_block[0] == 0) {
-    boot_msg("EXT2", "Invalid root inode\n",2);
+    boot_msg("EXT2", "Invalid root inode\n", 2);
     return;
   }
 

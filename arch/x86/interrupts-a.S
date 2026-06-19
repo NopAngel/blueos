@@ -153,22 +153,39 @@ irq_common_stub:
 
 global syscall_isr_wrapper
 extern syscall_handler
+
+syscall_interrupt_entry:       ; Mantenemos coherencia de nombres si es necesario
 syscall_isr_wrapper:
-    push byte 0
-    push byte 0x80
-    pushad
-    push ds
+    cli                        ; Deshabilitamos interrupciones temporalmente
+    push byte 0                ; Código de error ficticio (para simular el stack de ISR)
+    push byte 0x80             ; Número de interrupción (128 en decimal)
+    
+    pushad                     ; Empuja EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
+    
+    push ds                    ; Empuja los segmentos de datos actuales
     push es
     push fs
     push gs
+
+    ; Cargamos los selectores del segmento del Kernel (Data Segment = 0x10)
     mov ax, 0x10
     mov ds, ax
     mov es, ax
-    call syscall_handler
+    mov fs, ax
+    mov gs, ax
+
+    ; --- FIXED: PASO DE PARÁMETROS CRÍTICO ---
+    push esp                   ; Empujamos el puntero de la pila actual (struct registers* regs)
+    call syscall_handler       ; ¡Saltamos a tu código en C!
+    add esp, 4                 ; Limpiamos el argumento de la pila tras el retorno
+
+    ; Restauramos los segmentos en el orden inverso exacto en que se empujaron (KISS)
     pop gs
     pop fs
     pop es
     pop ds
-    popad
-    add esp, 8
-    iret
+    
+    popad                      ; Restaura los registros de uso general (EAX, EBX, etc.)
+    add esp, 8                 ; Limpiamos el número de interrupción y el código de error ficticio
+    sti                        ; Re-habilitamos interrupciones
+    iret                       ; Volvemos a la aplicación de usuario con éxito

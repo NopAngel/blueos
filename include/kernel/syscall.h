@@ -1,14 +1,12 @@
-#ifndef _SYSCALL_H
-#define _SYSCALL_H
+#ifndef _BLUEOS_SYSCALLS_H
+#define _BLUEOS_SYSCALLS_H
 
-/* POSIX Standard Syscalls */
-#define SYS_READ   0
-#define SYS_WRITE  1
-#define SYS_OPEN   2
+#define SYS_WRITE 1
+#define SYS_EXIT  2
+#define SYS_MKDIR 4
+#define SYS_TOUCH 5
+#define SYS_LS 6
+#define SYS_CHDIR 7
+#define SYS_CHDIR 8
 
-/* BlueOS Custom Syscalls */
-#define SYS_PRINTK 4
-#define SYS_CLEAR  5
-#define SYS_EXIT   6
-
-#endif /* _SYSCALL_H */
+#endif

@@ -8,10 +8,10 @@
 #define _SYSCTL_H
 
 typedef struct {
-    char *name;         
-    void *value;        
-    int type;           
-    int writable;      
+  char *name;
+  void *value;
+  int type;
+  int writable;
 } sysctl_entry_t;
 
 void sysctl_init();

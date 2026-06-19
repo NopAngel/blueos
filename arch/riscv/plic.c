@@ -1,36 +1,35 @@
 
-#include <kernel/printk.h>
 #include <arch/riscv/plic.h>
 #include <kernel/colors.h>
+#include <kernel/printk.h>
 
-#define PLIC_BASE          0x0c000000
-#define PLIC_PRIORITY      (PLIC_BASE + 0x0)
-#define PLIC_PENDING       (PLIC_BASE + 0x1000)
-#define PLIC_ENABLE        (PLIC_BASE + 0x2000)
-#define PLIC_THRESHOLD     (PLIC_BASE + 0x200000)
-#define PLIC_CLAIM         (PLIC_BASE + 0x200004)
+#define PLIC_BASE 0x0c000000
+#define PLIC_PRIORITY (PLIC_BASE + 0x0)
+#define PLIC_PENDING (PLIC_BASE + 0x1000)
+#define PLIC_ENABLE (PLIC_BASE + 0x2000)
+#define PLIC_THRESHOLD (PLIC_BASE + 0x200000)
+#define PLIC_CLAIM (PLIC_BASE + 0x200004)
 
 void plic_write(uint32_t reg, uint32_t data) {
-    volatile uint32_t *addr = (uint32_t *)(reg);
-    *addr = data;
+  volatile uint32_t *addr = (uint32_t *)(reg);
+  *addr = data;
 }
 
 uint32_t plic_read(uint32_t reg) {
-    volatile uint32_t *addr = (uint32_t *)(reg);
-    return *addr;
+  volatile uint32_t *addr = (uint32_t *)(reg);
+  return *addr;
 }
 
-void plic_complete(uint32_t irq) {
-    plic_write(PLIC_CLAIM, irq);
-}
+void plic_complete(uint32_t irq) { plic_write(PLIC_CLAIM, irq); }
 
-uint32_t plic_claim(void) {
-    return plic_read(PLIC_CLAIM);
-}
+uint32_t plic_claim(void) { return plic_read(PLIC_CLAIM); }
 
 void plic_init(void) {
-    printk("\033[32mPLIC: Initializing Platform-Level Interrupt Controller at %p...\033[0m\n", PLIC_BASE);
-    plic_write(PLIC_THRESHOLD, 0);
+  printk("\033[32mPLIC: Initializing Platform-Level Interrupt Controller at "
+         "%p...\033[0m\n",
+         PLIC_BASE);
+  plic_write(PLIC_THRESHOLD, 0);
 
-    printk("\033[32mPLIC: Controller ready. Priority and Threshold set.\033[0m\n");
+  printk(
+      "\033[32mPLIC: Controller ready. Priority and Threshold set.\033[0m\n");
 }

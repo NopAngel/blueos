@@ -1,0 +1,1 @@
+obj-y += drivers/watchdog/wdt.o

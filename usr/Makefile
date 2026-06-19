@@ -1,5 +1,4 @@
 # usr/Makefile
-# SOLO archivos .o
 obj-y += usr/auth.o \
          usr/commands.o \
          usr/qsh.o \

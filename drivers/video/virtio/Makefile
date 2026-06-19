@@ -1,0 +1,1 @@
+obj-y += drivers/video/virtio/virtio.o

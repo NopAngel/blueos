@@ -1,0 +1,1 @@
+obj-y += kernel/power/acpi_sleep.o

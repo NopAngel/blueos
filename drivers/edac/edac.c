@@ -4,22 +4,20 @@
 static struct edac_mc_stats main_mc;
 
 void edac_init() {
-    main_mc.ce_count = 0;
-    main_mc.ue_count = 0;
-    printk("[EDAC] Memory Error Detection and Correction active.\n");
+  main_mc.ce_count = 0;
+  main_mc.ue_count = 0;
+  printk("[EDAC] Memory Error Detection and Correction active.\n");
 }
 
 void edac_report_ce(const char *msg, uint64_t addr) {
-    main_mc.ce_count++;
-    printk("[EDAC] CE (Corrected): %s at 0x%lx (Total: %d)\n",
-           msg, addr, main_mc.ce_count);
-
+  main_mc.ce_count++;
+  printk("[EDAC] CE (Corrected): %s at 0x%lx (Total: %d)\n", msg, addr,
+         main_mc.ce_count);
 }
 
-
 void edac_report_ue(const char *msg, uint64_t addr) {
-    main_mc.ue_count++;
-    printk("!!! [EDAC] UE (Uncorrectable): %s at 0x%lx !!!\n", msg, addr);
+  main_mc.ue_count++;
+  printk("!!! [EDAC] UE (Uncorrectable): %s at 0x%lx !!!\n", msg, addr);
 
-    // kernel_panic("Memory corruption detected!");
+  // kernel_panic("Memory corruption detected!");
 }

@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 struct edac_mc_stats {
-    uint32_t ce_count; 
-    uint32_t ue_count; 
-    char controller_name[32];
+  uint32_t ce_count;
+  uint32_t ue_count;
+  char controller_name[32];
 };
 
 void edac_init();

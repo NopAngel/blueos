@@ -20,10 +20,10 @@
  * @active: Boolean flag (1 if user slot is occupied, 0 if free).
  */
 typedef struct {
-    char username[32];
-    char password[32];
-    char cwd[255];
-    int active; 
+  char username[32];
+  char password[32];
+  char cwd[255];
+  int active;
 } user_t;
 
 /* Global state for user management */

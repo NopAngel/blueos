@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define INPUT_BUFFER_SIZE 256
-#define HISTORY_MAX       10
+#define HISTORY_MAX 10
 
 #define KBD_F1 0x3B
 #define KBD_F2 0x3C
@@ -15,9 +15,9 @@
 #define KBD_F7 0x41
 
 /* Arrow Keys Scancodes */
-#define SCAN_UP    0x48
-#define SCAN_DOWN  0x50
-#define SCAN_LEFT  0x4B
+#define SCAN_UP 0x48
+#define SCAN_DOWN 0x50
+#define SCAN_LEFT 0x4B
 #define SCAN_RIGHT 0x4D
 
 /* Shared State */
@@ -27,7 +27,7 @@ extern int keyboard_echo;
 
 /* Main Logic */
 void keyboard_init(void);
-void keyboard_handler();
+void keyboard_handler(void);
 void handle_backspace(void);
 
 /* Arch-Specific Bridge (Must be implemented in arch/xxx/keyboard_io.c) */

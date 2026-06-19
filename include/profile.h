@@ -1,7 +1,7 @@
 #ifndef PROFILE_H
 #define PROFILE_H
 
-#define PROF_SHIFT 2  
+#define PROF_SHIFT 2
 extern unsigned int *prof_buffer;
 extern unsigned int prof_len;
 

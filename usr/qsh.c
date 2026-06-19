@@ -10,11 +10,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 #ifndef INPUT_BUFFER_SIZE
 #define INPUT_BUFFER_SIZE 256
 #endif
-
 
 #define qsh_HISTORY_SIZE 32
 #define qsh_LINE_MAX 256
@@ -25,7 +23,6 @@ static int qsh_history_index = -1;
 
 /* Global scancode helper for arrow keys */
 extern uint8_t arch_get_scancode();
-
 
 typedef enum {
   SFILE,   /* Reading from a file */
@@ -38,7 +35,7 @@ typedef struct Source {
   char *str;
   int line;
   const char *file;
-  vfs_node_t *node;    
+  vfs_node_t *node;
   struct Source *next;
 } Source;
 
@@ -255,7 +252,8 @@ int qsh_shell(Source *s) {
   bool condition_met = false;
 
   if (s->type == SFILE) {
-    content = (char*)s->node->ptr;;
+    content = (char *)s->node->ptr;
+    ;
   }
 
   while (1) {
@@ -420,19 +418,17 @@ int cmd_qsh(char *args) {
     source_stack = stdin_source.next;
     return res;
   }
-  vfs_node_t* node = vfs_findfile(args);
+  vfs_node_t *node = vfs_findfile(args);
   if (node == NULL) { // Comparamos contra NULL
     printk("qsh: %s: No such file\n", args);
     return 1;
   }
 
-  Source script_source = {
-      .type = SFILE, 
-      .file = args, 
-      .node = node,
-      .line = 0, 
-      .next = source_stack
-  };
+  Source script_source = {.type = SFILE,
+                          .file = args,
+                          .node = node,
+                          .line = 0,
+                          .next = source_stack};
   source_stack = &script_source;
   qsh_env_t kernel_env = {.type = 1, .oenv = e, .source = &script_source};
   e = &kernel_env;

@@ -1,0 +1,1 @@
+obj-y += drivers/hda/hda_codec.o drivers/hda/hda_intel.o

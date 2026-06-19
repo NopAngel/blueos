@@ -1,2 +1,1 @@
-obj-y += drivers/video/vt100.o \
-		 drivers/video/vt220.o
+obj-y += drivers/video/ansi_tty.o

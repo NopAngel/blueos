@@ -1,11 +1,282 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="01e1ad2a-7eb4-4ca4-90e7-1dfcac6813ff" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/init/smbios.c" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/init/wrapper.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/common/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/arch/common/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/common/hal.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/common/hal.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/common/memory.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/common/memory.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/common/pic.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/common/pic.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/acpi.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/acpi.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/arch.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/arch.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/fpu.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/fpu.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/intel_h.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/intel_h.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/interrupts.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/interrupts.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/intr.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/intr.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/keyboard_io.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/keyboard_io.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/kvm.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/kvm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/panic.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/panic.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/plic.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/plic.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/profile.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/profile.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/shell.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/shell.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/timer.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/timer.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/trap.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/trap.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/trap_handler.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/trap_handler.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/uart.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/uart.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/riscv/vendor_h.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/riscv/vendor_h.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/acpi.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/acpi.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/amd.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/amd.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/apic.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/apic.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/bg.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/bg.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/cmdline.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/cmdline.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/elf.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/elf.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/gdt.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/gdt.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/hal.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/hal.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/idt.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/idt.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/intel.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/intel.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/interrupts-a.S" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/interrupts-a.S" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/interrupts.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/interrupts.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/irq.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/irq.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/isr.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/isr.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/keyboard_io.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/keyboard_io.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/kvm.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/kvm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/loader.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/loader.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/notifier.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/notifier.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/panic.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/panic.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/pm.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/pm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/profile.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/profile.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/shell.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/shell.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/syscall.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/syscall.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/timer.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/timer.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/virt.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/virt.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/arch/x86/vmm.c" beforeDir="false" afterPath="$PROJECT_DIR$/arch/x86/vmm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/hello.asm" beforeDir="false" afterPath="$PROJECT_DIR$/bin/hello.asm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/hello.c" beforeDir="false" afterPath="$PROJECT_DIR$/bin/hello.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/hello_elf.c" beforeDir="false" afterPath="$PROJECT_DIR$/bin/hello_elf.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blueos_net.pcap" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crypto/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/crypto/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crypto/aes.c" beforeDir="false" afterPath="$PROJECT_DIR$/crypto/aes.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crypto/aes_riscv_glue.c" beforeDir="false" afterPath="$PROJECT_DIR$/crypto/aes_riscv_glue.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crypto/sha256.c" beforeDir="false" afterPath="$PROJECT_DIR$/crypto/sha256.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crypto/sm3_riscv_glue.c" beforeDir="false" afterPath="$PROJECT_DIR$/crypto/sm3_riscv_glue.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/accel/core.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/accel/core.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/android/ashmem.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/android/ashmem.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/android/binder.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/android/binder.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/ata/ata.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/ata/ata.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/battery/battery.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/battery/battery.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/bcma/bcma.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/bcma/bcma.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/block/initrd.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/block/initrd.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/bluetooh/core.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/bluetooh/core.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/cdrom/cdrom.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/cdrom/cdrom.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/connector/connector.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/connector/connector.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/core/live_config.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/core/live_config.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/cxl/cxl_m.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/cxl/cxl_m.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/dax/dax.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/dax/dax.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/disk/disk.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/disk/disk.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/dma/hdc_dma.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/dma/hdc_dma.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/edac/edac.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/edac/edac.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/firmware/firmware.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/firmware/firmware.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/gpio/gpio.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/gpio/gpio.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/hal/gpio.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/hal/gpio.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/hal/timer.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/hal/timer.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/hx/haptics.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/hx/haptics.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/hyperv/hypervisor.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/hyperv/hypervisor.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/i2c/i2c.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/i2c/i2c.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/isapnp/isapnp.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/isapnp/isapnp.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/leds/leds.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/leds/leds.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/lru/multilru.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/lru/multilru.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/macintosh/adb.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/macintosh/adb.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/mailbox/mbox.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/mailbox/mbox.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/net/e1000.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/net/e1000.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/net/mac80211.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/net/mac80211.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/net/rtl8139.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/net/rtl8139.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/net/virtio_net.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/net/virtio_net.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/nvidia/core.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/nvidia/core.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/pci/pci.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/pci/pci.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/pictrl/pictrl.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/pictrl/pictrl.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/pinctrl/pinctrl.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/pinctrl/pinctrl.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/pnp/pnp.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/pnp/pnp.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/pps/pps.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/pps/pps.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/ptp/ptp.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/ptp/ptp.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/rtc/rtc.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/rtc/rtc.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/scsi/scsi_core.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/scsi/scsi_core.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/scsi/scsi_lsi.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/scsi/scsi_lsi.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/soc/reset.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/soc/reset.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/soc/soc_intel.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/soc/soc_intel.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/tc/tc.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/tc/tc.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/thermal/lm75.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/thermal/lm75.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/tty/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/tty/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/tty/tty.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/tty/tty.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/uio/uio.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/uio/uio.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/usb/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/usb/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/usb/usb.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/vhost/vhost_net.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/vhost/vhost_net.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/video/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/video/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/video/ansi_tty.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/video/ansi_tty.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/video/serial.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/video/virtio.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/video/vt100.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/video/vt220.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/w1/w1.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/w1/w1.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/watchdog/wdt.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/watchdog/wdt.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/xen/xen.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/xen/xen.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/zorro/zorro.c" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/zorro/zorro.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/9p/9p.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/9p/9p.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/adfs/adfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/adfs/adfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/btrfs/btrfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/btrfs/btrfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/dev_null.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/dev_null.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/eventfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/eventfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/ext2/ext2.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/ext2/ext2.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/help.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/help.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/jfs/jfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/jfs/jfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/ramfs/ramfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/ramfs/ramfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/sysfs/sysfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/sysfs/sysfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/tmpfs/tmpfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/tmpfs/tmpfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/vboxfs/vboxfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/vboxfs/vboxfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/vfs/vfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/vfs/vfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fs/xfs/xfs.c" beforeDir="false" afterPath="$PROJECT_DIR$/fs/xfs/xfs.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/asm/kvm_host.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/asm/kvm_host.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/asm/ptrace.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/asm/ptrace.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/auth.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/auth.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/commands/system_cmds.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/commands/system_cmds.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/adb.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/adb.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/amba.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/amba.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/ansi_tty.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/ansi_tty.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/ata.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/ata.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/bcma.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/bcma.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/connector.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/connector.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/cxl.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/cxl.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/dax.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/dax.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/disk.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/disk.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/edac.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/edac.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/firmware.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/firmware.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/haptics.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/haptics.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/i2c.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/i2c.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/k_language.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/k_language.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/keyboard.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/keyboard.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/leds.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/leds.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/mailbox.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/mailbox.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/pci.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/pci.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/pinctrl.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/pinctrl.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/power.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/power.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/pps.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/pps.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/ps3_ds3.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/ps3_ds3.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/ptp.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/ptp.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/rtc.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/rtc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/scsi.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/scsi.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/serial.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/serial.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/soc_intel.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/soc_intel.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/tc.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/tc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/tmpfs.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/tmpfs.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/tty.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/tty.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/uio.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/uio.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/usb.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/usb.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/vhost.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/vhost.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/virtio.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/virtio.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/virtio_net.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/virtio_net.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/w1.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/w1.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/watchdog.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/watchdog.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/xen.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/xen.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/drivers/xterm.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/drivers/xterm.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/elf.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/elf.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/9p.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/9p.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/btrfs.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/btrfs.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/ext2.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/ext2.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/fat16.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/fat16.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/fat32.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/fat32.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/fs.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/fs.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/initrd.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/initrd.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/jfs.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/jfs.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/vboxfs.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/vboxfs.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/vfs.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/vfs.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/fs/xfs.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/fs/xfs.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/hlec.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/hlec.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/hpet.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/hpet.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/bg.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/bg.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/colors.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/colors.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/commands.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/commands.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/errno.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/errno.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/gpio.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/gpio.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/hal.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/hal.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/hibernate.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/hibernate.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/initcall.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/initcall.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/io.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/io.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/ioctl.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/ioctl.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/jump_label.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/jump_label.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/kvm.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/kvm.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/malloc.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/malloc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/module.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/module.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/net.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/net.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/panic.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/panic.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/ports.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/ports.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/process.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/process.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/sched.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/sched.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/slab.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/slab.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/snd.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/snd.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/spinlock.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/spinlock.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/syscall.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/syscall.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/sysctl.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/sysctl.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/task.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/task.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/timer.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/timer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/types.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/types.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/kernel/vmcore_info.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/kernel/vmcore_info.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/lib/list.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/lib/list.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/lib/ringbuffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/lib/ringbuffer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/lib/string.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/lib/string.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/lib/syscall_user.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/lib/syscall_user.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/mm/heap.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/mm/heap.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/mm/memory.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/mm/memory.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/mm/pmm.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/mm/pmm.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/mm/vmm.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/mm/vmm.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/multiboot.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/multiboot.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/multilru.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/multilru.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/net/network.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/net/network.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/notifier.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/notifier.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/prdt.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/prdt.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/profile.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/profile.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/smbios.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/smbios.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/sys.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/sys.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/version.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/version.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/init/all.c" beforeDir="false" afterPath="$PROJECT_DIR$/init/all.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/init/hyper.c" beforeDir="false" afterPath="$PROJECT_DIR$/init/hyper.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/init/kernel.c" beforeDir="false" afterPath="$PROJECT_DIR$/init/kernel.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/bluefetch.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/bluefetch.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/bpf/jit_rv64.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/bpf/jit_rv64.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/hlec.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/hlec.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/hpet.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/hpet.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/init_ops.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/init_ops.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/jump_label.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/jump_label.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/ksyms.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/ksyms.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/mm/fault.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/mm/fault.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/mm/malloc.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/mm/malloc.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/mm/ptdump.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/mm/ptdump.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/mm/slab.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/mm/slab.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/mm/vmm.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/mm/vmm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/module.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/module.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/ping.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/ping.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/power/hibernate.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/power/hibernate.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/printk.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/printk.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/sched.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/sched.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/sys.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/sys.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/sysctl.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/sysctl.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/time.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/time.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/userspace.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/userspace.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kernel/vmcore_info.c" beforeDir="false" afterPath="$PROJECT_DIR$/kernel/vmcore_info.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/network.c" beforeDir="false" afterPath="$PROJECT_DIR$/lib/network.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/net/stack.c" beforeDir="false" afterPath="$PROJECT_DIR$/net/stack.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sound/core/pcspeaker.c" beforeDir="false" afterPath="$PROJECT_DIR$/sound/core/pcspeaker.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sound/sdw/s.c" beforeDir="false" afterPath="$PROJECT_DIR$/sound/sdw/s.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sound/snd.c" beforeDir="false" afterPath="$PROJECT_DIR$/sound/snd.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usr/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/usr/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usr/auth.c" beforeDir="false" afterPath="$PROJECT_DIR$/usr/auth.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/usr/commands.c" beforeDir="false" afterPath="$PROJECT_DIR$/usr/commands.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usr/lib/string.c" beforeDir="false" afterPath="$PROJECT_DIR$/usr/lib/string.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usr/qsh.c" beforeDir="false" afterPath="$PROJECT_DIR$/usr/qsh.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,28 +286,34 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5,
-  "fromUser": false
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3EaQPp9bXTVX8leozAP6DUX3wQ7" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/angelxd/Desktop/Workspace/blueos",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/angelxd/Desktop/Workspace/blueos&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -53,10 +330,16 @@
       <option name="presentableId" value="Default" />
       <updated>1780414186311</updated>
       <workItem from="1780414222760" duration="97000" />
+      <workItem from="1781495032727" duration="615000" />
+      <workItem from="1781495726082" duration="62000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>
