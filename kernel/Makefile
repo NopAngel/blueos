@@ -12,4 +12,8 @@ obj-y += kernel/userspace.o \
          kernel/sys.o \
          kernel/bluefetch.o \
          kernel/exec.o \
-         kernel/run_user.o
+         kernel/run_user.o \
+         kernel/lkm.o \
+         kernel/security.o \
+         kernel/process.o \
+         kernel/stack_protector.o

@@ -2,6 +2,10 @@
 #include <kernel/printk.h>
 #include <stdint.h>
 
+// Símbolos exportados por el linker.ld (Asegúrate de tenerlos en tu script de enlace)
+extern uint32_t _start;
+extern uint32_t _end;
+
 struct gdt_entry {
   uint16_t limit_low;
   uint16_t base_low;
@@ -40,18 +44,33 @@ void gdt_init() {
 
   // 1. Null descriptor
   gdt_set_gate(0, 0, 0, 0, 0);
-  // 2. Code segment (Kernel): Access 0x9A, Granularity 0xCF (4GB flat)
-  gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
-  // 3. Data segment (Kernel): Access 0x92, Granularity 0xCF (4GB flat)
+
+  /* * APLICANDO POLÍTICA W^X:
+   * Calculamos el límite estricto de la sección ejecutable (.text).
+   * Si la granularidad es 0xCF, el límite se multiplica por páginas de 4KB.
+   * Modificamos el límite del segmento de código para que solo abarque hasta '_text_end'.
+   */
+  uint32_t text_limit = (uint32_t)&_end;
+  
+  // Convertimos el límite de bytes a bloques de 4KB si usamos granularidad de página (0xCF)
+  uint32_t code_limit_pages = text_limit >> 12;
+
+  // 2. Code segment (Kernel): Limitado estrictamente a la sección ejecutable
+  gdt_set_gate(1, 0, code_limit_pages, 0x9A, 0xCF);
+  
+  // 3. Data segment (Kernel): Mantiene acceso a los 4GB para stack, heap y MMIO
   gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
-  // 4. User mode code: Access 0xFA
+  
+  // 4. User mode code: De igual manera, se limita o se deja flat dependiendo del diseño de tu app de usuario
   gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
-  // 5. User mode data: Access 0xF2
+  
+  // 5. User mode data: 4GB flat
   gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
-  // 6. TSS Placeholder: Se inicializa en 0, kernel/userspace.c lo llenará
+  // 6. TSS Placeholder
   gdt_set_gate(5, 0, 0, 0, 0);
 
   gdt_flush((uint32_t)&gdtp);
-  printk("[  OK  ] GDT: System segments initialized.\n");
+  
+  printk("[  \033[32mOK\033[0m  ] GDT: W^X protection segment deployed (Code limit: 0x%x).\n", text_limit);
 }

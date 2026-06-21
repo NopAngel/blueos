@@ -3,49 +3,33 @@
 #include <kernel/sched.h>
 #include <stddef.h>
 
-extern struct task_struct *current_task;
-
-/**
- * get_current_task - Returns the task currently executing.
- */
-struct task_struct *get_current_task() { return current_task; }
+/* Tell the compiler that the real pointer lives inside sched.c */
+extern task_t *current_task;
 
 /**
  * do_exit - Terminate the current process.
- * This is the internal implementation of the exit() system call.
  */
 void do_exit(int status) {
-  struct task_struct *curr = current_task;
+  task_t *curr = current_task;
 
   if (!curr) {
-    /* If there's no current task, we are likely in an early kernel panic */
     return;
   }
 
-  /* 1. Set the process state to ZOMBIE */
-  /* A zombie process has finished execution but still has an entry in the task
-   * list */
-  curr->state = TASK_ZOMBIE;
+  curr->state = ZOMBIE; /* Uses your task_state_t enum from task.h */
   curr->exit_code = status;
 
-  boot_msg("Process [%s] (PID:%d) exited with status %d\n", curr->name,
-           curr->pid, status);
+  boot_msg("TASK", "Process exited execution framework", 0);
 
-  /* 2. Notify the parent process (Optional: logic for wait() syscall) */
-  // wake_up_process(curr->parent);
-
-  /* 3. Schedule another task immediately */
-  /* We never return from this call if the scheduler is working correctly */
   schedule();
 
-  /* 4. Safety net: If schedule() returns, something is very wrong */
-  boot_msg("Process: Error, zombie process tried to return!\n");
+  boot_msg("TASK", "Error, zombie process tried to return!", 2);
+  
   while (1) {
-    /* Universal low-power wait */
 #if defined(__riscv)
     asm volatile("wfi");
 #elif defined(x86)
-    asm volatile("hlt");
+    asm volatile("cli; hlt");
 #endif
   }
 }

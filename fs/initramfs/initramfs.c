@@ -40,16 +40,14 @@ static uint32_t octal_to_int(const char *str, int max_len) {
     return result;
 }
 
-/* Función para asegurar que el path existe (crea directorios padre) */
 void ensure_directory_exists(const char *path) {
     char temp[256];
     strcpy(temp, path);
-    char *ptr = temp + 1; // Saltar '/' inicial
+    char *ptr = temp + 1; 
 
     while ((ptr = strchr(ptr, '/')) != NULL) {
         *ptr = '\0';
         
-        // FIXED: Si el directorio intermedio no existe, lo creamos. Si existe, no hacemos nada.
         if (vfs_lookup(temp) == NULL) {
             vfs_mkdir(temp, 0755);
         }
@@ -60,43 +58,38 @@ void ensure_directory_exists(const char *path) {
 }
 
 int initrd_read(vfs_node_t *node, char *buffer, uint32_t size, uint32_t offset) {
-    // 1. Obtener la dirección base del initrd en memoria
-    uint32_t initrd_base = 0x1000000; // Donde sea que esté tu initrd
-    
-    // 2. Calcular la posición real
-    // node->inode es el inicio del archivo real (sin cabecera)
+    uint32_t initrd_base = 0x1000000; 
+
     char *data_ptr = (char *)(initrd_base + node->inode + offset);
     
-    // 3. Copiar los datos
+    
     memcpy(buffer, data_ptr, size);
     return size;
 }
 
 void initrd_init(uint32_t location) {
     uint32_t offset = 0;
-    vfs_node_t *root = vfs_get_root(); // Necesitamos la raíz para colgar el nodo
+    vfs_node_t *root = vfs_get_root(); 
 
     while (1) {
         tar_header_t *header = (tar_header_t *)(location + offset);
         if (header->name[0] == '\0') break;
 
-        uint32_t size = octal_to_int(header->size, 12); // FIXED: Añadido el 12
+        uint32_t size = octal_to_int(header->size, 12); 
 
         vfs_node_t *node = (vfs_node_t *)kmalloc(sizeof(vfs_node_t));
-        mm_memset(node, 0, sizeof(vfs_node_t)); // Limpieza por seguridad
+        mm_memset(node, 0, sizeof(vfs_node_t)); 
         
-        strncpy(node->name, header->name, 128); // Asegúrate de no desbordar
+        strncpy(node->name, header->name, 128); 
         node->size = size;
         node->type = VFS_TYPE_FILE;
         node->inode = offset + 512; 
         
-        // FIXED: Usamos root_ops o creamos initrd_ops arriba
         extern vfs_ops_t root_ops;
         node->ops = &root_ops;    
         
         node->parent = root;
 
-        // FIXED: En lugar de vfs_register(), lo insertamos manualmente en la lista de la raíz
         if (root) {
             node->next = root->ptr;
             root->ptr = node;
@@ -110,7 +103,7 @@ void initramfs_parse(uintptr_t ramdisk_start, uintptr_t ramdisk_end) {
     uintptr_t address = ramdisk_start;
     int files_loaded = 0;
 
-    printk("<6>[  %s   ] Unpacking ramdisk image...\n", MODULE_NAME);
+    boot_msg(MODULE_NAME, "Unpacking ramdisk image...\n", 0);
 
     while (address < ramdisk_end) {
         tar_header_t *header = (tar_header_t *)address;
@@ -129,7 +122,6 @@ void initramfs_parse(uintptr_t ramdisk_start, uintptr_t ramdisk_end) {
         }
 
         if (header->typeflag == '5') {
-            // FIXED: Verificar si el directorio ya fue creado previamente
             if (vfs_lookup(full_path) == NULL) {
                 vfs_mkdir(full_path, 0755);
                 printk("<6>[  %s   ] Dir: %s\n", MODULE_NAME, full_path);
@@ -139,23 +131,17 @@ void initramfs_parse(uintptr_t ramdisk_start, uintptr_t ramdisk_end) {
         }
 
         else if (header->typeflag == '0' || header->typeflag == '\0') {
-    // Asegurar que existan directorios padres
     ensure_directory_exists(full_path);
     
     if (vfs_lookup(full_path) == NULL) {
-        // Creamos el nodo limpio en el RootFS/RAMFS
         vfs_create(full_path, NULL); 
 
         vfs_node_t *new_node = vfs_lookup(full_path);
         if (new_node) {
-            // FIX CRUCIAL:
-            // 1. Apuntamos DIRECTO al inicio de los datos crudos del archivo dentro del TAR (dirección actual + 512 bytes del header)
             new_node->ptr = (void *)file_data; 
             
-            // 2. Le asignamos su tamaño real EXACTO en bytes (ej: 1024 bytes, no redondeado a bloques)
             new_node->size = file_size; 
 
-            // Si usas xfs_bind_file_buffer, asegúrate de que use el tamaño real también
             extern int xfs_bind_file_buffer(uint32_t inode_num, uint32_t size, uintptr_t ram_address);
             xfs_bind_file_buffer(new_node->inode, file_size, (uintptr_t)file_data);
         }

@@ -20,6 +20,9 @@ typedef struct vfs_ops {
     int (*unlink)(struct vfs_node *node, const char *name);
     int (*readdir)(struct vfs_node *node, uint32_t index, void *dirent_out);
     struct vfs_node* (*finddir)(struct vfs_node *parent, const char *name);
+
+    int (*ioctl)(struct vfs_node *node, uint64_t request, void *arg);
+	uintptr_t (*mmap)(struct vfs_node *node, uintptr_t addr, size_t length, int prot, int flags, size_t pgoffset);
 } vfs_ops_t;
 
 /* Core data structure representing a generalized node abstraction (Vnode) */
@@ -62,5 +65,6 @@ int vfs_read(vfs_node_t *node, void *buffer, uint32_t size, uint32_t offset);
 vfs_node_t *vfs_finddir(vfs_node_t *node, const char *name);
 vfs_node_t *vfs_get_root(void);
 int vfs_create(const char *path, const char *content);
+void vfs_register_fb0(void *arch_data);
 
 #endif /* _BLUEOS_VFS_H_ */

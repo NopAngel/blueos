@@ -26,4 +26,5 @@ obj-y += arch/x86/irq.o \
          arch/x86/switch.o \
          arch/x86/bg.o \
 		 arch/x86/isr.o \
-         arch/x86/idt.o
+         arch/x86/idt.o \
+         arch/x86/cpu.o

@@ -5,12 +5,27 @@
 SECTION .multiboot
     align 4
     MULTIBOOT_MAGIC    equ 0x1BADB002
-    MULTIBOOT_FLAGS    equ 0x00000003 ; ALIGN + MEMINFO
+    
+    ; ALIGN (1) + MEMINFO (2) + VIDEO (4) = 7
+    MULTIBOOT_FLAGS    equ 0x00000007 
     CHECKSUM           equ -(MULTIBOOT_MAGIC + MULTIBOOT_FLAGS)
 
     dd MULTIBOOT_MAGIC
     dd MULTIBOOT_FLAGS
     dd CHECKSUM
+
+    ; --- Relleno de direccionamiento requerido para no romper el offset gráfico ---
+    dd 0 ; header_addr (0 porque es un binario ELF, GRUB usa el ELF header)
+    dd 0 ; load_addr
+    dd 0 ; load_end_addr
+    dd 0 ; bss_end_addr
+    dd 0 ; entry_addr
+
+    ; --- Campos gráficos reales de Multiboot 1 ---
+    dd 0    ; mode_type: 0 = Modo gráfico lineal real
+    dd 1024 ; width: Ancho de pantalla
+    dd 768  ; height: Alto de pantalla
+    dd 32   ; depth: 32 bits por píxel (True Color RGBA)
 
 SECTION .text
 global _start

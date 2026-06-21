@@ -49,33 +49,46 @@ void vmm_handle_demand_paging(uint32_t fault_addr, uint32_t *pte) {
          fault_addr);
 }
 
-void vmm_map(void *virtual, uint32_t physical, uint32_t size, uint32_t flags) {
-  spin_lock(&vmm_lock);
+void
+vmm_map(void *virtual, uint32_t physical, uint32_t size, uint32_t flags)
+{
+	spin_lock(&vmm_lock);
 
-  uint32_t addr = (uint32_t)virtual;
-  uint32_t end = addr + size;
+	uint32_t addr = (uint32_t)virtual;
+	uint32_t end = addr + size;
 
-  while (addr < end) {
+	while (addr < end) {
+		uint32_t pd_index = addr >> 22;
+		uint32_t pt_index = (addr >> 12) & 0x3FF;
 
-    uint32_t pd_index = addr >> 22;
-    uint32_t pt_index = (addr >> 12) & 0x3FF;
+		/* 1. Acceso al Page Directory usando el mapeo recursivo clásico de x86 */
+		uint32_t *pd = (uint32_t *)0xFFFFF000;
 
-    uint32_t *pd = (uint32_t *)0xFFFFF000;
+		/* Si la entrada en el directorio de páginas no está presente */
+		if (!(pd[pd_index] & PAGE_PRESENT)) {
+			uint32_t new_pt_phys = (uint32_t)pmm_alloc_frame();
+			pd[pd_index] = new_pt_phys | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+			
+			/* ¡OJO!: Para limpiar la nueva tabla (memset), necesitamos su dirección VIRTUAL,
+			 * no la física. La dirección virtual recursiva para la tabla de páginas es esta: */
+			uint32_t *new_pt_virt = (uint32_t *)(0xFFC00000 + (pd_index << 12));
+			memset((void *)new_pt_virt, 0, 4096);
+		}
 
-    if (!(pd[pd_index] & PAGE_PRESENT)) {
-      uint32_t new_pt = (uint32_t)pmm_alloc_frame();
-      pd[pd_index] = new_pt | PAGE_PRESENT | PAGE_RW | PAGE_USER;
-      memset((void *)(new_pt), 0, 4096);
-    }
+		/* 2. ¡EL CAMBIO CRUCIAL!: Obtener la dirección VIRTUAL de la tabla de páginas.
+		 * En el esquema de mapeo recursivo (donde la entrada 1023 apunta al propio PD),
+		 * las tablas de páginas se exponen de forma contigua en el rango virtual 0xFFC00000 */
+		uint32_t *pt = (uint32_t *)(0xFFC00000 + (pd_index << 12));
 
-    uint32_t *pt = (uint32_t *)((pd[pd_index] & 0xFFFFF000));
-    pt[pt_index] = physical | flags;
+		/* Asignamos la dirección física real al PTE con sus flags correspondientes */
+		pt[pt_index] = physical | flags;
 
-    __asm__ volatile("invlpg (%0)" ::"r"(addr) : "memory");
+		/* Invalidamos la caché de la TLB para esta dirección virtual específica */
+		__asm__ volatile("invlpg (%0)" ::"r"(addr) : "memory");
 
-    addr += 4096;
-    physical += 4096;
-  }
+		addr += 4096;
+		physical += 4096;
+	}
 
-  spin_unlock(&vmm_lock);
+	spin_unlock(&vmm_lock);
 }

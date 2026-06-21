@@ -30,7 +30,7 @@ ifeq ($(ARCH),x86)
     QEMU       = qemu-system-i386
     GCC_INC    = $(shell $(CC) -print-file-name=include 2>/dev/null)
     CFLAGS     = -m32 -march=i386 -mno-sse -mno-sse2 -mno-mmx -ffreestanding \
-                 -fno-builtin -std=gnu99 -nostdlib -fno-stack-protector \
+                 -fno-builtin -std=gnu99 -nostdlib -fno-stack-protector -fstack-protector-all \
                  -nostdinc -fno-pic -fno-pie -I. -Iinclude -I$(GCC_INC) -O2 \
                  -g -Dx86 -D__x86__ $(EXTRA_CFLAGS)
     ASFLAGS    = -f elf32
@@ -65,7 +65,8 @@ SUBDIRS      := arch/$(ARCH) $(SUBDIRS_NEED) drivers/leds \
                  drivers/input/mouse/8042 drivers/input/keyboard/s390 \
                  drivers/input/keyboard drivers/scsi drivers/pinctrl \
                  lib crypto usr net fs/btrfs fs/tmpfs drivers/video/vt \
-				 drivers/extcon drivers/eisa fs/xfs fs/initramfs
+				 drivers/extcon drivers/eisa fs/xfs fs/initramfs kernel/bpf \
+				 modules
 
 obj-y        :=
 

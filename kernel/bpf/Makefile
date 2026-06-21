@@ -1,1 +1,1 @@
-obj-y += kernel/bpf/jit_rv64.o
+obj-y += kernel/bpf/jit_rv64.o kernel/bpf/ebpf_vm.o

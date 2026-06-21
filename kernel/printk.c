@@ -1,6 +1,7 @@
 #include <drivers/vt100.h>
 #include <kernel/colors.h>
 #include <kernel/printk.h>
+#include <drivers/fb.h>
 #include <kernel/timer.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -16,6 +17,16 @@
 #define LOGLEVEL_DEBUG 7 /* Debug-level messages */              // KERN_DEBUG
 #define LOGLEVEL_DEFAULT LOGLEVEL_WARNING // Default log level if not specified
 
+#define FB_TEXT_COLOR 0xFFFFFF
+
+static uint32_t fb_cursor_x = 10;  
+static uint32_t fb_cursor_y = 10;  
+#define FB_FONT_WIDTH  8
+#define FB_FONT_HEIGHT 8
+
+extern void fb_draw_char(uint32_t x_start, uint32_t y_start, char c, uint32_t color);
+
+
 /* --- Global Variables --- */
 int console_loglevel =
     LOGLEVEL_DEBUG; // Maximum log level to display on the console
@@ -25,7 +36,7 @@ char kernel_log_buffer[LOG_BUFFER_SIZE];
 uint32_t log_ptr = 0;
 static int at_line_start = 1;
 
-int g_gui_enabled = 0;
+int g_gui_enabled = 1;
 
 extern void update_cursor();
 
@@ -107,20 +118,17 @@ static void log_timestamp() {
  * putchar: Now uses the VT100 engine instead of writing directly to hardware.
  */
 static void __putchar(char c) {
-  // If it's the start of a line, record the timestamp ONLY in the internal log
-  // (dmesg)
   if (at_line_start && c != '\n' && c != '\r' && c != '\033') {
     log_timestamp();
     at_line_start = 0;
   }
 
-  // Visual output using the VT100 driver
+  // Visual output delegado al motor VT100 inteligente
   vt100_putc(c);
 
-  // The message is always stored in the circular buffer
+  // El mensaje se almacena siempre en el buffer circular (dmesg)
   log_char(c);
 
-  // Update line state tracking
   if (c == '\n')
     at_line_start = 1;
   else if (c != '\r')
@@ -242,19 +250,30 @@ unsigned int printk(const char *fmt, ...) {
 }
 
 void clear_screen() {
+  if (g_gui_enabled) {
+    /* Si la GUI está activa, usamos el inicializador del motor de video */
+    extern void vt100_init(void);
+    vt100_init();
+  } else {
+    /* Modo texto clásico */
 #if defined(__riscv) || defined(RISCV)
-  /* ANSI escape code to clear terminal and move cursor to home */
-  printk("\033[2J\033[H");
+    printk("\033[2J\033[H");
 #elif defined(__x86__) || defined(x86)
-  for (int i = 0; i < (VGA_WIDTH * VGA_HEIGHT * 2); i += 2) {
-    VIDEO_MEM[i] = ' ';
-    VIDEO_MEM[i + 1] = 0x07;
-  }
+    for (int i = 0; i < (VGA_WIDTH * VGA_HEIGHT * 2); i += 2) {
+      VIDEO_MEM[i] = ' ';
+      VIDEO_MEM[i + 1] = 0x07;
+    }
 #endif
+  }
+
+  /* Reseteamos los cursores globales */
   cursor_x = 0;
   cursor_y = 0;
-#if defined(x86)
-  update_cursor();
+
+#if defined(x86) || defined(__x86_64__)
+  if (!g_gui_enabled) {
+    update_cursor();
+  }
 #endif
 }
 
